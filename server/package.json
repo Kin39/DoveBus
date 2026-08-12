@@ -10,6 +10,7 @@
     "import": "tsx src/cli/import.ts",
     "refresh": "tsx src/cli/refresh.ts",
     "verify": "tsx src/cli/verify.ts",
+    "poll": "tsx src/cli/poll.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
@@ -20,6 +21,7 @@
     "@turf/centroid": "^7.4.0",
     "better-sqlite3": "^13.0.3",
     "csv-parse": "^7.0.2",
+    "gtfs-realtime-bindings": "^2.2.0",
     "yauzl": "^3.4.0"
   },
   "devDependencies": {

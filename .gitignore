@@ -13,3 +13,6 @@ data/
 .env.*
 !.env.example
 .DS_Store
+
+# Local workflow log: records checkpoints with machine-local SHAs
+.claude/checkpoints.log
