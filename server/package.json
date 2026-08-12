@@ -1,0 +1,36 @@
+{
+  "name": "@dovebus/server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "import": "tsx src/cli/import.ts",
+    "refresh": "tsx src/cli/refresh.ts",
+    "verify": "tsx src/cli/verify.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.4.0",
+    "@turf/centroid": "^7.4.0",
+    "better-sqlite3": "^13.0.3",
+    "csv-parse": "^7.0.2",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.2",
+    "@types/yauzl": "^2.10.3",
+    "@types/yazl": "^3.3.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10",
+    "yazl": "^3.3.1"
+  }
+}

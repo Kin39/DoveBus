@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+
+# Built SQLite databases and downloaded feeds (never committed — 125 MB+)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.zip
+
+.env
+.env.*
+!.env.example
+.DS_Store

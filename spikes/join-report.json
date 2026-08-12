@@ -1,0 +1,102 @@
+{
+  "rtCount": 672,
+  "matched": 649,
+  "matchRate": 0.9658,
+  "routeAgree": 649,
+  "routeAgreeRateOfMatched": 1,
+  "dirAgree": 649,
+  "withShape": 649,
+  "withShapeRateOfMatched": 1,
+  "unmatchedSamples": [
+    {
+      "tripId": "66191-9",
+      "route_id": "1174",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66870-7",
+      "route_id": "1168",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66186-10",
+      "route_id": "1174",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65744-5",
+      "route_id": "202",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65737-5",
+      "route_id": "202",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "67049-2",
+      "route_id": "425",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "16658-6",
+      "route_id": "122",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66367-11",
+      "route_id": "1155",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66370-12",
+      "route_id": "1155",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66368-11",
+      "route_id": "1155",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65940-11",
+      "route_id": "1456",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "66871-6",
+      "route_id": "1163",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65743-6",
+      "route_id": "619",
+      "direction_id": 0,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65745-8",
+      "route_id": "619",
+      "direction_id": 1,
+      "start_date": "20260812"
+    },
+    {
+      "tripId": "65801-19",
+      "route_id": "603",
+      "direction_id": 0,
+      "start_date": "20260812"
+    }
+  ]
+}

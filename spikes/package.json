@@ -1,0 +1,11 @@
+{
+  "name": "dovebus-spikes",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 validation spikes (throwaway)",
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.4.0",
+    "@turf/helpers": "^7.4.0",
+    "gtfs-realtime-bindings": "^1.1.1"
+  }
+}
