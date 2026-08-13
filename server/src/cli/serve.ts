@@ -8,8 +8,8 @@
  * reach the upstream feeds, and the daily refresh job can republish the database
  * underneath a running server without a restart.
  */
-import { buildApi } from "../api/server.js";
-import { API_HOST, API_PORT, LIVE_DB_PATH } from "../config.js";
+import { buildApi, closeWithGrace } from "../api/server.js";
+import { API_HOST, API_PORT, LIVE_DB_PATH, SHUTDOWN_GRACE_MS } from "../config.js";
 import { openDbHandle } from "../db/handle.js";
 import { feedValidity, readFeedMeta } from "../feed/meta.js";
 import { logger } from "../logger.js";
@@ -57,9 +57,13 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => {
     logger.info("shutting down", { signal });
     realtime.stop();
-    // Closes the listening socket and lets in-flight requests finish; open SSE
-    // connections are dropped, and browsers reconnect on their own.
-    void app.close().then(() => {
+
+    void closeWithGrace(app, SHUTDOWN_GRACE_MS).then((outcome) => {
+      if (outcome === "forced") {
+        logger.warn("shutdown grace expired — exiting with streams still open", {
+          graceMs: SHUTDOWN_GRACE_MS,
+        });
+      }
       dbHandle.close();
       process.exit(0);
     });

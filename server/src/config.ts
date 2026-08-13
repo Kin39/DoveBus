@@ -104,6 +104,17 @@ export const DB_RELOAD_CHECK_MS = 5_000;
 export const SSE_HEARTBEAT_MS = 15_000;
 
 /**
+ * How long a shutdown waits for in-flight work before exiting anyway.
+ *
+ * A live stream is an open socket held for as long as a rider watches their bus,
+ * and a graceful close waits for every one of them — so a restart with viewers
+ * connected would hang until systemd lost patience and sent SIGKILL. Browsers
+ * reconnect to an SSE endpoint on their own, so dropping the stragglers costs a
+ * client nothing and makes `systemctl restart` deterministic.
+ */
+export const SHUTDOWN_GRACE_MS = 5_000;
+
+/**
  * Ceiling on concurrent live-trip streams. Each one is an open socket held for
  * as long as a rider watches their bus; without a cap a single client can pin
  * the process's file descriptors.

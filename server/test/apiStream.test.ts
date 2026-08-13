@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { closeWithGrace } from "../src/api/server.js";
 import { type ApiFixture, createApiFixture, vehicleTimestamp } from "./helpers/apiFixture.js";
 
 const DATE = "20260812";
@@ -144,9 +145,15 @@ describe("GET /api/stream/trip/:tripId", () => {
     await Promise.all(readers.map((reader) => reader.next()));
     await readers[0]?.cancel();
 
-    // A closed connection releases its slot rather than leaking it.
+    // A closed connection releases its slot rather than leaking it. Each probe
+    // is closed again straight away: an SSE connection left open holds the
+    // server's shutdown, which is a hang, not a failure.
     await expect
-      .poll(async () => (await fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`)).status)
+      .poll(async () => {
+        const probe = await fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`);
+        await probe.body?.cancel();
+        return probe.status;
+      })
       .toBe(200);
     await readers[1]?.cancel();
   });
@@ -158,6 +165,25 @@ describe("GET /api/stream/trip/:tripId", () => {
       success: false,
       error: { code: "not_found" },
     });
+  });
+
+  test("shuts down within its grace period even with a viewer connected", async () => {
+    const response = await fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`);
+    const stream = eventReader(response.body as ReadableStream<Uint8Array>);
+    await stream.next();
+
+    // A graceful close waits for every open connection, and this one is held for
+    // as long as someone watches the bus: without a bound, `systemctl restart`
+    // hangs until SIGKILL. (This is exactly what hung the suite once.)
+    const startedAt = Date.now();
+    await expect(closeWithGrace(fixture.app, 300)).resolves.toBe("forced");
+    expect(Date.now() - startedAt).toBeLessThan(2000);
+
+    await stream.cancel();
+  });
+
+  test("closes immediately when nobody is streaming", async () => {
+    await expect(closeWithGrace(fixture.app, 5000)).resolves.toBe("closed");
   });
 
   test("keeps polling after a client disconnects", async () => {

@@ -109,6 +109,28 @@ export function buildApi(options: ApiOptions): FastifyInstance {
   return app;
 }
 
+/**
+ * Shuts the API down within a bounded time.
+ *
+ * A graceful close waits for every open connection, and a live stream is held
+ * for as long as someone is watching a bus — so a restart with viewers connected
+ * waits for the viewers, which in practice means until systemd gives up and
+ * sends SIGKILL. Browsers reconnect to an SSE endpoint on their own, so leaving
+ * the stragglers behind costs a client nothing and makes a restart deterministic.
+ */
+export async function closeWithGrace(
+  app: FastifyInstance,
+  graceMs: number,
+): Promise<"closed" | "forced"> {
+  return await Promise.race([
+    app.close().then(() => "closed" as const),
+    new Promise<"forced">((resolve) => {
+      const timer = setTimeout(() => resolve("forced"), graceMs);
+      timer.unref?.();
+    }),
+  ]);
+}
+
 /** Fastify attaches a status to its own validation errors; anything else is a 500. */
 function statusCodeOf(error: unknown): number {
   const status = (error as { statusCode?: unknown }).statusCode;
