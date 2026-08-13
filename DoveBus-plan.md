@@ -126,6 +126,30 @@ Must-haves proven in the brief's tests: **DISTINCT + calendar filter** (raw join
 
 > **Build with the `frontend-design` skill** — invoke it before writing any UI code so the interface is distinctive and production-grade rather than generic.
 
+> **MOBILE FIRST — owner's explicit requirement (2026-08-13), not a nice-to-have.** The phone is the primary target and the design starts there; the desktop layout is what the mobile one grows into, never the reverse. Concretely, and to be held to in review:
+> - **Design at 375×812 first.** Nothing ships until it works there; wider viewports are progressive enhancement.
+> - **The map owns the screen**, the search lives in a **bottom sheet** — thumb-reachable, draggable, collapsible. No sidebar, no top-anchored controls a thumb cannot reach.
+> - **Touch targets ≥44 px**, no hover-only affordances (there is no hover on a bus), honour safe-area insets for notches and home indicators.
+> - **Render vehicles as MapLibre GeoJSON layers, never DOM markers.** ~1,150 markers as DOM nodes will not hold a frame rate on a mid-range phone; the interpolation runs on the layer's source data.
+> - **Ask for the viewport, not the region:** `GET /api/vehicles?bbox=` — the whole region is 464 KB, a city viewport ~108 KB (measured), and the difference is a rider's mobile data.
+> - **Assume the network drops.** A bus rider is on a moving bus: the SSE stream must reconnect cleanly, and the freshness age must stay honest across a reconnection rather than resetting.
+> - **Legible in sunlight, one-handed, at a bus stop** — that is the actual usage context and it decides contrast, type size and how much can be on screen at once.
+
+> **The frontend is built as a screenshot loop — owner's explicit requirement (2026-08-13).** Not "build it, then check it at the end": every increment is verified by looking at it, at several resolutions, before moving on.
+>
+> ```
+> build/change ─► screenshot at every viewport ─► read the shots, list concrete defects
+>      ▲                                                          │
+>      └──────────────── fix / improve ◄─────────────────────────┘   until a pass is clean
+> ```
+>
+> - **Viewports, every round:** 320×568 (smallest realistic), **375×812 (the primary target)**, 393×852, 414×896, 768×1024, 1280×800. Light and dark if the design is themed.
+> - **Screenshot the states, not just the landing page** — an empty map, the search sheet open on both tabs, an autocomplete dropdown mid-type, a results list (including a long one), the live trip view with trail + freshness + delay badges, and the error/offline state. Most of the risk is in the states, not the first paint.
+> - **Shoot against the real API and the real data.** Tuscan comune names run long ("Castelnuovo di Val di Cecina"), a busy viewport is hundreds of buses, and a delay badge can read "+139 min". Fixtures would hide exactly the overflow this loop exists to catch.
+> - **Assert what a screenshot cannot show, in the same run:** no horizontal page scroll, touch targets ≥44 px, no console errors, no layout shift after load, and a frame rate that survives a full viewport of vehicles.
+> - **The loop runs until a round produces no findings** — a round that only finds nits still gets a fix pass and another round.
+> - **Committed as a script** (e.g. `npm run shots`), not ad-hoc tooling, so the owner can rerun the exact same check and so it survives into later phases. Playwright drives it; the artifacts land in a gitignored directory.
+
 - MapLibre map of Tuscany; markers colored by freshness bucket; smooth **interpolation** between the last two GPS reads via `requestAnimationFrame` (labelled as smoothing).
 - **Search panel, two tabs:** (1) line + date + time window; (2) comune-A / comune-B (autocomplete) + date + time window. Both produce a trip list → select → live view.
 - **Live view:** selected bus marker + **trail polyline** (travelled, from GPS) + **planned-route line** (the full path the bus will follow, from the trip's `shape`) + a freshness badge with the age label + a **delay/cancellation badge** (on-time / +N min late / cancelled, from `trip-updates`). Subscribes to `/api/stream/trip/:tripId` (SSE).
