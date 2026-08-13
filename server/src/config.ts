@@ -20,6 +20,15 @@ export const RT_TRIP_UPDATES_URL =
 
 export const USER_AGENT = "DoveBus/0.1 (static feed importer)";
 
+/**
+ * The agency's clock. A GTFS service date is a local calendar day, so "today"
+ * must be asked of Rome and not of the server: a UTC box — which is what the
+ * deployment target is — would answer with yesterday's date for the two hours
+ * before midnight, quietly serving the wrong timetable to every request that
+ * omits a date.
+ */
+export const AGENCY_TIMEZONE = "Europe/Rome";
+
 /** CC BY obligation for both data sources — must be shown in the UI. */
 export const ATTRIBUTION_GTFS = "Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)";
 export const ATTRIBUTION_COMUNI = "Confini comunali: openpolis/ISTAT (CC BY 4.0)";
@@ -100,6 +109,18 @@ export const SSE_HEARTBEAT_MS = 15_000;
  * the process's file descriptors.
  */
 export const MAX_SSE_CLIENTS = Number(process.env.DOVEBUS_MAX_STREAMS ?? 500);
+
+/** Per-caller share of that budget: one client must not be able to spend all of it. */
+export const MAX_SSE_CLIENTS_PER_IP = Number(process.env.DOVEBUS_MAX_STREAMS_PER_IP ?? 10);
+
+/**
+ * Whether to believe `X-Forwarded-For`. True in the intended deployment (Caddy in
+ * front), where without it every client shares the proxy's address and the rate
+ * limiter throttles the whole region as one caller — but it must be off when the
+ * process is exposed directly, since the header is then caller-controlled and
+ * makes the per-IP limits trivially evadable.
+ */
+export const TRUST_PROXY = process.env.DOVEBUS_TRUST_PROXY !== "false";
 
 /** Where the built database and download scratch live. Override for tests/deploys. */
 export const DATA_DIR = process.env.DOVEBUS_DATA_DIR ?? resolve(REPO_ROOT, "data");

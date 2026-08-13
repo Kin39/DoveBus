@@ -1,7 +1,7 @@
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance } from "fastify";
-import { API_CORS_ORIGIN, RATE_LIMIT_PER_MINUTE } from "../config.js";
+import { API_CORS_ORIGIN, RATE_LIMIT_PER_MINUTE, TRUST_PROXY } from "../config.js";
 import type { DbHandle } from "../db/handle.js";
 import { logger } from "../logger.js";
 import type { RealtimeService } from "../rt/service.js";
@@ -23,6 +23,9 @@ export interface ApiOptions {
   /** Off in tests, where hundreds of requests come from one address in seconds. */
   readonly rateLimit?: boolean;
   readonly rateLimitMax?: number;
+  /** Off when the process is exposed without a reverse proxy in front of it. */
+  readonly trustProxy?: boolean;
+  readonly maxStreamsPerIp?: number;
   readonly startedAtMs?: number;
 }
 
@@ -36,9 +39,8 @@ export interface ApiOptions {
 export function buildApi(options: ApiOptions): FastifyInstance {
   const app = Fastify({
     logger: false,
-    // Deployed behind Caddy: without this, every client shares the proxy's
-    // address and the rate limiter would throttle the whole region as one caller.
-    trustProxy: true,
+    // See TRUST_PROXY: on behind a reverse proxy, off when exposed directly.
+    trustProxy: options.trustProxy ?? TRUST_PROXY,
   });
   const ctx = createApiContext(options.dbHandle, options.realtime, options.startedAtMs);
   const corsOrigin = options.corsOrigin ?? API_CORS_ORIGIN;
@@ -91,7 +93,12 @@ export function buildApi(options: ApiOptions): FastifyInstance {
       registerSearchRoutes(api, ctx);
       registerVehicleRoutes(api, ctx);
       registerTripRoutes(api, ctx);
-      registerStreamRoutes(api, ctx, { corsOrigin });
+      registerStreamRoutes(api, ctx, {
+        corsOrigin,
+        ...(options.maxStreamsPerIp === undefined
+          ? {}
+          : { maxClientsPerIp: options.maxStreamsPerIp }),
+      });
     },
     { prefix: "/api" },
   );

@@ -2,9 +2,17 @@ import { describe, expect, test } from "vitest";
 import { daysBetweenServiceDates, parseServiceDate, toServiceDate } from "../src/util/date.js";
 
 describe("toServiceDate", () => {
-  test("formats a local date as YYYYMMDD", () => {
-    expect(toServiceDate(new Date(2026, 7, 12))).toBe("20260812");
-    expect(toServiceDate(new Date(2026, 0, 1))).toBe("20260101");
+  test("formats a date as YYYYMMDD", () => {
+    expect(toServiceDate(new Date(2026, 7, 12, 12))).toBe("20260812");
+    expect(toServiceDate(new Date(2026, 0, 1, 12))).toBe("20260101");
+  });
+
+  test("uses the agency's day, not the server's", () => {
+    // A UTC host — which is what the deployment is — would call these the 12th
+    // and the 1st, and every date-less request would get yesterday's timetable
+    // for the two hours before midnight.
+    expect(toServiceDate(new Date(Date.UTC(2026, 7, 12, 23, 30)))).toBe("20260813");
+    expect(toServiceDate(new Date(Date.UTC(2026, 0, 1, 23, 30)))).toBe("20260102");
   });
 });
 

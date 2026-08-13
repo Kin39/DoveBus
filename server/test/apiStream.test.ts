@@ -127,6 +127,30 @@ describe("GET /api/stream/trip/:tripId", () => {
     await stream.cancel();
   });
 
+  test("caps how many streams one caller can hold, and gives the slot back", async () => {
+    const held = await Promise.all([
+      fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`),
+      fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`),
+    ]);
+    // One client must not be able to spend the whole process budget: the cap
+    // would then be the outage it exists to prevent.
+    const refused = await fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`);
+    expect(refused.status).toBe(503);
+    expect(await refused.json()).toMatchObject({ error: { code: "unavailable" } });
+
+    const readers = held.map((response) =>
+      eventReader(response.body as ReadableStream<Uint8Array>),
+    );
+    await Promise.all(readers.map((reader) => reader.next()));
+    await readers[0]?.cancel();
+
+    // A closed connection releases its slot rather than leaking it.
+    await expect
+      .poll(async () => (await fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`)).status)
+      .toBe(200);
+    await readers[1]?.cancel();
+  });
+
   test("404s an unknown trip before hijacking the response", async () => {
     const response = await fetch(`${baseUrl}/api/stream/trip/NOPE`);
     expect(response.status).toBe(404);

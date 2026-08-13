@@ -86,6 +86,11 @@ export function tripDetail(db: Db, tripId: string, date: string): TripDetail | n
   };
 }
 
+/** Existence alone, for callers that must reject an unknown trip before doing work. */
+export function tripExists(db: Db, tripId: string): boolean {
+  return db.prepare("SELECT 1 FROM trips WHERE trip_id = ?").get(tripId) !== undefined;
+}
+
 export function tripStops(db: Db, tripId: string): readonly TripStop[] {
   const rows = db
     .prepare(

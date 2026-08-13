@@ -1,7 +1,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { API_CORS_ORIGIN, MAX_SSE_CLIENTS, SSE_HEARTBEAT_MS } from "../../config.js";
+import {
+  API_CORS_ORIGIN,
+  MAX_SSE_CLIENTS,
+  MAX_SSE_CLIENTS_PER_IP,
+  SSE_HEARTBEAT_MS,
+} from "../../config.js";
 import { logger } from "../../logger.js";
-import { tripDetail } from "../../query/trip.js";
+import { tripExists } from "../../query/trip.js";
 import type { ApiContext } from "../context.js";
 import { HttpError } from "../errors.js";
 import { parseDate, readQuery } from "../params.js";
@@ -11,6 +16,7 @@ import { liveTrip } from "./trip.js";
 export interface StreamOptions {
   readonly corsOrigin?: string;
   readonly maxClients?: number;
+  readonly maxClientsPerIp?: number;
   readonly heartbeatMs?: number;
 }
 
@@ -27,10 +33,13 @@ export function registerStreamRoutes(
   ctx: ApiContext,
   options: StreamOptions = {},
 ): void {
-  const corsOrigin = options.corsOrigin ?? API_CORS_ORIGIN;
-  const maxClients = options.maxClients ?? MAX_SSE_CLIENTS;
-  const heartbeatMs = options.heartbeatMs ?? SSE_HEARTBEAT_MS;
-  let clients = 0;
+  const settings = {
+    corsOrigin: options.corsOrigin ?? API_CORS_ORIGIN,
+    maxClients: options.maxClients ?? MAX_SSE_CLIENTS,
+    maxClientsPerIp: options.maxClientsPerIp ?? MAX_SSE_CLIENTS_PER_IP,
+    heartbeatMs: options.heartbeatMs ?? SSE_HEARTBEAT_MS,
+  };
+  const openStreams = new StreamCounter(settings.maxClients, settings.maxClientsPerIp);
 
   app.get("/stream/trip/:tripId", (request: FastifyRequest, reply: FastifyReply) => {
     const { tripId } = request.params as { tripId: string };
@@ -38,67 +47,120 @@ export function registerStreamRoutes(
 
     // Everything that can fail is checked before the response is hijacked: after
     // that point the only way to report a problem is an event nobody is reading.
-    if (!tripDetail(ctx.db(), tripId, date)) {
+    if (!tripExists(ctx.db(), tripId)) {
       throw HttpError.notFound(`unknown trip: "${tripId}"`);
     }
-    if (clients >= maxClients) {
+    const release = openStreams.take(request.ip);
+    stream(ctx, { tripId, date, request, reply, release, ...settings });
+  });
+}
+
+interface StreamContext {
+  readonly tripId: string;
+  readonly date: string;
+  readonly request: FastifyRequest;
+  readonly reply: FastifyReply;
+  readonly release: () => void;
+  readonly corsOrigin: string;
+  readonly heartbeatMs: number;
+}
+
+/** One open connection: headers, first snapshot, poller subscription, teardown. */
+function stream(ctx: ApiContext, connection: StreamContext): void {
+  const { tripId, date, request, reply } = connection;
+  reply.hijack();
+  const socket = reply.raw;
+  socket.writeHead(200, {
+    "content-type": "text/event-stream",
+    "cache-control": "no-cache, no-transform",
+    connection: "keep-alive",
+    // Nginx and friends buffer by default, which turns a live stream into a
+    // batch delivered when the connection ends.
+    "x-accel-buffering": "no",
+    "access-control-allow-origin": connection.corsOrigin,
+  });
+
+  let lastSignature: string | null = null;
+  let closed = false;
+
+  function close(): void {
+    if (closed) return;
+    closed = true;
+    clearInterval(heartbeat);
+    unsubscribe();
+    connection.release();
+  }
+
+  const push = (event: string): void => {
+    if (closed) return;
+    const live = liveTrip(ctx, tripId, date);
+    const signature = signatureOf(live);
+    // A bus that has not moved and is not newly late is not news; the heartbeat
+    // is what keeps the connection (and any proxy in front of it) alive.
+    if (event === "update" && signature === lastSignature) return;
+    lastSignature = signature;
+
+    try {
+      socket.write(
+        `event: ${event}\ndata: ${JSON.stringify({ tripId, date, at: Date.now(), live })}\n\n`,
+      );
+    } catch (error) {
+      logger.warn("live stream write failed", { tripId, error: String(error) });
+      close();
+    }
+  };
+
+  const unsubscribe = ctx.realtime.subscribe(() => push("update"));
+  const heartbeat = setInterval(() => {
+    if (!closed) socket.write(": keep-alive\n\n");
+  }, connection.heartbeatMs);
+  heartbeat.unref?.();
+
+  request.raw.on("close", close);
+  request.raw.on("error", close);
+  push("snapshot");
+}
+
+/**
+ * Open-connection budget.
+ *
+ * A stream is a socket held for as long as a rider watches their bus, so the
+ * process needs a ceiling — and a per-caller one as well, or a single client can
+ * take every slot and the cap becomes the outage it was meant to prevent.
+ */
+class StreamCounter {
+  readonly #max: number;
+  readonly #maxPerIp: number;
+  readonly #byIp = new Map<string, number>();
+  #total = 0;
+
+  constructor(max: number, maxPerIp: number) {
+    this.#max = max;
+    this.#maxPerIp = maxPerIp;
+  }
+
+  /** Reserves a slot, returning the function that gives it back. Throws when full. */
+  take(ip: string): () => void {
+    const forIp = this.#byIp.get(ip) ?? 0;
+    if (this.#total >= this.#max || forIp >= this.#maxPerIp) {
       throw HttpError.unavailable("too many live streams open — try again shortly");
     }
 
-    clients++;
-    reply.hijack();
-    const socket = reply.raw;
-    socket.writeHead(200, {
-      "content-type": "text/event-stream",
-      "cache-control": "no-cache, no-transform",
-      connection: "keep-alive",
-      // Nginx and friends buffer by default, which turns a live stream into a
-      // batch delivered when the connection ends.
-      "x-accel-buffering": "no",
-      "access-control-allow-origin": corsOrigin,
-    });
+    this.#total++;
+    this.#byIp.set(ip, forIp + 1);
+    let released = false;
 
-    let lastSignature: string | null = null;
-    let closed = false;
-
-    const send = (event: string, payload: unknown): void => {
-      if (closed) return;
-      try {
-        socket.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
-      } catch (error) {
-        logger.warn("live stream write failed", { tripId, error: String(error) });
-        close();
-      }
+    return () => {
+      if (released) return;
+      released = true;
+      this.#total--;
+      const remaining = (this.#byIp.get(ip) ?? 1) - 1;
+      // Deleting at zero keeps this map bounded by *concurrent* callers rather
+      // than by every address that ever connected.
+      if (remaining <= 0) this.#byIp.delete(ip);
+      else this.#byIp.set(ip, remaining);
     };
-
-    const push = (event: string): void => {
-      const live = liveTrip(ctx, tripId, date);
-      const signature = signatureOf(live);
-      // A bus that has not moved and is not newly late is not news; the heartbeat
-      // is what keeps the connection (and any proxy in front of it) alive.
-      if (event === "update" && signature === lastSignature) return;
-      lastSignature = signature;
-      send(event, { tripId, date, at: Date.now(), live });
-    };
-
-    const unsubscribe = ctx.realtime.subscribe(() => push("update"));
-    const heartbeat = setInterval(() => {
-      if (!closed) socket.write(": keep-alive\n\n");
-    }, heartbeatMs);
-    heartbeat.unref?.();
-
-    function close(): void {
-      if (closed) return;
-      closed = true;
-      clients--;
-      clearInterval(heartbeat);
-      unsubscribe();
-    }
-
-    request.raw.on("close", close);
-    request.raw.on("error", close);
-    push("snapshot");
-  });
+  }
 }
 
 /** Cheap "has anything a viewer would notice changed?" test. */

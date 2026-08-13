@@ -64,7 +64,8 @@ export async function createApiFixture(): Promise<ApiFixture> {
   });
 
   const dbHandle = openDbHandle(fixtureDb.path);
-  const app = buildApi({ dbHandle, realtime, rateLimit: false });
+  // Two streams per caller keeps the cap test quick; production allows ten.
+  const app = buildApi({ dbHandle, realtime, rateLimit: false, maxStreamsPerIp: 2 });
 
   return {
     app,
