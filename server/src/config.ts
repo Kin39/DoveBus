@@ -70,6 +70,37 @@ export const TUSCANY_BBOX = {
   maxLon: 12.5,
 } as const;
 
+/**
+ * API listen address. The port is fixed by the plan so the frontend's
+ * `VITE_API_BASE` never has to guess; the default host stays on the loopback
+ * because the deployment terminates TLS in Caddy in front of this process.
+ */
+export const API_PORT = Number(process.env.DOVEBUS_PORT ?? 3200);
+export const API_HOST = process.env.DOVEBUS_HOST ?? "127.0.0.1";
+
+/**
+ * Browser origins allowed to read the API. Open by default: this serves nothing
+ * but public CC-BY timetable data, has no cookies and no authentication, so an
+ * origin check would protect nothing while breaking every preview deploy.
+ */
+export const API_CORS_ORIGIN = process.env.DOVEBUS_CORS_ORIGIN ?? "*";
+
+/** Requests per IP per minute. Generous for a map that polls, cheap insurance against a scraper. */
+export const RATE_LIMIT_PER_MINUTE = Number(process.env.DOVEBUS_RATE_LIMIT ?? 300);
+
+/** How often a read re-stats the database file to notice the refresh job's atomic swap. */
+export const DB_RELOAD_CHECK_MS = 5_000;
+
+/** Comment line sent on idle SSE connections so proxies do not reap them. */
+export const SSE_HEARTBEAT_MS = 15_000;
+
+/**
+ * Ceiling on concurrent live-trip streams. Each one is an open socket held for
+ * as long as a rider watches their bus; without a cap a single client can pin
+ * the process's file descriptors.
+ */
+export const MAX_SSE_CLIENTS = Number(process.env.DOVEBUS_MAX_STREAMS ?? 500);
+
 /** Where the built database and download scratch live. Override for tests/deploys. */
 export const DATA_DIR = process.env.DOVEBUS_DATA_DIR ?? resolve(REPO_ROOT, "data");
 

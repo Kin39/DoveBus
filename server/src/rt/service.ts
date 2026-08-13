@@ -31,6 +31,11 @@ export interface RealtimeServiceOptions {
   readonly fetchFeed?: (url: string) => Promise<RtFetchResult>;
 }
 
+/** Which feed produced a change — a delay arriving is not a bus having moved. */
+export type RealtimeUpdate = "vehicles" | "trip-updates";
+
+export type RealtimeListener = (update: RealtimeUpdate) => void;
+
 export interface RealtimeService {
   readonly state: LiveState;
   start(): void;
@@ -38,6 +43,12 @@ export interface RealtimeService {
   /** One poll of each feed, awaited — used by the CLI and by tests. */
   pollOnce(): Promise<void>;
   status(nowMs?: number): RealtimeStatus;
+  /**
+   * Called after each snapshot is folded into the live state. This is what lets
+   * SSE clients be pushed to on the poller's rhythm instead of every connection
+   * running its own timer and re-sending an unchanged position.
+   */
+  subscribe(listener: RealtimeListener): () => void;
 }
 
 /**
@@ -51,6 +62,18 @@ export function createRealtimeService(options: RealtimeServiceOptions = {}): Rea
   const state = options.state ?? new LiveState();
   const vehicleIntervalMs = options.vehicleIntervalMs ?? RT_VEHICLE_POLL_MS;
   const tripUpdateIntervalMs = options.tripUpdateIntervalMs ?? RT_TRIP_UPDATE_POLL_MS;
+  const listeners = new Set<RealtimeListener>();
+
+  /** One listener throwing must not cost the others their notification, or the poll its loop. */
+  function notify(update: RealtimeUpdate): void {
+    for (const listener of listeners) {
+      try {
+        listener(update);
+      } catch (error) {
+        logger.warn("realtime listener failed", { update, error: String(error) });
+      }
+    }
+  }
 
   const vehicles = createPoller({
     name: "vehicle-positions",
@@ -60,6 +83,7 @@ export function createRealtimeService(options: RealtimeServiceOptions = {}): Rea
     handle: (body, receivedAtMs) => {
       const snapshot = decodeVehiclePositions(body);
       state.applyVehicles(snapshot, receivedAtMs);
+      notify("vehicles");
       return { headerTimestamp: snapshot.headerTimestamp };
     },
     onError: (error, failureStreak) =>
@@ -74,6 +98,7 @@ export function createRealtimeService(options: RealtimeServiceOptions = {}): Rea
     handle: (body, receivedAtMs) => {
       const snapshot = decodeTripUpdates(body);
       state.applyTripUpdates(snapshot, receivedAtMs);
+      notify("trip-updates");
       return { headerTimestamp: snapshot.headerTimestamp };
     },
     onError: (error, failureStreak) =>
@@ -92,6 +117,12 @@ export function createRealtimeService(options: RealtimeServiceOptions = {}): Rea
     },
     async pollOnce(): Promise<void> {
       await Promise.all([vehicles.poll(), tripUpdates.poll()]);
+    },
+    subscribe(listener: RealtimeListener): () => void {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
     status(nowMs: number = Date.now()): RealtimeStatus {
       return {
