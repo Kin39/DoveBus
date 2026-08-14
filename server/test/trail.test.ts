@@ -78,4 +78,25 @@ describe("TrailBuffer", () => {
     expect(trail.points(START + 120_000)).toEqual([]);
     expect(trail.isEmpty).toBe(true);
   });
+
+  test("previous is the fix before the current one, not the same place twice", () => {
+    const trail = new TrailBuffer();
+    trail.push({ lat: 43.1, lon: 11.1, at: START }, START);
+    // The feed regenerates every ~120 s while the poller runs every 30 s, so the
+    // same position arrives repeatedly; a repeat must not become "the previous
+    // position" or the speed measured between them would be zero.
+    trail.push({ lat: 43.1, lon: 11.1, at: START + 30_000 }, START + 30_000);
+    trail.push({ lat: 43.2, lon: 11.2, at: START + 120_000 }, START + 120_000);
+
+    expect(trail.previous).toEqual({ lat: 43.1, lon: 11.1, at: START });
+    expect(trail.last).toEqual({ lat: 43.2, lon: 11.2, at: START + 120_000 });
+  });
+
+  test("previous is null until a second position has been seen", () => {
+    const trail = new TrailBuffer();
+    expect(trail.previous).toBeNull();
+
+    trail.push({ lat: 43.1, lon: 11.1, at: START }, START);
+    expect(trail.previous).toBeNull();
+  });
 });

@@ -30,6 +30,8 @@ const DEFAULT_WINDOW_HOURS = 3;
 
 export interface SearchPanelOptions {
   readonly onSubmit: (query: SearchQuery) => void;
+  /** Asks for room: a field in use needs the sheet open, not peeking. */
+  readonly onFieldFocus: () => void;
 }
 
 /**
@@ -98,6 +100,10 @@ export class SearchPanel {
 
     this.#comuneA = this.#comuneField("#input-comune-a", "#list-comune-a");
     this.#comuneB = this.#comuneField("#input-comune-b", "#list-comune-b");
+
+    for (const input of this.element.querySelectorAll<HTMLInputElement>(".field__input")) {
+      input.addEventListener("focus", () => this.#options.onFieldFocus());
+    }
 
     query(this.element, "#swap").addEventListener("click", () => this.#swapComuni());
 

@@ -30,6 +30,22 @@ export interface VehicleJson {
   readonly delaySeconds: number | null;
   readonly scheduleRelationship: string | null;
   readonly cancelled: boolean;
+  /**
+   * Where this bus was before it was here.
+   *
+   * Sent so a map can start moving the vehicle on its very first response. The
+   * feed regenerates about every two minutes, so a client left to collect two
+   * fixes of its own would show a frozen map for that long after every load.
+   */
+  readonly previous: PreviousFixJson | null;
+}
+
+/** The position before the current one — what a client measures a speed against. */
+export interface PreviousFixJson {
+  readonly lat: number;
+  readonly lon: number;
+  /** Seconds since epoch, matching `VehicleJson.timestamp`. */
+  readonly at: number;
 }
 
 export interface TrailPointJson {
@@ -54,6 +70,7 @@ export function toVehicleJson(
   vehicle: LiveVehicle,
   nowMs: number,
   routes: ReadonlyMap<string, RouteName>,
+  previous: TrailPoint | null = null,
 ): VehicleJson {
   const age = freshness(nowMs, vehicle.timestamp);
   return {
@@ -81,6 +98,7 @@ export function toVehicleJson(
     // have to infer from an enum name.
     cancelled:
       vehicle.scheduleRelationship === "CANCELED" || vehicle.scheduleRelationship === "DELETED",
+    previous: toPreviousFixJson(previous, vehicle.timestamp),
   };
 }
 
@@ -90,9 +108,29 @@ export function toLiveTripJson(
   routes: ReadonlyMap<string, RouteName>,
 ): LiveTripJson {
   return {
-    vehicle: toVehicleJson(view.vehicle, nowMs, routes),
+    vehicle: toVehicleJson(view.vehicle, nowMs, routes, view.trail[view.trail.length - 2] ?? null),
     trail: view.trail.map(toTrailPointJson),
   };
+}
+
+/**
+ * The earlier fix, but only when it really is earlier.
+ *
+ * A trail point falls back to the server's clock for a bus that reports no
+ * timestamp of its own, so the two ends of this pair can come from different
+ * clocks and occasionally arrive out of order. A "previous" position stamped
+ * later than the current one is not something a client can measure a speed
+ * against, so it is not sent at all rather than sent to be second-guessed.
+ */
+function toPreviousFixJson(
+  previous: TrailPoint | null,
+  currentTimestamp: number | null,
+): PreviousFixJson | null {
+  if (previous === null || currentTimestamp === null) return null;
+  const at = Math.round(previous.at / 1000);
+  if (at >= currentTimestamp) return null;
+
+  return { lat: roundCoordinate(previous.lat), lon: roundCoordinate(previous.lon), at };
 }
 
 function toTrailPointJson(point: TrailPoint): TrailPointJson {

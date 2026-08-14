@@ -12,9 +12,10 @@ export function registerVehicleRoutes(app: FastifyInstance, ctx: ApiContext): vo
     const now = Date.now();
     const routes = ctx.routeNames();
 
-    const vehicles = ctx.realtime.state
+    const state = ctx.realtime.state;
+    const vehicles = state
       .listInBbox(bbox)
-      .map((vehicle) => toVehicleJson(vehicle, now, routes));
+      .map((vehicle) => toVehicleJson(vehicle, now, routes, state.previousFix(vehicle.key)));
 
     // The whole region is ~1100 buses, so this is a complete answer rather than a
     // page — but say so explicitly instead of leaving the client to assume it.

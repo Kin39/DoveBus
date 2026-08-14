@@ -36,9 +36,9 @@ export function basemapStyle(): StyleSpecification {
       carto: {
         type: "raster",
         tiles: [
-          "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-          "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-          "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+          "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+          "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+          "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
         ],
         tileSize: 256,
         maxzoom: 19,
@@ -46,18 +46,20 @@ export function basemapStyle(): StyleSpecification {
       },
     },
     layers: [
-      { id: "ink", type: "background", paint: { "background-color": "#0b1524" } },
+      { id: "paper", type: "background", paint: { "background-color": "#eef2f7" } },
       {
         id: "basemap",
         type: "raster",
         source: "carto",
         paint: {
-          // The petrol background showing through is what makes this map look
-          // like DoveBus and not like every other dark-tile map.
-          "raster-opacity": 0.74,
-          "raster-contrast": 0.08,
-          "raster-saturation": -0.25,
-          "raster-brightness-max": 0.92,
+          // The map is a backdrop, not the subject — but a backdrop a rider still
+          // has to read a street off. Desaturating cools the tiles toward the
+          // interface's paper and leaves the vehicle colours as the only
+          // saturated things on screen; the contrast stays up so the road
+          // network does not wash out to nothing underneath them.
+          "raster-opacity": 1,
+          "raster-contrast": 0.06,
+          "raster-saturation": -0.3,
         },
       },
     ],

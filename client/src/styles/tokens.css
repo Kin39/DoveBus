@@ -1,52 +1,60 @@
 /*
- * DoveBus design tokens.
+ * DoveBus design tokens — light.
  *
  * One editorial rule governs this palette: **the chrome is monochrome, and every
  * saturated colour means something.** A map is already a coloured surface, so any
  * decorative colour in the interface competes with the data drawn on top of it.
- * Ink and bone carry the UI; aqua, amber and red are reserved for freshness,
- * delay and cancellation respectively, and appear nowhere else.
+ * Paper and ink carry the UI; the freshness ramp, the delay scale and the single
+ * alarm red are reserved for data and appear nowhere else.
+ *
+ * The data colours are not the dark theme's inverted. On white, a luminous aqua
+ * carries a contrast ratio under 2:1 and a bright amber is unreadable outright,
+ * so the whole ramp was re-picked against paper for a minimum of 3:1 as a mark
+ * and 4.5:1 wherever it sets type.
  */
 
 :root {
-  /* ---- Ink: a petrol blue-black, not a neutral black. Reads as night road,
-     holds contrast in direct sunlight, and lets the basemap sink away. ---- */
-  --ink-900: #060a11;
-  --ink-850: #0a1019;
-  --ink-800: #0e1622;
-  --ink-750: #131d2c;
-  --ink-700: #1a2536;
-  --ink-600: #243247;
-  --ink-500: #33445e;
+  color-scheme: light;
 
-  /* ---- Bone: warm off-white used as *ink on dark*, the inverse of the usual
-     cream-background move. It is the colour of an enamel stop plate at night. ---- */
-  --bone: #f2efe6;
-  --bone-dim: #97a3b4;
-  --bone-faint: #5d6b7e;
+  /* ---- Paper: the surfaces, coolest at the top of the stack. ---- */
+  --paper: #ffffff;
+  --paper-sunk: #f4f7fa;
+  --paper-raise: #eaeff5;
+  --paper-deep: #dfe6ee;
+
+  /* ---- Edges. Hairlines do the separating; boxes and shadows stay rare. ---- */
+  --edge: #dce3ec;
+  --edge-strong: #bcc7d5;
+
+  /* ---- Ink: a blue-cast near-black, never pure grey. ---- */
+  --text: #0d1825;
+  --text-dim: #4c5a6d;
+  --text-faint: #78859a;
+  /* Type set on a dark fill — the primary button, the alarm badge. */
+  --on-ink: #ffffff;
 
   /* ---- Data colours. Freshness is a confidence ramp, not a rainbow: full
-     saturation means "we know where this bus is", and the colour drains out as
-     the fix ages. Stale is grey, never red — red would say "danger" when the
-     truth is only "we have not heard from it". ---- */
-  --fresh-live: #4ff0c0;
-  --fresh-recent: #2bc39a;
-  --fresh-delayed: #ffb020;
-  --fresh-stale: #6c7c91;
+     saturation means "we know where this bus is", and the colour drains toward
+     grey as the fix ages. Stale is grey, never red — red would say "danger"
+     when the truth is only "we have not heard from it". ---- */
+  --fresh-live: #0f9d76;
+  --fresh-recent: #12876a;
+  --fresh-delayed: #b06a00;
+  --fresh-stale: #7a8798;
 
   /* Delay is a separate axis from freshness and must never borrow its colours. */
-  --delay-early: #7fb2ff;
-  --delay-ontime: var(--bone-dim);
-  --delay-late: #ffb020;
-  --delay-heavy: #ff8a3d;
+  --delay-early: #1c62c4;
+  --delay-ontime: var(--fresh-recent);
+  --delay-late: #b06a00;
+  --delay-heavy: #c2410c;
 
   /* The only alarm in the product. A suppressed run is the one thing a rider
      must not have to infer. */
-  --alarm: #ff5a5f;
+  --alarm: #c8102e;
 
-  /* Selection is monochrome on purpose: the bus you picked goes bone-white so it
-     separates from every data colour around it. */
-  --selected: #ffffff;
+  /* Selection is the darkest thing on the map on purpose: the bus you picked
+     separates from every data colour around it by weight, not by hue. */
+  --selected: #0b3d33;
 
   /* ---- Type. One variable grotesque carries the whole interface at three
      widths — condensed is a functional choice, since GTFS ships stop names like
@@ -80,8 +88,9 @@
   --radius-lg: 18px;
   --radius-pill: 999px;
 
-  --shadow-sheet: 0 -18px 44px rgb(3 6 12 / 0.66);
-  --shadow-float: 0 6px 20px rgb(3 6 12 / 0.5);
+  /* Shadows on paper are for lift, not for drama. */
+  --shadow-sheet: 0 -10px 34px rgb(13 24 37 / 0.13);
+  --shadow-float: 0 4px 16px rgb(13 24 37 / 0.14);
 
   /* Safe areas: this is a phone-first product and the sheet sits on the home
      indicator if it does not ask. */

@@ -142,6 +142,17 @@ describe("HTTP API", () => {
       expect(tracked?.ageSeconds).toBeGreaterThanOrEqual(30);
     });
 
+    test("carries the previous fix, so a client can estimate from its first response", async () => {
+      const { body } = await get("/api/vehicles");
+      const vehicles = body.data?.vehicles as ReadonlyArray<Record<string, unknown>>;
+
+      // One snapshot in, so there is no earlier position to report yet — the
+      // field is present and null rather than absent, which is the contract a
+      // client codes against.
+      expect(vehicles.every((vehicle) => "previous" in vehicle)).toBe(true);
+      expect(vehicles.every((vehicle) => vehicle.previous === null)).toBe(true);
+    });
+
     test("keeps deadheading buses, which carry no trip", async () => {
       const { body } = await get("/api/vehicles");
       const vehicles = body.data?.vehicles as ReadonlyArray<Record<string, unknown>>;

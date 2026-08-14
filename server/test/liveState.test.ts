@@ -359,3 +359,37 @@ describe("LiveState", () => {
     expect(state.stats(NOW + 11 * 60_000).tripUpdates).toBe(1);
   });
 });
+
+describe("previousFix", () => {
+  test("is null until a vehicle has reported a second, different position", () => {
+    const state = new LiveState();
+    state.applyVehicles(vehicles([{ vehicleId: "BUS1", lat: 43.1, lon: 11.1 }]), NOW);
+
+    expect(state.previousFix("vehicle:BUS1")).toBeNull();
+  });
+
+  test("returns the earlier position once the bus has moved", () => {
+    const state = new LiveState();
+    state.applyVehicles(
+      vehicles([{ vehicleId: "BUS1", lat: 43.1, lon: 11.1, timestamp: NOW_S }]),
+      NOW,
+    );
+    // The same snapshot arrives again before the publisher regenerates — it must
+    // not become "the previous position", or a client measuring a speed between
+    // the two would read zero.
+    state.applyVehicles(
+      vehicles([{ vehicleId: "BUS1", lat: 43.1, lon: 11.1, timestamp: NOW_S }]),
+      NOW + 30_000,
+    );
+    state.applyVehicles(
+      vehicles([{ vehicleId: "BUS1", lat: 43.2, lon: 11.2, timestamp: NOW_S + 120 }]),
+      NOW + 120_000,
+    );
+
+    // The feed encodes coordinates as float32, so these come back with the
+    // precision the wire actually carries rather than the literal written above.
+    const previous = state.previousFix("vehicle:BUS1");
+    expect(previous?.lat).toBeCloseTo(43.1, 5);
+    expect(previous?.lon).toBeCloseTo(11.1, 5);
+  });
+});

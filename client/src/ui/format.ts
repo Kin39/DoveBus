@@ -14,6 +14,20 @@ export const FRESHNESS_DELAYED_S = 300;
 /** Where the ageing bar is considered full. Past this the data is simply old. */
 export const FRESHNESS_FULL_S = FRESHNESS_DELAYED_S;
 
+/**
+ * Past this age a bus is dropped from the map rather than drawn faded.
+ *
+ * Derived from this feed, not borrowed: busbus.it hides at three minutes, but a
+ * fix here is already ~116 s old when it arrives and the next one is ~120 s
+ * behind it, so a three-minute rule empties the whole map twice every cycle —
+ * measured at 0% / 83% / 82% / 74% / 26% / 0% of 1,092 vehicles over two and a
+ * half minutes. Five minutes is where that flicker stops: a steady 84–85% of the
+ * fleet stays drawn, and the ~15% left out are genuinely no longer reporting.
+ *
+ * Re-derive this if the publisher's cadence ever changes.
+ */
+export const MAX_VISIBLE_AGE_S = 300;
+
 export function bucketOf(ageSeconds: number | null): FreshnessBucket {
   if (ageSeconds === null) return "stale";
   if (ageSeconds <= FRESHNESS_LIVE_S) return "live";

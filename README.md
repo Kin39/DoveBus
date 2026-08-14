@@ -108,6 +108,13 @@ put load on the regional feed.
 curl 'http://127.0.0.1:3200/api/search/od?comuneA=Arezzo&comuneB=Anghiari&from=06:00&to=09:00'
 ```
 
+- **Vehicles carry their previous position.** `/api/vehicles` sends each bus's
+  earlier fix alongside its current one, so a map can start moving markers on its
+  first response instead of sitting frozen for a publisher cycle — about two
+  minutes — while it collects two fixes of its own. It is withheld rather than
+  guessed at when it is not strictly older than the current one, which the live
+  feed does produce: a trail point falls back to the server's clock for a bus
+  reporting no timestamp, so the pair can straddle two clocks.
 - **One envelope.** `{"success":true,"data":{…}}` or
   `{"success":false,"error":{"code","message"}}` — including 404s, rate limits and
   the unexpected, so a client writes one unwrapping path and one error path.
@@ -164,7 +171,7 @@ The interface is built by looking at it, at every viewport, after every change �
 so the check is a committed script rather than something run by hand.
 
 ```bash
-npm run shots              # 12 states × 6 viewports, against the real API
+npm run shots              # 13 states × 6 viewports, against the real API
 npm run shots -- 375x812   # just the primary target
 ```
 
@@ -180,6 +187,15 @@ result, a live trip, a scheduled one, a tapped vehicle, and the offline case —
 are where the risk is. It runs against live data on purpose: Tuscan comune names
 run long, a busy viewport is hundreds of buses, and fixtures would hide exactly
 the overflow the loop exists to catch.
+
+One of them, `12-journey`, is the state that earns its keep. Every other one
+starts from a fresh page load, which is precisely how an earlier round reported
+72 clean shots over a search button that died on the *second* search: a control
+detached from the DOM mid-flow was never re-enabled, and nothing in the loop ever
+performed two actions in a row. `12-journey` runs one continuous session —
+search, back, switch tab, search again, open a trip, back — and Playwright's
+refusal to click a dead button surfaces that class of bug as an unreachable
+state rather than as a picture nobody looks at closely.
 
 ## Checking a build
 
@@ -384,7 +400,7 @@ client/src
   └─ styles/       tokens → base → sheet → panel → trip
 ```
 
-Four decisions carry the design:
+Five decisions carry the design:
 
 **The map owns the screen; the sheet owns the thumb.** Everything a rider does
 happens in a bottom sheet with three detents, draggable, flick-aware, and
@@ -396,20 +412,48 @@ it behind the panel.
 **Vehicles are a layer, never DOM markers.** A busy viewport is several hundred
 buses and the region is over a thousand; as element nodes that will not hold a
 frame rate on a mid-range phone. One `geojson` source, two circle layers, and
-the interpolation between the last two GPS reads writes to the source data on
-`requestAnimationFrame` — graphical only, and it never touches the reported age.
+the positions are rewritten five times a second rather than sixty — a bus at
+50 km/h covers under two pixels per second at street zoom, so the extra
+fifty-five redraws would buy nothing and cost a phone its frame rate.
 
-**Freshness is recomputed on the client, continuously.** The server's bucket is
-correct when it is sent and wrong a minute later, because the fix keeps ageing
-while the screen is open. Both the map colour and the meter derive the age from
-the bus's own `timestamp` on every frame, so a stalled feed *looks* stalled and
-nothing can keep claiming "recente" for a bus that went silent. The exact age in
-seconds is always printed next to the word.
+**A bus does not wait for a fix to move.** The feed publishes roughly every two
+minutes, and a marker that only moves when a snapshot lands sits still for two
+minutes and then jumps. Every bus is advanced at the speed it was last observed
+travelling — along its route where one is known (`map/route.ts` turns a position
+into a distance along the shape), along its last heading otherwise. The speed
+needs two fixes, so the API sends the earlier one with the current one and the
+map moves from its first response rather than after a two-minute wait: measured
+at **59% of markers moving within 14 seconds of a cold load**, against 0% before.
+What was assumed is never hidden: the trip view states how far the marker has
+been advanced past the last real fix, and a disc on the map shows how far off it
+could be.
 
-**Colour means data, never decoration.** The interface is ink and bone; the only
-saturated colours are the freshness ramp (aqua → amber, draining to a hollow
-grey ring when a bus stops reporting), the delay badge on its own separate
-scale, and red, which is reserved for a cancelled run and appears nowhere else.
+**Freshness is recomputed on the client, continuously, and old buses leave.**
+The server's bucket is correct when it is sent and wrong a minute later, because
+the fix keeps ageing while the screen is open, so both the map colour and the
+meter derive the age from the bus's own `timestamp`. Past five minutes a bus is
+removed from the map rather than drawn faded — the threshold is derived from
+this feed and not borrowed (see `MAX_VISIBLE_AGE_S`), and the bus a rider is
+actively following is exempt, because vanishing mid-watch is the worst possible
+moment to disappear.
+
+**Colour means data, never decoration.** The interface is paper and ink; the
+only saturated colours are the freshness ramp (green → amber, draining to grey),
+the delay badge on its own separate scale, and red, which is reserved for a
+cancelled run and appears nowhere else. The ramp was re-picked against white
+rather than inverted from the dark original — a luminous aqua carries under 2:1
+on paper.
+
+### The trail is a reconstruction, and says so
+
+Consecutive fixes on this feed are 96–130 s and **up to 2.7 km** apart, so a line
+joining them draws a straight chord across every curve — visibly through
+hillsides. The route's own shape carries 877 points for the same trip, so the
+travelled path is drawn as *the stretch of road up to where the bus has got to*,
+projected onto that shape. The raw fixes stay on top as separate marks: the
+difference between "we watched this happen" and "we reconstructed this" is
+exactly the sort of thing this product does not blur, and the caption says which
+is which.
 
 ## Attribution (CC BY — required)
 

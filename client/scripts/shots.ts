@@ -239,7 +239,39 @@ const STATES: readonly State[] = [
     },
   },
   {
-    name: "12-offline",
+    /**
+     * One continuous session, no reload.
+     *
+     * Every other state starts from a fresh `goto`, which is exactly why this
+     * round of the loop reported 72 clean shots over a button that died on the
+     * *second* search: a control detached from the DOM mid-flow stayed disabled,
+     * and nothing here ever performed two actions in a row. Playwright refuses
+     * to click a disabled button, so the regression shows up as an unreachable
+     * state rather than as a picture nobody reads carefully.
+     */
+    name: "12-journey",
+    expectedConsole: TRIP_NOT_PUBLISHED,
+    async enter(page) {
+      await runOdSearch(page, "Arezzo", "Anghiari");
+      await page.click("#results-back");
+      await page.waitForSelector("#search-form", { timeout: 5_000 });
+
+      await page.click('.tabs__tab[data-mode="line"]');
+      await page.fill("#input-line", "11");
+      await page.fill("#input-from", "00:00");
+      await page.fill("#input-to", "23:59");
+      // The click that used to be impossible.
+      await page.click(".cta", { timeout: 5_000 });
+      await page.waitForSelector(".triplist", { timeout: 15_000 });
+
+      await openTrip(page);
+      await page.click(".tripview .viewhead__back");
+      await page.waitForSelector(".triplist", { timeout: 5_000 });
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    name: "13-offline",
     expectedConsole: OFFLINE_NOISE,
     async enter(page) {
       await page.waitForTimeout(1200);

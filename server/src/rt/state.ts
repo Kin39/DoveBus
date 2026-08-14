@@ -221,6 +221,18 @@ export class LiveState {
     return this.#trails.get(key)?.points() ?? [];
   }
 
+  /**
+   * The position a vehicle reported before its current one.
+   *
+   * Served alongside the current position so a client can estimate where a bus
+   * is *now* from its first response, rather than having to sit through a
+   * publisher cycle — about two minutes — before it has two fixes of its own to
+   * measure a speed between.
+   */
+  previousFix(key: string): TrailPoint | null {
+    return this.#trails.get(key)?.previous ?? null;
+  }
+
   /** Position + honest age + travelled path: everything the live view needs. */
   describe(key: string, nowMs: number): LiveVehicleView | null {
     const vehicle = this.get(key);

@@ -15,8 +15,8 @@ body {
 }
 
 body {
-  background: var(--ink-900);
-  color: var(--bone);
+  background: var(--paper);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: var(--text-base);
   font-stretch: 100%;
@@ -78,8 +78,8 @@ button {
   align-items: center;
   min-height: var(--touch);
   padding: var(--s2) var(--s4);
-  background: var(--bone);
-  color: var(--ink-900);
+  background: var(--text);
+  color: var(--paper);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   text-decoration: none;
@@ -95,7 +95,7 @@ button {
 .map {
   position: fixed;
   inset: 0;
-  background: var(--ink-900);
+  background: var(--paper);
 }
 
 .maplibregl-ctrl-attrib {
@@ -131,8 +131,8 @@ button {
   gap: var(--s2);
   padding: var(--s2) var(--s3);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--ink-850) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--ink-600) 70%, transparent);
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--edge) 70%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -145,7 +145,7 @@ button {
 .brand__dove {
   font-stretch: 100%;
   font-weight: 400;
-  color: var(--bone-dim);
+  color: var(--text-dim);
 }
 
 /* The wordmark's whole idea: the question is soft, the answer is stamped. */
@@ -154,19 +154,19 @@ button {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--bone);
+  color: var(--text);
 }
 
 .fleet {
   font-size: var(--text-xs);
-  color: var(--bone-dim);
+  color: var(--text-dim);
 }
 
 .fleet__count {
   font-family: var(--font-data);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--bone);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -197,8 +197,8 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   width: var(--touch);
   height: var(--touch);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--ink-850) 88%, transparent);
-  border: 1px solid var(--ink-600);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  border: 1px solid var(--edge);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--shadow-float);
@@ -208,7 +208,7 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   width: 21px;
   height: 21px;
   fill: none;
-  stroke: var(--bone);
+  stroke: var(--text);
   stroke-width: 1.7;
   stroke-linecap: round;
 }
@@ -221,9 +221,9 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   justify-content: center;
   min-width: 3.4rem;
   padding: 0.28rem 0.5rem;
-  border: 1.5px solid var(--ink-500);
+  border: 1.5px solid var(--edge-strong);
   border-radius: var(--radius-sm);
-  background: var(--ink-750);
+  background: var(--paper-raise);
   flex: none;
 }
 
@@ -233,14 +233,14 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   font-size: var(--text-base);
   letter-spacing: 0.045em;
   text-transform: uppercase;
-  color: var(--bone);
+  color: var(--text);
   white-space: nowrap;
 }
 
 /* A plate glows only when there is a bus behind it right now. */
 .plate[data-running="true"] {
   border-color: color-mix(in srgb, var(--fresh-recent) 70%, transparent);
-  background: color-mix(in srgb, var(--fresh-recent) 12%, var(--ink-750));
+  background: color-mix(in srgb, var(--fresh-recent) 12%, var(--paper-raise));
 }
 
 .plate--large {
@@ -271,7 +271,7 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   font-weight: 600;
   text-transform: lowercase;
   letter-spacing: 0.02em;
-  color: var(--bone-dim);
+  color: var(--text-dim);
 }
 
 .badge__value {
@@ -294,12 +294,12 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   color: var(--delay-heavy);
 }
 .badge[data-tone="offline"] {
-  color: var(--bone-faint);
+  color: var(--text-faint);
 }
 
 /* The only alarm in the product — a suppressed run gets filled, not outlined. */
 .badge[data-tone="cancelled"] {
-  color: var(--ink-900);
+  color: var(--paper);
   background: var(--alarm);
   border-color: var(--alarm);
   font-stretch: 92%;
@@ -307,8 +307,8 @@ body:has(.sheet[data-detent="full"]) .mapctl {
 }
 
 .badge--quiet {
-  color: var(--bone-faint);
-  border-color: var(--ink-600);
+  color: var(--text-faint);
+  border-color: var(--edge);
 }
 
 /* ---- the freshness meter: this product's signature ---------------------- */
@@ -331,7 +331,7 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  color: var(--bone);
+  color: var(--text);
 }
 
 .meter__label {
@@ -340,14 +340,14 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   letter-spacing: 0.13em;
   font-stretch: 88%;
   font-weight: 650;
-  color: var(--meter-color, var(--bone-dim));
+  color: var(--meter-color, var(--text-dim));
 }
 
 .meter__track {
   position: relative;
   height: 3px;
   border-radius: 2px;
-  background: var(--ink-700);
+  background: var(--edge);
   overflow: hidden;
 }
 
@@ -418,8 +418,8 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   min-height: var(--touch);
   padding: var(--s3) var(--s4);
   border-radius: var(--radius);
-  background: var(--bone);
-  color: var(--ink-900);
+  background: var(--text);
+  color: var(--paper);
   font-size: var(--text-base);
   font-stretch: 96%;
   font-weight: 700;
@@ -455,7 +455,7 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   padding: var(--s3);
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--fresh-delayed) 45%, transparent);
-  background: color-mix(in srgb, var(--ink-850) 94%, transparent);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   color: var(--fresh-delayed);
@@ -467,10 +467,10 @@ body:has(.sheet[data-detent="full"]) .mapctl {
 
 .credits {
   padding: var(--s5) 0 var(--s2);
-  color: var(--bone-faint);
+  color: var(--text-faint);
   font-size: var(--text-xs);
   line-height: 1.6;
-  border-top: 1px solid var(--ink-700);
+  border-top: 1px solid var(--edge);
   margin-top: var(--s5);
 }
 

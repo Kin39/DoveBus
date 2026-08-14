@@ -4,6 +4,9 @@ import { clear, el } from "../dom.js";
 import { clockTime, delayView, titleCase } from "../format.js";
 import { FreshnessMeter } from "../freshness.js";
 
+/** Below this the guess is smaller than GPS noise and not worth a sentence. */
+const ESTIMATE_VISIBLE_M = 40;
+
 export interface TripViewOptions {
   readonly onBack: () => void;
   /** Fired on every live payload so the map can move the bus and redraw the trail. */
@@ -27,6 +30,7 @@ export class TripView {
   #detail: TripDetail | null = null;
   #live: LiveTrip | null = null;
   #connected = true;
+  #advanced = 0;
 
   constructor(options: TripViewOptions) {
     this.#options = options;
@@ -39,6 +43,29 @@ export class TripView {
     this.#live = detail.live;
     this.#render();
     this.#connect(detail.trip.tripId, detail.trip.date);
+  }
+
+  /**
+   * Says how far the marker has been advanced past the last real fix.
+   *
+   * The bus is drawn where we think it is, not where we last saw it — so the
+   * size of that assumption is stated in words as well as drawn on the map,
+   * rather than left for the rider to infer from a moving dot.
+   */
+  setEstimate(advancedMetres: number): void {
+    this.#advanced = advancedMetres;
+    this.#renderEstimate();
+  }
+
+  #renderEstimate(): void {
+    const node = this.element.querySelector("#trip-estimate");
+    if (!(node instanceof HTMLElement)) return;
+    const metres = Math.round(this.#advanced);
+    node.hidden = metres < ESTIMATE_VISIBLE_M;
+    node.textContent =
+      metres >= 1000
+        ? `Posizione stimata: avanzata di ~${(metres / 1000).toFixed(1)} km dall'ultimo dato ricevuto.`
+        : `Posizione stimata: avanzata di ~${metres} m dall'ultimo dato ricevuto.`;
   }
 
   close(): void {
@@ -176,13 +203,18 @@ export class TripView {
 
     status.append(this.#meter.element, badges);
 
-    if (live.trail.length > 1) {
-      status.append(
-        el("p", {
-          class: "status__trail",
-          text: `Tracciato: ${live.trail.length} posizioni da quando DoveBus segue questa corsa.`,
-        }),
-      );
-    }
+    status.append(
+      el("p", { class: "status__trail", id: "trip-estimate" }),
+      el("p", {
+        class: "status__trail",
+        // The green line is a reconstruction and the dots are observations, and
+        // the difference between those two is not something to leave implicit.
+        text:
+          live.trail.length > 1
+            ? `Percorso compiuto ricostruito sul tracciato della linea. I punti sono le ${live.trail.length} posizioni ricevute da quando DoveBus segue questa corsa.`
+            : "Percorso compiuto ricostruito sul tracciato della linea.",
+      }),
+    );
+    this.#renderEstimate();
   }
 }

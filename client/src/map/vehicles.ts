@@ -1,29 +1,28 @@
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import type { Vehicle } from "../api/types.js";
-import { ageFromTimestamp, bucketOf } from "../ui/format.js";
+import { ageFromTimestamp, bucketOf, MAX_VISIBLE_AGE_S } from "../ui/format.js";
+import { type Estimate, estimate, type Fix } from "./estimate.js";
+import type { RouteGeometry } from "./route.js";
 
 const SOURCE_ID = "vehicles";
 export const VEHICLE_LAYER_ID = "vehicles-dot";
 const SELECTED_LAYER_ID = "vehicles-selected";
 
 /**
- * How long a bus takes to glide from its previous position to the new one.
+ * How often the estimated positions are rewritten.
  *
- * Purely graphical, and shorter than the ~120 s the feed actually takes to
- * refresh: the point is to stop a thousand markers from teleporting, not to
- * pretend the bus is being tracked continuously. The age readout is unaffected
- * by this animation and keeps counting from the bus's own clock.
+ * Not every frame, deliberately. A bus at 50 km/h covers 13.9 m per second,
+ * which at street zoom is under two pixels — so five updates a second are
+ * already smoother than the eye can resolve for this subject, while sixty would
+ * mean re-parsing a thousand-feature collection sixty times a second on a phone.
  */
-const GLIDE_MS = 1400;
+const TICK_MS = 200;
 
-interface Rendered {
-  readonly vehicle: Vehicle;
-  /** Where the marker is drawn right now — not necessarily where the bus is. */
-  fromLon: number;
-  fromLat: number;
-  toLon: number;
-  toLat: number;
-  startedAt: number;
+interface Tracked {
+  vehicle: Vehicle;
+  /** The two most recent positions the bus reported, oldest first. */
+  previous: Fix | null;
+  latest: Fix;
 }
 
 /**
@@ -31,14 +30,22 @@ interface Rendered {
  *
  * Deliberately not DOM markers: a busy viewport is several hundred buses and the
  * whole region is over a thousand, which no phone will keep at 60 fps as
- * individual nodes. One source, two circle layers, and the interpolation runs on
- * the source data rather than on any element's transform.
+ * individual nodes.
+ *
+ * Markers do not wait for a fix to move. The feed publishes roughly every two
+ * minutes and a bus covers real ground in that time, so each one is advanced at
+ * the speed it was last observed travelling — along its route where one is
+ * known, along its last heading otherwise. What was assumed is never hidden: the
+ * age is printed, the colour ages with it, and a bus we have not heard from in
+ * five minutes leaves the map instead of being drawn as though it were still
+ * being tracked.
  */
 export class VehicleLayer {
   readonly #map: MapLibreMap;
-  readonly #rendered = new Map<string, Rendered>();
+  readonly #tracked = new Map<string, Tracked>();
   #selectedKey: string | null = null;
-  #frame: number | null = null;
+  #selectedRoute: RouteGeometry | null = null;
+  #timer: number | null = null;
   #reducedMotion: boolean;
 
   constructor(map: MapLibreMap) {
@@ -63,43 +70,22 @@ export class VehicleLayer {
       type: "circle",
       source: SOURCE_ID,
       paint: {
-        "circle-radius": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          // Small enough to read as a fleet when zoomed out over the region,
-          // large enough to be a 44 px-ish tap target in a city.
-          8,
-          3.2,
-          11,
-          5.5,
-          14,
-          8,
-          16,
-          11,
-        ],
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 3.2, 11, 5.5, 14, 8, 16, 11],
         "circle-color": [
           "match",
           ["get", "freshness"],
           "live",
-          "#4ff0c0",
+          "#0f9d76",
           "recent",
-          "#2bc39a",
+          "#12876a",
           "delayed",
-          "#ffb020",
-          "#6c7c91",
+          "#b06a00",
+          "#7a8798",
         ],
-        // A silent bus keeps its outline and loses its fill: you can still see
-        // that something is there, and that we no longer know it is.
-        "circle-opacity": ["match", ["get", "freshness"], "stale", 0.06, 0.92],
-        "circle-stroke-width": ["match", ["get", "freshness"], "stale", 1.2, 0.8],
-        "circle-stroke-color": [
-          "case",
-          ["get", "cancelled"],
-          "#ff5a5f",
-          ["match", ["get", "freshness"], "stale", "#6c7c91", "#06121c"],
-        ],
-        "circle-stroke-opacity": 0.85,
+        "circle-opacity": 0.95,
+        "circle-stroke-width": 1.4,
+        "circle-stroke-color": ["case", ["get", "cancelled"], "#c8102e", "#ffffff"],
+        "circle-stroke-opacity": 0.95,
       },
     });
 
@@ -109,56 +95,64 @@ export class VehicleLayer {
       source: SOURCE_ID,
       filter: ["==", ["get", "selected"], true],
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 8, 12, 13, 16, 20],
-        "circle-color": "#ffffff",
-        "circle-opacity": 0.14,
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#ffffff",
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 9, 12, 15, 16, 22],
+        "circle-color": "#0b3d33",
+        "circle-opacity": 0.1,
+        "circle-stroke-width": 2.5,
+        "circle-stroke-color": "#0b3d33",
       },
     });
   }
 
-  /** Replaces the fleet with a fresh snapshot, gliding markers that moved. */
+  /** Takes a fresh snapshot, keeping each bus's previous fix to estimate from. */
   update(vehicles: readonly Vehicle[]): void {
-    const now = performance.now();
-    const next = new Map<string, Rendered>();
+    const next = new Map<string, Tracked>();
 
     for (const vehicle of vehicles) {
-      const previous = this.#rendered.get(vehicle.key);
-      if (previous === undefined) {
-        next.set(vehicle.key, {
-          vehicle,
-          fromLon: vehicle.lon,
-          fromLat: vehicle.lat,
-          toLon: vehicle.lon,
-          toLat: vehicle.lat,
-          startedAt: now - GLIDE_MS,
-        });
-        continue;
-      }
-      const [lon, lat] = positionOf(previous, now);
+      const fix: Fix = {
+        lon: vehicle.lon,
+        lat: vehicle.lat,
+        // A bus with no clock of its own cannot be extrapolated, only placed.
+        at: vehicle.timestamp ?? 0,
+      };
+      const existing = this.#tracked.get(vehicle.key);
+      const moved = existing !== undefined && existing.latest.at !== fix.at;
+
+      // On first sight, take the earlier position the API sends rather than
+      // waiting to observe one. Without it a freshly opened map would sit
+      // motionless for a whole publisher cycle — about two minutes — before any
+      // bus had two fixes to measure a speed between.
+      const seeded: Fix | null =
+        vehicle.previous === null
+          ? null
+          : { lon: vehicle.previous.lon, lat: vehicle.previous.lat, at: vehicle.previous.at };
+
       next.set(vehicle.key, {
         vehicle,
-        // The glide starts wherever the marker actually is, so a snapshot
-        // arriving mid-animation does not snap the marker backwards.
-        fromLon: lon,
-        fromLat: lat,
-        toLon: vehicle.lon,
-        toLat: vehicle.lat,
-        startedAt: now,
+        previous: moved ? existing.latest : (existing?.previous ?? seeded),
+        latest: moved || existing === undefined ? fix : existing.latest,
       });
     }
 
-    this.#rendered.clear();
-    for (const [key, entry] of next) this.#rendered.set(key, entry);
-    this.#draw(now);
-    this.#animate();
+    this.#tracked.clear();
+    for (const [key, entry] of next) this.#tracked.set(key, entry);
+    this.#draw();
+    this.#start();
   }
 
-  select(key: string | null): void {
-    if (this.#selectedKey === key) return;
+  /**
+   * Marks one bus as the followed one, optionally with its route.
+   *
+   * The route is what lets its estimate follow the road rather than fly straight
+   * on, and the followed bus is also the one exempt from the age cutoff: making
+   * it vanish while a rider is watching it would be the worst possible moment to
+   * remove it from the map.
+   */
+  select(key: string | null, route: RouteGeometry | null = null): void {
+    if (this.#selectedKey === key && this.#selectedRoute === route) return;
     this.#selectedKey = key;
-    this.#draw(performance.now());
+    this.#selectedRoute = route;
+    this.#draw();
   }
 
   get selectedKey(): string | null {
@@ -166,69 +160,74 @@ export class VehicleLayer {
   }
 
   vehicleAt(key: string): Vehicle | null {
-    return this.#rendered.get(key)?.vehicle ?? null;
+    return this.#tracked.get(key)?.vehicle ?? null;
+  }
+
+  /** Where a bus is being drawn right now, and how much of that was assumed. */
+  estimateFor(key: string): Estimate | null {
+    const entry = this.#tracked.get(key);
+    if (!entry) return null;
+    const route = key === this.#selectedKey ? this.#selectedRoute : null;
+    return estimate(entry.previous, entry.latest, Date.now() / 1000, route);
   }
 
   clear(): void {
-    this.#rendered.clear();
-    this.#draw(performance.now());
+    this.#tracked.clear();
+    this.#draw();
   }
 
   destroy(): void {
-    if (this.#frame !== null) cancelAnimationFrame(this.#frame);
-    this.#frame = null;
+    if (this.#timer !== null) clearInterval(this.#timer);
+    this.#timer = null;
   }
 
-  #animate(): void {
-    if (this.#reducedMotion || this.#frame !== null) return;
-
-    const step = (): void => {
-      const now = performance.now();
-      const moving = this.#draw(now);
-      this.#frame = moving ? requestAnimationFrame(step) : null;
-    };
-    this.#frame = requestAnimationFrame(step);
+  #start(): void {
+    if (this.#timer !== null) return;
+    // Even with reduced motion the positions must keep updating — the estimate
+    // is information, not decoration. Only the cadence relaxes.
+    const interval = this.#reducedMotion ? 1000 : TICK_MS;
+    this.#timer = window.setInterval(() => this.#draw(), interval);
   }
 
-  /** Writes the current frame to the source. Returns whether anything is still moving. */
-  #draw(now: number): boolean {
+  #draw(): void {
     const source = this.#map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
-    if (!source) return false;
+    if (!source) return;
 
-    let moving = false;
+    const nowMs = Date.now();
+    const nowSeconds = nowMs / 1000;
     const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
 
-    for (const entry of this.#rendered.values()) {
-      const [lon, lat] = this.#reducedMotion ? [entry.toLon, entry.toLat] : positionOf(entry, now);
-      if (now - entry.startedAt < GLIDE_MS) moving = true;
-
+    for (const entry of this.#tracked.values()) {
+      const selected = entry.vehicle.key === this.#selectedKey;
       // The bucket is recomputed here rather than trusted from the payload: the
       // fix keeps ageing between snapshots, and a colour frozen on delivery
       // would keep claiming "recente" long after it stopped being true.
-      const age = ageFromTimestamp(entry.vehicle.timestamp);
+      const age = ageFromTimestamp(entry.vehicle.timestamp, nowMs);
+
+      // Past the cutoff we no longer know enough to draw a bus at all — except
+      // the one being followed, which stays and says so.
+      if (!selected && (age === null || age > MAX_VISIBLE_AGE_S)) continue;
+
+      const position = estimate(
+        entry.previous,
+        entry.latest,
+        nowSeconds,
+        selected ? this.#selectedRoute : null,
+      );
+
       features.push({
         type: "Feature",
-        geometry: { type: "Point", coordinates: [lon, lat] },
+        geometry: { type: "Point", coordinates: [position.point[0], position.point[1]] },
         properties: {
           key: entry.vehicle.key,
           line: entry.vehicle.line,
           freshness: bucketOf(age),
           cancelled: entry.vehicle.cancelled,
-          selected: entry.vehicle.key === this.#selectedKey,
+          selected,
         },
       });
     }
 
     source.setData({ type: "FeatureCollection", features });
-    return moving;
   }
-}
-
-function positionOf(entry: Rendered, now: number): [number, number] {
-  const progress = Math.min(1, (now - entry.startedAt) / GLIDE_MS);
-  const eased = progress * (2 - progress);
-  return [
-    entry.fromLon + (entry.toLon - entry.fromLon) * eased,
-    entry.fromLat + (entry.toLat - entry.fromLat) * eased,
-  ];
 }

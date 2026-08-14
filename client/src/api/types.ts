@@ -25,6 +25,15 @@ export interface Vehicle {
   readonly delaySeconds: number | null;
   readonly scheduleRelationship: string | null;
   readonly cancelled: boolean;
+  /** Where this bus was before it was here — the other end of a speed measurement. */
+  readonly previous: PreviousFix | null;
+}
+
+export interface PreviousFix {
+  readonly lat: number;
+  readonly lon: number;
+  /** Seconds since epoch, matching `Vehicle.timestamp`. */
+  readonly at: number;
 }
 
 export interface TrailPoint {

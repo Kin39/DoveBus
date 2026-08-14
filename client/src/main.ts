@@ -10,7 +10,7 @@ import "./styles/panel.css";
 import "./styles/trip.css";
 
 import { ApiError, fetchTrip, fetchVehicles, searchLine, searchOd } from "./api/client.js";
-import type { LiveTrip, TripDetail, Vehicle } from "./api/types.js";
+import type { LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";
 import { MapController } from "./map/map.js";
 import { boundsOf } from "./map/trip.js";
 import { clear, el, query } from "./ui/dom.js";
@@ -36,6 +36,9 @@ const VIEWPORT_SETTLE_MS = 400;
 /** The side column's width plus its margins, matching `sheet.css` above 720 px. */
 const WIDE_PANEL_WIDTH = 380 + 32;
 
+/** Matches the marker cadence: the trail must not lag the bus drawing it. */
+const PROGRESS_TICK_MS = 200;
+
 type View = "search" | "results" | "trip";
 
 class App {
@@ -55,6 +58,11 @@ class App {
   #openTrip: TripDetail | null = null;
   /** The day the open trip list was searched for — not necessarily today. */
   #searchDate = todayServiceDate();
+  /** The buttons a running request disabled, held so they can be given back. */
+  #busyButtons: HTMLButtonElement[] = [];
+  /** The positions the followed bus genuinely reported, drawn as marks. */
+  #trail: readonly TrailPoint[] = [];
+  #progressTimer: number | null = null;
 
   constructor() {
     this.#scroll = query(document, "#sheet-scroll");
@@ -72,7 +80,10 @@ class App {
       onHeightChange: (height) => this.#onSheetHeight(height),
     });
 
-    this.#search = new SearchPanel({ onSubmit: (q) => void this.#runSearch(q) });
+    this.#search = new SearchPanel({
+      onSubmit: (q) => void this.#runSearch(q),
+      onFieldFocus: () => this.#sheet.snapTo("full"),
+    });
     this.#results = new ResultsView({
       onSelect: (tripId) => void this.#openTripView(tripId),
       onBack: () => this.#showSearch(),
@@ -109,6 +120,7 @@ class App {
 
   #showSearch(): void {
     this.#view = "search";
+    this.#stopProgressTicker();
     this.#trip.close();
     this.#map.trip?.clear();
     this.#map.vehicles?.select(null);
@@ -124,6 +136,7 @@ class App {
       return;
     }
     this.#view = "results";
+    this.#stopProgressTicker();
     this.#trip.close();
     this.#map.trip?.clear();
     this.#map.vehicles?.select(null);
@@ -191,10 +204,16 @@ class App {
       this.#swapFooter();
       this.#sheet.snapTo("half");
 
-      this.#map.trip?.setShape(detail.shape);
+      const route = this.#map.trip?.setShape(detail.shape) ?? null;
       this.#map.trip?.setStops(detail.stops);
-      this.#map.trip?.setTrail(detail.live?.trail ?? []);
-      this.#map.vehicles?.select(detail.live?.vehicle.key ?? null);
+      // The route goes to the layer too: it is what lets the followed bus be
+      // advanced along the road instead of straight on, and it exempts that bus
+      // from the age cutoff so it never vanishes mid-watch.
+      this.#map.vehicles?.select(detail.live?.vehicle.key ?? null, route);
+      this.#trail = detail.live?.trail ?? [];
+      this.#map.trip?.setObserved(this.#trail);
+      this.#drawProgress();
+      this.#startProgressTicker();
 
       const bounds = boundsOf(detail.shape);
       if (bounds) this.#map.fit(bounds);
@@ -206,11 +225,39 @@ class App {
   }
 
   #onTripLive(live: LiveTrip | null): void {
-    this.#map.trip?.setTrail(live?.trail ?? []);
-    this.#map.vehicles?.select(live?.vehicle.key ?? null);
+    this.#trail = live?.trail ?? [];
+    this.#map.trip?.setObserved(this.#trail);
+    this.#map.vehicles?.select(live?.vehicle.key ?? null, this.#map.trip?.route ?? null);
     // The stream is the authority for this one bus even when it sits outside the
     // viewport the fleet request asked about.
     if (live) this.#mergeVehicle(live.vehicle);
+    this.#drawProgress();
+  }
+
+  /**
+   * Redraws the travelled road and the uncertainty disc from the *estimated*
+   * position, on the same cadence the markers move at — otherwise the trail
+   * would stop at the last fix while the bus carried on ahead of it.
+   */
+  #startProgressTicker(): void {
+    if (this.#progressTimer !== null) return;
+    this.#progressTimer = window.setInterval(() => this.#drawProgress(), PROGRESS_TICK_MS);
+  }
+
+  #stopProgressTicker(): void {
+    if (this.#progressTimer !== null) window.clearInterval(this.#progressTimer);
+    this.#progressTimer = null;
+  }
+
+  #drawProgress(): void {
+    const trip = this.#map.trip;
+    const key = this.#map.vehicles?.selectedKey ?? null;
+    if (!trip || this.#view !== "trip") return;
+
+    const current = key === null ? null : (this.#map.vehicles?.estimateFor(key) ?? null);
+    trip.setProgress(current?.point ?? null, this.#trail);
+    trip.setUncertainty(current?.point ?? null, current?.uncertainty ?? 0);
+    this.#trip.setEstimate(Math.abs(current?.advanced ?? 0));
   }
 
   // ---- fleet -------------------------------------------------------------
@@ -315,7 +362,17 @@ class App {
 
   #setBusy(busy: boolean): void {
     document.body.classList.toggle("is-busy", busy);
-    for (const cta of document.querySelectorAll<HTMLButtonElement>(".cta")) cta.disabled = busy;
+    if (busy) {
+      this.#busyButtons = [...document.querySelectorAll<HTMLButtonElement>(".cta")];
+      for (const cta of this.#busyButtons) cta.disabled = true;
+      return;
+    }
+    // Re-enable exactly the buttons that were disabled, rather than re-querying
+    // the document: a successful search swaps the search panel out of the DOM
+    // before this runs, so a fresh query would miss the now-detached button and
+    // leave it disabled — and `cursor: progress` on it — forever.
+    for (const cta of this.#busyButtons) cta.disabled = false;
+    this.#busyButtons = [];
   }
 
   #reportError(error: unknown): void {

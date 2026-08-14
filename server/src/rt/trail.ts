@@ -57,6 +57,17 @@ export class TrailBuffer {
     return this.#points[this.#points.length - 1] ?? null;
   }
 
+  /**
+   * The fix before the current one.
+   *
+   * Repeats are never stored, so this is genuinely the previous *position* and
+   * not the same place reported twice — which is what makes it usable as the
+   * other end of a speed measurement.
+   */
+  get previous(): TrailPoint | null {
+    return this.#points[this.#points.length - 2] ?? null;
+  }
+
   get size(): number {
     return this.#points.length;
   }
