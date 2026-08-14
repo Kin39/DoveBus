@@ -6,11 +6,12 @@ Real-time map of Autolinee Toscane buses in Tuscany, with two search modes
 Plan: [`DoveBus-plan.md`](DoveBus-plan.md) · Data-source validation:
 [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md)
 
-**Status:** Phase 3 complete — static import + comune enrichment + refresh job
+**Status:** Phase 4 complete — static import + comune enrichment + refresh job
 (Phase 1), the realtime pollers holding live positions, delays, trails and
-freshness in memory (Phase 2), and the HTTP API on top of both: both search
-modes, live vehicles, trip detail with the planned route, and an SSE stream.
-The frontend is next.
+freshness in memory (Phase 2), the HTTP API on top of both (Phase 3), and the
+mobile-first MapLibre frontend: full-screen map, draggable search sheet, both
+search modes, live trip view with trail, planned route, freshness and delay
+(Phase 4). Deploy is next.
 
 ---
 
@@ -133,6 +134,52 @@ Environment=DOVEBUS_HOST=127.0.0.1 DOVEBUS_PORT=3200
 [Install]
 WantedBy=multi-user.target
 ```
+
+## Running the frontend
+
+The API must be running first — the frontend has no fixtures and talks to the
+real thing.
+
+```bash
+npm run dev         # Vite on http://localhost:5280
+```
+
+Port 5280 is fixed with `strictPort`, so a clash fails loudly instead of quietly
+moving to 5281. The API address lives in one place, `client/.env`:
+
+```bash
+cp client/.env.example client/.env   # VITE_API_BASE=http://localhost:3200
+```
+
+```bash
+npm run build:client   # typecheck + static bundle into client/dist
+```
+
+`client/dist` is what Netlify serves. Nothing else is needed at runtime: the
+basemap is public raster tiles and the fonts are bundled.
+
+### The screenshot loop
+
+The interface is built by looking at it, at every viewport, after every change —
+so the check is a committed script rather than something run by hand.
+
+```bash
+npm run shots              # 12 states × 6 viewports, against the real API
+npm run shots -- 375x812   # just the primary target
+```
+
+It drives the real app with Playwright and writes PNGs plus a `REPORT.md` into
+`client/shots/` (gitignored). Alongside the pictures it asserts what a picture
+cannot show: no horizontal page scroll, no interactive target under 44 px, no
+unexpected console errors, and that every state is reachable at all. A round
+exits non-zero if anything is found.
+
+The states it shoots — the empty map, the search sheet on both tabs, an
+autocomplete mid-type, a results list, a deliberately long-named one, an empty
+result, a live trip, a scheduled one, a tapped vehicle, and the offline case —
+are where the risk is. It runs against live data on purpose: Tuscan comune names
+run long, a busy viewport is hundreds of buses, and fixtures would hide exactly
+the overflow the loop exists to catch.
 
 ## Checking a build
 
@@ -323,6 +370,46 @@ Design points worth knowing before changing it:
 > anywhere in Prato across a whole service day reads all of them and takes ~1.5 s.
 > With a time window — which is what the search panel sends — the same pair is
 > half a second, and every other shape of query is milliseconds.
+
+## How the frontend works
+
+```
+client/src
+  ├─ api/          typed fetch of the envelope + the SSE url
+  ├─ map/          the only place MapLibre exists
+  │    ├─ style    petrol-tinted raster basemap (no API key)
+  │    ├─ vehicles one GeoJSON source, rAF interpolation on the source data
+  │    └─ trip     planned shape (dashed) · trail (gradient) · stop beads
+  ├─ ui/           bottom sheet, combobox, the freshness meter, views
+  └─ styles/       tokens → base → sheet → panel → trip
+```
+
+Four decisions carry the design:
+
+**The map owns the screen; the sheet owns the thumb.** Everything a rider does
+happens in a bottom sheet with three detents, draggable, flick-aware, and
+keyboard-operable. Above 720 px the same sheet becomes a left column and the map
+takes the rest — the desktop layout is what the phone grows into, not the
+reverse. The map's `padding` follows the sheet, so flying to a bus never parks
+it behind the panel.
+
+**Vehicles are a layer, never DOM markers.** A busy viewport is several hundred
+buses and the region is over a thousand; as element nodes that will not hold a
+frame rate on a mid-range phone. One `geojson` source, two circle layers, and
+the interpolation between the last two GPS reads writes to the source data on
+`requestAnimationFrame` — graphical only, and it never touches the reported age.
+
+**Freshness is recomputed on the client, continuously.** The server's bucket is
+correct when it is sent and wrong a minute later, because the fix keeps ageing
+while the screen is open. Both the map colour and the meter derive the age from
+the bus's own `timestamp` on every frame, so a stalled feed *looks* stalled and
+nothing can keep claiming "recente" for a bus that went silent. The exact age in
+seconds is always printed next to the word.
+
+**Colour means data, never decoration.** The interface is ink and bone; the only
+saturated colours are the freshness ramp (aqua → amber, draining to a hollow
+grey ring when a bus stops reporting), the delay badge on its own separate
+scale, and red, which is reserved for a cancelled run and appears nowhere else.
 
 ## Attribution (CC BY — required)
 

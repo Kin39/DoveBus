@@ -1,0 +1,26 @@
+{
+  "name": "@dovebus/client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "shots": "tsx scripts/shots.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/martian-mono": "^5.3.0",
+    "maplibre-gl": "^5.9.0"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.10.2",
+    "playwright": "^1.62.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.2",
+    "vite": "^7.3.0"
+  }
+}

@@ -1,0 +1,92 @@
+/*
+ * DoveBus design tokens.
+ *
+ * One editorial rule governs this palette: **the chrome is monochrome, and every
+ * saturated colour means something.** A map is already a coloured surface, so any
+ * decorative colour in the interface competes with the data drawn on top of it.
+ * Ink and bone carry the UI; aqua, amber and red are reserved for freshness,
+ * delay and cancellation respectively, and appear nowhere else.
+ */
+
+:root {
+  /* ---- Ink: a petrol blue-black, not a neutral black. Reads as night road,
+     holds contrast in direct sunlight, and lets the basemap sink away. ---- */
+  --ink-900: #060a11;
+  --ink-850: #0a1019;
+  --ink-800: #0e1622;
+  --ink-750: #131d2c;
+  --ink-700: #1a2536;
+  --ink-600: #243247;
+  --ink-500: #33445e;
+
+  /* ---- Bone: warm off-white used as *ink on dark*, the inverse of the usual
+     cream-background move. It is the colour of an enamel stop plate at night. ---- */
+  --bone: #f2efe6;
+  --bone-dim: #97a3b4;
+  --bone-faint: #5d6b7e;
+
+  /* ---- Data colours. Freshness is a confidence ramp, not a rainbow: full
+     saturation means "we know where this bus is", and the colour drains out as
+     the fix ages. Stale is grey, never red — red would say "danger" when the
+     truth is only "we have not heard from it". ---- */
+  --fresh-live: #4ff0c0;
+  --fresh-recent: #2bc39a;
+  --fresh-delayed: #ffb020;
+  --fresh-stale: #6c7c91;
+
+  /* Delay is a separate axis from freshness and must never borrow its colours. */
+  --delay-early: #7fb2ff;
+  --delay-ontime: var(--bone-dim);
+  --delay-late: #ffb020;
+  --delay-heavy: #ff8a3d;
+
+  /* The only alarm in the product. A suppressed run is the one thing a rider
+     must not have to infer. */
+  --alarm: #ff5a5f;
+
+  /* Selection is monochrome on purpose: the bus you picked goes bone-white so it
+     separates from every data colour around it. */
+  --selected: #ffffff;
+
+  /* ---- Type. One variable grotesque carries the whole interface at three
+     widths — condensed is a functional choice, since GTFS ships stop names like
+     "CASTELNUOVO DI VAL DI CECINA (BIVIO)" in caps and they must not wrap to
+     three lines on a 375 px phone. The mono is rationed to one job: the live
+     numerals that make up the signature readout. ---- */
+  --font-ui: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-data: "Martian Mono Variable", ui-monospace, "SF Mono", monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+
+  /* ---- Space. A 4 px base; the sheet's own rhythm is 16. ---- */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.25rem;
+  --s6: 1.5rem;
+  --s8: 2rem;
+
+  /* Nothing interactive is ever smaller than this. There is no hover on a bus. */
+  --touch: 44px;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  --shadow-sheet: 0 -18px 44px rgb(3 6 12 / 0.66);
+  --shadow-float: 0 6px 20px rgb(3 6 12 / 0.5);
+
+  /* Safe areas: this is a phone-first product and the sheet sits on the home
+     indicator if it does not ask. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}

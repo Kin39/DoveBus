@@ -6,9 +6,13 @@
   "license": "MIT",
   "type": "module",
   "workspaces": [
-    "server"
+    "server",
+    "client"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace=client",
+    "build:client": "npm run build --workspace=client",
+    "shots": "npm run shots --workspace=client --",
     "import": "npm run import --workspace=server --",
     "refresh": "npm run refresh --workspace=server --",
     "verify": "npm run verify --workspace=server --",
@@ -17,10 +21,10 @@
     "test": "npm run test --workspace=server",
     "coverage": "npm run coverage --workspace=server",
     "typecheck": "npm run typecheck --workspace=server",
-    "lint": "biome lint server",
-    "check": "biome check server",
-    "check:fix": "biome check --write server",
-    "format": "biome format --write server"
+    "lint": "biome lint server client/src client/scripts",
+    "check": "biome check server client/src client/scripts",
+    "check:fix": "biome check --write server client/src client/scripts",
+    "format": "biome format --write server client/src client/scripts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8"

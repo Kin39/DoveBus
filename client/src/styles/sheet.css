@@ -1,0 +1,111 @@
+/*
+ * The bottom sheet.
+ *
+ * Everything a rider does happens here, because the map owns the screen and a
+ * thumb owns the bottom of it. Height is animated rather than a transform so the
+ * scroller inside always measures against a real box.
+ */
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  height: 45vh;
+  background: color-mix(in srgb, var(--ink-850) 96%, transparent);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  border-top: 1px solid var(--ink-600);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-sheet);
+  /* Hairline of light along the top edge — the sheet reads as lifted rather
+     than as a panel welded to the bottom of the screen. */
+  outline: 1px solid color-mix(in srgb, var(--bone) 6%, transparent);
+  outline-offset: -1px;
+}
+
+/* The drag target is a full 44 px even though the grip drawn inside it is a
+   4 px line: this is the control a thumb reaches for first. */
+.sheet__handle {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s3) 0;
+  flex: none;
+  touch-action: none;
+}
+
+.sheet__grip {
+  display: block;
+  width: 42px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-500);
+  transition:
+    background 160ms ease,
+    width 160ms ease;
+}
+
+.sheet__handle:active .sheet__grip {
+  background: var(--bone-dim);
+  width: 54px;
+}
+
+.sheet__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--s4) calc(var(--safe-bottom) + var(--s4));
+}
+
+/* On a phone the sheet is the width of the screen; on a tablet or a desktop it
+   becomes a column pinned to the left, so the map keeps most of the view. */
+@media (min-width: 720px) {
+  .sheet {
+    left: var(--s4);
+    bottom: var(--s4);
+    width: 380px;
+    right: auto;
+    /* biome-ignore lint/complexity/noImportantStyles: the drag sets `height` as an
+       inline style, and above 720 px the sheet stops being draggable and must
+       size to its content instead — only `!important` outranks an inline rule. */
+    height: auto !important;
+    max-height: calc(100vh - var(--s8));
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--ink-600);
+  }
+
+  .sheet__handle {
+    display: none;
+  }
+
+  .sheet__scroll {
+    padding-top: var(--s4);
+    max-height: calc(100vh - var(--s8));
+  }
+
+  .mapctl {
+    bottom: var(--s4);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* The sheet becomes a column pinned to the top-left, so the brand has to step
+     out from behind it rather than sit underneath. */
+  .topbar {
+    left: calc(380px + var(--s4) * 2);
+  }
+
+  .toast {
+    left: auto;
+    right: var(--s4);
+    bottom: var(--s4);
+    max-width: 360px;
+  }
+}

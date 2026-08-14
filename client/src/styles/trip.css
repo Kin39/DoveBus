@@ -1,0 +1,180 @@
+/* The live trip view, and the callout a tapped bus opens. */
+
+.viewhead__headsign {
+  font-size: var(--text-base);
+  font-stretch: 84%;
+  font-weight: 600;
+  color: var(--bone-dim);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  margin-bottom: var(--s4);
+  border-radius: var(--radius);
+  border: 1px solid var(--ink-700);
+  background: var(--ink-800);
+}
+
+.status__none {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.status__nonetitle {
+  font-size: var(--text-base);
+  font-stretch: 92%;
+  font-weight: 600;
+  color: var(--bone);
+}
+
+.status__nonehint {
+  font-size: var(--text-sm);
+  color: var(--bone-dim);
+}
+
+/* The trail's honest caveat: it starts where this backend started watching. */
+.status__trail {
+  font-size: var(--text-xs);
+  color: var(--bone-faint);
+  line-height: 1.5;
+}
+
+/* ---- stops -------------------------------------------------------------- */
+
+.stops__title {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--bone-faint);
+  margin-bottom: var(--s2);
+}
+
+.stops__list {
+  display: flex;
+  flex-direction: column;
+  /* A single hairline runs the length of the list, standing in for the route
+     itself — the stops are beads on it. */
+  border-left: 1px solid var(--ink-600);
+  margin-left: 3.2rem;
+}
+
+.stops__item {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  min-height: 34px;
+  padding: var(--s1) 0 var(--s1) var(--s4);
+}
+
+.stops__item::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0.85rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-850);
+  border: 1.5px solid var(--ink-500);
+}
+
+.stops__time {
+  position: absolute;
+  left: -3.2rem;
+  width: 2.6rem;
+  text-align: right;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--bone-dim);
+}
+
+.stops__name {
+  font-size: var(--text-sm);
+  font-stretch: 88%;
+  font-weight: 450;
+  color: var(--bone);
+  min-width: 0;
+}
+
+/* ---- callout ------------------------------------------------------------ */
+
+.callout {
+  position: fixed;
+  left: var(--s3);
+  right: var(--s3);
+  bottom: calc(var(--sheet-height, 45vh) + var(--s3) + var(--touch) + var(--s2));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  border-radius: var(--radius);
+  border: 1px solid var(--ink-600);
+  background: color-mix(in srgb, var(--ink-850) 95%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-float);
+  transition: bottom 340ms var(--ease-sheet);
+}
+
+.callout[hidden] {
+  display: none;
+}
+
+.callout__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.callout__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-stretch: 90%;
+  font-weight: 600;
+  color: var(--bone-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.callout__close {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  margin: calc(var(--s2) * -1);
+  flex: none;
+}
+
+.callout__close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--bone-faint);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+@media (min-width: 720px) {
+  .callout {
+    left: auto;
+    right: var(--s4);
+    bottom: calc(var(--s4) + var(--touch) + var(--s3));
+    width: 340px;
+  }
+}

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#060a11" />
+    <meta
+      name="description"
+      content="Dov'è il tuo bus in Toscana, adesso. Posizione in tempo reale delle corse Autolinee Toscane, con ritardi e percorso."
+    />
+    <title>DoveBus — i bus della Toscana, adesso</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#sheet">Vai alla ricerca</a>
+
+    <div id="map" class="map" role="application" aria-label="Mappa dei bus in Toscana"></div>
+
+    <header class="topbar" id="topbar">
+      <p class="brand">
+        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span>
+      </p>
+      <p class="fleet" id="fleet" aria-live="polite">
+        <span class="fleet__count" id="fleet-count">—</span>
+        <span class="fleet__unit">bus in vista</span>
+      </p>
+    </header>
+
+    <div class="mapctl">
+      <button
+        type="button"
+        class="mapctl__button"
+        id="recenter"
+        aria-label="Inquadra tutta la Toscana"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
+        </svg>
+      </button>
+    </div>
+
+    <section class="sheet" id="sheet" aria-label="Ricerca corse">
+      <button
+        type="button"
+        class="sheet__handle"
+        id="sheet-handle"
+        aria-label="Trascina per ridimensionare il pannello"
+      >
+        <span class="sheet__grip" aria-hidden="true"></span>
+      </button>
+      <div class="sheet__scroll" id="sheet-scroll"></div>
+    </section>
+
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
