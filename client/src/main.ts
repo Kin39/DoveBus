@@ -247,6 +247,7 @@ class App {
   #stopProgressTicker(): void {
     if (this.#progressTimer !== null) window.clearInterval(this.#progressTimer);
     this.#progressTimer = null;
+    this.#trail = [];
   }
 
   #drawProgress(): void {

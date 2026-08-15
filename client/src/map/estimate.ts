@@ -1,3 +1,4 @@
+import { MAX_VISIBLE_AGE_S } from "../ui/format.js";
 import type { LngLat, RouteGeometry } from "./route.js";
 import { MAX_OFF_ROUTE_M, metresBetween } from "./route.js";
 
@@ -11,7 +12,11 @@ export interface Fix {
 
 export interface Estimate {
   readonly point: LngLat;
-  /** Seconds since the fix this was extrapolated from. Zero means "this is measured". */
+  /**
+   * Seconds since the fix this was extrapolated from. Zero means "this is
+   * measured". Reported in full even when the advance stopped being extended —
+   * the age is a fact, and only the guess is bounded.
+   */
   readonly elapsed: number;
   /** Metres the marker has been advanced past the last known position. */
   readonly advanced: number;
@@ -57,6 +62,18 @@ export function estimate(
   route?: RouteGeometry | null,
 ): Estimate {
   const elapsed = Math.max(0, nowSeconds - latest.at);
+  /**
+   * The guess stops being extended at the age where an ordinary bus would have
+   * left the map entirely.
+   *
+   * The followed bus is deliberately exempt from that cutoff — vanishing while a
+   * rider watches is the worst possible moment to disappear — but exempting it
+   * from *hiding* must not exempt it from *honesty*. Left unbounded, a selected
+   * bus that went silent drifted 58.7 km in an hour and the interface announced
+   * the number. Past this point the marker holds its last estimate and the
+   * meter, which never stops counting, carries the truth.
+   */
+  const guessed = Math.min(elapsed, MAX_VISIBLE_AGE_S);
   const still: Estimate = {
     point: [latest.lon, latest.lat],
     elapsed,
@@ -75,7 +92,7 @@ export function estimate(
       // detour, a diversion, or the wrong trip matched. Guessing along a road it
       // is not driving would be worse than not guessing at all.
       const speed = clampSpeed((to.distance - from.distance) / interval);
-      const advanced = speed * elapsed;
+      const advanced = speed * guessed;
       const point = route.at(to.distance + advanced);
       if (point) {
         return { point, elapsed, advanced, uncertainty: Math.abs(advanced) * UNCERTAINTY_RATIO };
@@ -91,12 +108,12 @@ export function estimate(
   // Continue along the last heading. Straight-line dead reckoning is crude, but
   // over one publisher cycle it is closer to the truth than a marker frozen two
   // minutes in the past.
-  const ratio = (speed * elapsed) / travelled;
+  const ratio = (speed * guessed) / travelled;
   const point: LngLat = [
     latest.lon + (latest.lon - previous.lon) * ratio,
     latest.lat + (latest.lat - previous.lat) * ratio,
   ];
-  const advanced = speed * elapsed;
+  const advanced = speed * guessed;
   return { point, elapsed, advanced, uncertainty: advanced * UNCERTAINTY_RATIO };
 }
 

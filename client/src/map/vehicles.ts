@@ -54,6 +54,12 @@ export class VehicleLayer {
     this.#reducedMotion = query.matches;
     query.addEventListener("change", (event) => {
       this.#reducedMotion = event.matches;
+      // Restart, or the cadence chosen at construction outlives the preference.
+      if (this.#timer !== null) {
+        clearInterval(this.#timer);
+        this.#timer = null;
+        this.#start();
+      }
     });
     this.#install();
   }
@@ -159,10 +165,6 @@ export class VehicleLayer {
     return this.#selectedKey;
   }
 
-  vehicleAt(key: string): Vehicle | null {
-    return this.#tracked.get(key)?.vehicle ?? null;
-  }
-
   /** Where a bus is being drawn right now, and how much of that was assumed. */
   estimateFor(key: string): Estimate | null {
     const entry = this.#tracked.get(key);
@@ -174,11 +176,6 @@ export class VehicleLayer {
   clear(): void {
     this.#tracked.clear();
     this.#draw();
-  }
-
-  destroy(): void {
-    if (this.#timer !== null) clearInterval(this.#timer);
-    this.#timer = null;
   }
 
   #start(): void {

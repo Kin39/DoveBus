@@ -435,7 +435,13 @@ map moves from its first response rather than after a two-minute wait: measured
 at **59% of markers moving within 14 seconds of a cold load**, against 0% before.
 What was assumed is never hidden: the trip view states how far the marker has
 been advanced past the last real fix, and a disc on the map shows how far off it
-could be.
+could be. **The guess stops being extended at five minutes** — the same age at
+which an ordinary bus leaves the map. The followed bus is exempt from that
+cutoff, because vanishing while a rider watches is the worst possible moment to
+disappear, but exempting it from *hiding* must not exempt it from honesty:
+unbounded, a selected bus that went silent drifted 58.7 km in an hour with the
+interface announcing the figure. Past the cap the marker holds and the meter,
+which never stops counting, carries the truth.
 
 **Freshness is recomputed on the client, continuously, and old buses leave.**
 The server's bucket is correct when it is sent and wrong a minute later, because

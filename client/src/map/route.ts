@@ -123,17 +123,6 @@ export class RouteGeometry {
     return [head, ...between, tail];
   }
 
-  /** Compass bearing of the route where the bus is, for pointing the marker. */
-  bearingAt(distance: number): number | null {
-    const here = this.at(distance);
-    const ahead = this.at(Math.min(this.length, distance + 25));
-    if (!here || !ahead || (here[0] === ahead[0] && here[1] === ahead[1])) return null;
-
-    const dx = (ahead[0] - here[0]) * Math.cos((here[1] * Math.PI) / 180);
-    const dy = ahead[1] - here[1];
-    return (Math.atan2(dx, dy) * 180) / Math.PI;
-  }
-
   #vertexAtOrBefore(distance: number): number {
     let low = 0;
     let high = this.#cumulative.length - 1;
