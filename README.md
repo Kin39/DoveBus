@@ -114,8 +114,9 @@ curl 'http://127.0.0.1:3200/api/search/od?comuneA=Arezzo&comuneB=Anghiari&from=0
   question is turned around: what share of the buses actually running are on
   trips this timetable has never heard of. Normal is ~3%; past 10% (with at least
   50 live trips, or the 04:00 fleet makes the ratio meaningless) the response
-  reports `timetable.stale` and `status: "degraded"`. This is not hypothetical —
-  see "when the timetable is replaced" below.
+  reports `timetable.stale` and `status: "degraded"` — **and the process
+  refreshes itself.** This is not hypothetical — see "when the timetable is
+  replaced" below.
 - **Vehicles carry their previous position.** `/api/vehicles` sends each bus's
   earlier fix alongside its current one, so a map can start moving markers on its
   first response instead of sitting frozen for a publisher cycle — about two
@@ -482,7 +483,26 @@ Two things follow. The refresh job is not optional maintenance — it is what ke
 the timetable describing reality, and it compares the download's SHA1 rather than
 trusting the declared dates. And `feed_end_date` is not a health signal on its
 own: a feed can stop being true long before it stops being valid, which is why
-`/healthz` now watches the match rate instead.
+`/healthz` watches the match rate instead.
+
+**The daily timer is now a safety net rather than the only defence.** The API
+checks the match rate every 5 minutes — a few hundred indexed lookups, free — and
+when it crosses the threshold it runs the refresh itself, as a child process. The
+window of a wrong timetable goes from "up to 24 hours" to "however long the
+download takes".
+
+It is deliberately hard to provoke, because each trigger costs 125 MB: a 50-trip
+sample floor, a threshold clear of normal extra service, one refresh at a time,
+and a one-hour cooldown that holds even while the ratio still looks bad — if a
+refresh did not fix it, the cause is upstream and repeating it will not help. A
+failed refresh is logged and the stale timetable keeps answering: old schedules
+beat no schedules. Set `DOVEBUS_AUTO_REFRESH=false` to leave it to the timer.
+
+The reason it spawns a child rather than importing in place: the rebuild is
+synchronous by design — better-sqlite3 is what makes five million rows fast — so
+running it in the API process would block the event loop for the full two
+minutes. The child builds into a staging file and renames it over the live one,
+and the API notices the swap by itself.
 
 ## Attribution (CC BY — required)
 

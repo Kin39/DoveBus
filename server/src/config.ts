@@ -117,6 +117,34 @@ export const MAX_UNMATCHED_TRIP_RATIO = 0.1;
  */
 export const MIN_TRIP_MATCH_SAMPLE = 50;
 
+/**
+ * How often the API asks whether its timetable still describes the live fleet.
+ *
+ * Cheap — a few hundred indexed lookups — so the limit is not cost but noise:
+ * checking faster than the realtime feed regenerates (~120 s) would just re-read
+ * the same fleet.
+ */
+export const TIMETABLE_CHECK_MS = 5 * 60_000;
+
+/**
+ * Minimum gap between two automatically triggered refreshes.
+ *
+ * Each one is a 125 MB download and a full rebuild. If a refresh did not fix the
+ * match rate, repeating it immediately will not either — the cause is upstream,
+ * and the daily timer is still there.
+ */
+export const TIMETABLE_REFRESH_COOLDOWN_MS = 60 * 60_000;
+
+/**
+ * Whether the API may refresh its own timetable when it goes stale.
+ *
+ * On by default: the alternative is serving schedules that no longer describe
+ * the buses on the road for up to a day, which is what happened on 2026-08-15.
+ * Off for anyone who would rather the scheduled job be the only thing that
+ * downloads 125 MB.
+ */
+export const AUTO_REFRESH = process.env.DOVEBUS_AUTO_REFRESH !== "false";
+
 /** How often a read re-stats the database file to notice the refresh job's atomic swap. */
 export const DB_RELOAD_CHECK_MS = 5_000;
 
