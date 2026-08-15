@@ -29,6 +29,8 @@ re-probed in Phase 0 on 2026-08-12 — see "0. Source validation").
 | OTP rejection | Confirmed: <1 GB → >100 GB (Germany 95 GB). Out of scope, as decided. |
 | Hosting | Render free spins down (~15 min) → unsuitable. Hetzner CX22 ~€3.99/mo; Railway ~$5–9/mo. Cloudflare Workers cron = 1-min granularity (rejected for MVP). |
 
+> **Feed republishing — observed 2026-08-15, after Phase 4.** The `/gtfs` artifact is **not stable for the validity window it declares**. A feed imported on 12/08 declaring `20260812→20260901` was replaced upstream by 15/08 with a different one (`20260815→20260904`, 270,823 trips against 207,987) while the original still had 17 days of declared validity left. Anything that trusts `feed_end_date` to decide freshness will be wrong for days at a time; the refresh job's SHA1 comparison is the check that works.
+
 **Two facts to design around:** RT feed is **GET-only, full-snapshot, ~120 s cadence** (poller = fetch→decode→replace, poll 30 s); static zip is **~125 MB / 10 files** with **shapes.txt 277 MB + stop_times.txt 268 MB** (refresh-job + disk budget).
 
 ---
@@ -188,6 +190,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 7. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
 ### Phase 2+
+- **Expose the timetable match rate as a metric**, not only as a health flag — it moved 3% → 21% → 0.3% across the 2026-08-15 republish and was the only thing that noticed.
 - `alerts` feed (service advisories/disruptions banner).
 - **Shape-based full travelled-path** reconstruction (beyond the RAM buffer window).
 - Persistent long-term position history.
@@ -207,7 +210,8 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 | RT `trip_id` ≠ static `trip_id` (breaks live-tracking of a selected run) | ~~High~~ **RETIRED** | **Phase 0 verified: 96.6% exact, 100% route+direction+shape agreement.** Fallback on route+start_time+direction for the ~3.4% RT-only tail (route_id ≥1150). |
 | Comune enrichment wrong near borders / San-Gimignano-style false positives | ~~Medium~~ **Low** | **Phase 0: 99.3% PIP hit.** **Phase 1 on the full 28,964 stops: the false positive DID appear** — the name fallback claimed "BIVIO PRATO" (a junction 98 km from Prato) for Prato. Fixed in code review: a name match is now only accepted when the stop's coordinates are within ~5 km of that comune's bounding box; unplaceable stops stay NULL. 99.2% resolved, 4 name matches, all verified correct. |
 | OD query row explosion | Medium | DISTINCT + calendar filter + group-by-trip_id (proven on fixtures). |
-| ~20-day feed validity expiry serving stale schedules | Medium | Daily refresh job on `feed_end_date` (`20260901`); health flag when past validity. |
+| ~20-day feed validity expiry serving stale schedules | Medium | Daily refresh job comparing the download's SHA1; health flag when past validity. |
+| **Feed *replaced* inside its validity window** (new, observed 2026-08-15) | ~~Unknown~~ **Handled** | **This actually happened and hid for three days.** The operator republished mid-window, so `feed_end_date` still read three weeks out and every expiry check stayed green while **21.2% of live buses had become untraceable** (against 3.4% normal). The source cannot be polled for this — 125 MB, GET only, no HEAD — so `/healthz` now watches the inverse: the share of live trips absent from the loaded timetable, flagged past 10% with a 50-trip sample floor. After `npm run refresh`: 207,987 → 270,823 trips, unmatched 21.2% → 0.3%. **`feed_end_date` is not a health signal on its own: a feed stops being true long before it stops being valid.** |
 | Poll cadence / hammering the source | ~~Low~~ **Resolved** | Single poller; **measured ~120 s cadence → 30 s poll + adaptive backoff on unchanged header.** |
 | GPS outliers → ghost buses | Low | Tuscany bbox sanity filter (confirmed still needed). |
 | **Upstream RT endpoints intermittently hang** (new, Phase 2) | Medium | Measured 4 timeouts in a 5-minute run on both feeds: the connection hangs, is aborted at 15 s, and the next request succeeds in <1 s. Mitigated: 15 s fetch timeout, first retry at normal cadence then exponential backoff (cap 4 min), the two feeds fail independently, and the last good state keeps being served rather than blanking the map. |

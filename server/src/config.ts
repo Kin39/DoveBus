@@ -97,6 +97,26 @@ export const API_CORS_ORIGIN = process.env.DOVEBUS_CORS_ORIGIN ?? "*";
 /** Requests per IP per minute. Generous for a map that polls, cheap insurance against a scraper. */
 export const RATE_LIMIT_PER_MINUTE = Number(process.env.DOVEBUS_RATE_LIMIT ?? 300);
 
+/**
+ * When the share of live trips missing from the timetable means it is stale.
+ *
+ * The expiry check alone is not enough: this operator republishes *inside* the
+ * validity window it declared, so `feed_end_date` can read three weeks out while
+ * the timetable has already stopped describing the buses on the road. Measured
+ * across that exact event — 3.4% unmatched is normal (genuine extra service),
+ * 21.2% was a timetable three days out of date, 0.3% after the refresh. Ten per
+ * cent sits clear of both.
+ */
+export const MAX_UNMATCHED_TRIP_RATIO = 0.1;
+
+/**
+ * Live trips needed before that ratio means anything.
+ *
+ * At 04:00 three buses are running and one piece of extra service would read as
+ * a third of the fleet gone missing.
+ */
+export const MIN_TRIP_MATCH_SAMPLE = 50;
+
 /** How often a read re-stats the database file to notice the refresh job's atomic swap. */
 export const DB_RELOAD_CHECK_MS = 5_000;
 

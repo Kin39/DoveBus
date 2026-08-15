@@ -102,12 +102,20 @@ put load on the regional feed.
 | `GET /api/vehicles?bbox=minLon,minLat,maxLon,maxLat` | Live positions in the viewport. |
 | `GET /api/trip/:tripId?date=` | Timetable + planned shape + live position + trail + delay. |
 | `GET /api/stream/trip/:tripId?date=` | The same, pushed over SSE as the poller updates. |
-| `GET /healthz` | Liveness, timetable validity, both feeds' poller status. |
+| `GET /healthz` | Liveness, timetable validity *and staleness*, both feeds' poller status. |
 
 ```bash
 curl 'http://127.0.0.1:3200/api/search/od?comuneA=Arezzo&comuneB=Anghiari&from=06:00&to=09:00'
 ```
 
+- **`/healthz` catches a timetable that was replaced, not just one that expired.**
+  The obvious check is impossible — the static feed is a 125 MB GET with no HEAD,
+  so an always-on process cannot ask the source whether it republished. So the
+  question is turned around: what share of the buses actually running are on
+  trips this timetable has never heard of. Normal is ~3%; past 10% (with at least
+  50 live trips, or the 04:00 fleet makes the ratio meaningless) the response
+  reports `timetable.stale` and `status: "degraded"`. This is not hypothetical —
+  see "when the timetable is replaced" below.
 - **Vehicles carry their previous position.** `/api/vehicles` sends each bus's
   earlier fix alongside its current one, so a map can start moving markers on its
   first response instead of sitting frozen for a publisher cycle — about two
@@ -454,6 +462,27 @@ projected onto that shape. The raw fixes stay on top as separate marks: the
 difference between "we watched this happen" and "we reconstructed this" is
 exactly the sort of thing this product does not blur, and the caption says which
 is which.
+
+### When the timetable is replaced
+
+On 2026-08-15 the operator republished the static feed **inside its own declared
+validity window**. Every expiry check stayed green — `feed_end_date` still read
+three weeks out — while one live bus in five had become untraceable, because the
+realtime feed was quoting trip ids from a file the database did not have.
+
+What it looked like, measured:
+
+| | stale (3 days old) | after `npm run refresh` |
+|---|---|---|
+| declared validity | 20260812 → 20260901 | 20260815 → 20260904 |
+| trips in the database | 207,987 | 270,823 |
+| live trips not in the timetable | **21.2%** | **0.3%** |
+
+Two things follow. The refresh job is not optional maintenance — it is what keeps
+the timetable describing reality, and it compares the download's SHA1 rather than
+trusting the declared dates. And `feed_end_date` is not a health signal on its
+own: a feed can stop being true long before it stops being valid, which is why
+`/healthz` now watches the match rate instead.
 
 ## Attribution (CC BY — required)
 
