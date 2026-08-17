@@ -112,6 +112,7 @@ class App {
 
   async #start(): Promise<void> {
     await this.#map.ready;
+    this.#refreshFooter();
     await this.#refreshVehicles();
     window.setInterval(() => void this.#refreshVehicles(), VEHICLE_REFRESH_MS);
   }
@@ -151,14 +152,28 @@ class App {
     this.#scroll.scrollTop = 0;
   }
 
-  /** The CC-BY obligation, present on every view rather than only on the first. */
+  /**
+   * The CC-BY obligation, present on every view rather than only on the first.
+   *
+   * The basemap line names whichever basemap actually loaded, which is not known
+   * until the style settles — crediting CARTO for tiles OpenFreeMap served, or
+   * the reverse, would be a false statement in the one place the licence asks us
+   * to be exact. Until then it credits only OpenStreetMap, which is true of both.
+   */
   #swapFooter(): void {
+    const basemap = this.#map.basemapCredit ?? "Mappa © OpenStreetMap";
     this.#scroll.append(
       el("footer", { class: "credits" }, [
         el("p", { text: "Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)" }),
-        el("p", { text: "Confini comunali: openpolis / ISTAT · Mappa © OpenStreetMap, CARTO" }),
+        el("p", { text: `Confini comunali: openpolis / ISTAT · ${basemap}` }),
       ]),
     );
+  }
+
+  /** Replaces the footer once the basemap is known, without stacking a second one. */
+  #refreshFooter(): void {
+    this.#scroll.querySelector("footer.credits")?.remove();
+    this.#swapFooter();
   }
 
   // ---- search ------------------------------------------------------------
