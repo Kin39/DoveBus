@@ -36,22 +36,18 @@
 }
 
 /*
- * The search button is pinned to the bottom of the sheet.
+ * The search button sits at the end of the form and scrolls with it.
  *
- * It cannot simply sit at the end of the form: an open autocomplete is 240 px
- * tall and the rest of the form is shorter than that, so on a 393 px phone the
- * list covered the day, the time window and this button outright — the field a
- * rider had just typed into hid the only control that acts on it. Sticky, and
- * above the list's stacking order, it stays in reach whatever else is open.
+ * It was sticky for a while, for a reason that turned out not to be one: an open
+ * autocomplete is 240 px tall, so on a 393 px phone the list covers the day, the
+ * time window and this button outright. But the list is only open while a rider
+ * is still choosing a comune, and nothing can be searched until that choice is
+ * made — a button hidden while the question is still incomplete is not a button
+ * out of reach. Sticky bought a reachability nobody needed and paid a permanent
+ * strip of a 45vh sheet for it.
  */
 .form .cta {
-  position: sticky;
-  bottom: 0;
-  z-index: 45;
   margin-top: var(--s1);
-  /* The strip of paper under it stops list rows showing through the gap as the
-     sheet scrolls beneath. */
-  box-shadow: 0 var(--s3) 0 var(--s3) var(--paper);
 }
 
 .form__fields {
@@ -117,13 +113,18 @@
 }
 
 /*
- * Time and date controls stay in the UI face, not the mono.
+ * The three controls of the "when" row — day, from, to — set their digits the
+ * same way.
  *
- * The mono is reserved for live readouts, and it is wide enough that "08:50"
- * plus the native picker's own icon overflowed a third of a 375 px row. These
- * are controls, not data.
+ * This rule used to be named for the time fields alone even though its own
+ * comment claimed both, so the date input was the one control in the row
+ * rendering its digits proportionally. That cost nothing while the interface was
+ * set in a mono, and nothing today either, since a date does not tick — but
+ * Instrument Sans's proportional "1" is far narrower than its "0", and a row
+ * where two fields align their figures and the third does not is an accident
+ * waiting for the first person who compares them.
  */
-.field__input--time {
+.field__input--when {
   font-variant-numeric: tabular-nums;
   font-stretch: 88%;
   font-weight: 600;

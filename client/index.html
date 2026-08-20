@@ -12,6 +12,16 @@
       content="Dov'è il tuo bus in Toscana, adesso. Posizione in tempo reale delle corse Autolinee Toscane, con ritardi e percorso."
     />
     <title>DoveBus — i bus della Toscana, adesso</title>
+    <!--
+      The wordmark composes in HTML, but an icon cannot: these are exported at
+      their real size. The background is opaque #0d1825 in every cut, never
+      transparent — the green dot on a light browser bar measures 1.97:1 and
+      disappears. At 16 px the lettering stops being readable, so that cut is the
+      dot alone.
+    -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
   </head>
   <body>
     <a class="skip-link" href="#sheet">Vai alla ricerca</a>
@@ -20,7 +30,8 @@
 
     <header class="topbar" id="topbar">
       <p class="brand">
-        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span>
+        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span
+        ><span class="brand__dot" aria-hidden="true"></span>
       </p>
       <p class="fleet" id="fleet" aria-live="polite">
         <span class="fleet__count" id="fleet-count">—</span>

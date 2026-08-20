@@ -29,7 +29,17 @@
   /* ---- Ink: a blue-cast near-black, never pure grey. ---- */
   --text: #0d1825;
   --text-dim: #4c5a6d;
-  --text-faint: #78859a;
+  /* Darkened from #78859a, which measured 3.48:1 on --paper-sunk and 2.97:1 on
+     --paper-deep. This is not a mark colour: it sets type in eleven rules,
+     including the 11 px uppercase field labels — the smallest type in the
+     product, and the case that needs the ratio most. Picked against the darkest
+     paper it can land on rather than against white, so it clears 4.5:1
+     everywhere: 5.72 on --paper, 5.32 on sunk, 4.95 on raise, 4.55 on deep.
+
+     The cost is a narrower ink hierarchy — faint and --text-dim are now 5.72 and
+     7.02 against paper where they used to be 3.74 and 7.02. The three levels
+     still separate, but less than they did. */
+  --text-faint: #5b677b;
   /* Type set on a dark fill — the primary button, the alarm badge. */
   --on-ink: #ffffff;
 
@@ -38,7 +48,11 @@
      grey as the fix ages. Stale is grey, never red — red would say "danger"
      when the truth is only "we have not heard from it". ---- */
   --fresh-live: #0f9d76;
-  --fresh-recent: #12876a;
+  /* Darkened from #12876a, which measured 4.47:1 on white — three hundredths
+     under the 4.5 the comment above promises, and it sets type in two rules as
+     well as marking. Hue and chroma are unchanged, so the colour reads the same:
+     4.86 on --paper, 4.52 on --paper-sunk. */
+  --fresh-recent: #018164;
   --fresh-delayed: #b06a00;
   --fresh-stale: #7a8798;
 
@@ -59,10 +73,21 @@
   /* ---- Type. One variable grotesque carries the whole interface at three
      widths — condensed is a functional choice, since GTFS ships stop names like
      "CASTELNUOVO DI VAL DI CECINA (BIVIO)" in caps and they must not wrap to
-     three lines on a 375 px phone. The mono is rationed to one job: the live
-     numerals that make up the signature readout. ---- */
-  --font-ui: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-data: "Martian Mono Variable", ui-monospace, "SF Mono", monospace;
+     three lines on a 375 px phone. Measured against the real feed, whose stop
+     names the source caps at 40 characters: at the widths this interface uses,
+     Instrument Sans sets that worst case 1–8% narrower than the Archivo it
+     replaces, and 8.2% narrower in caps.
+
+     The mono is gone, and the live readouts are set in the same face. This only
+     works because of the line below it: Instrument Sans has tabular figures but
+     does not use them by default, and its proportional "1" is dramatically
+     narrower — ten of them measure 45 px less than ten zeroes at 15 px. Every
+     rule that sets a number which changes must therefore declare
+     `font-variant-numeric: tabular-nums`, or the readout will jump as it ticks.
+     Martian Mono was monospaced by construction and forgave the omission; this
+     does not. ---- */
+  --font-ui: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-data: var(--font-ui);
 
   --text-xs: 0.6875rem;
   --text-sm: 0.8125rem;

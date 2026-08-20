@@ -243,15 +243,15 @@ function template(): string {
       <div class="when">
         <div class="field">
           <label class="field__label" for="input-date">Giorno</label>
-          <input class="field__input" id="input-date" type="date" />
+          <input class="field__input field__input--when" id="input-date" type="date" />
         </div>
         <div class="field">
           <label class="field__label" for="input-from">Dalle</label>
-          <input class="field__input field__input--time" id="input-from" type="time" />
+          <input class="field__input field__input--when" id="input-from" type="time" />
         </div>
         <div class="field">
           <label class="field__label" for="input-to">Alle</label>
-          <input class="field__input field__input--time" id="input-to" type="time" />
+          <input class="field__input field__input--when" id="input-to" type="time" />
         </div>
       </div>
 

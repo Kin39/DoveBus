@@ -1,7 +1,6 @@
 // The `wdth` builds rather than the default `wght` ones: the interface leans on
 // the width axis to fit long uppercase Tuscan stop names onto a 375 px screen.
-import "@fontsource-variable/archivo/wdth.css";
-import "@fontsource-variable/martian-mono/wdth.css";
+import "@fontsource-variable/instrument-sans/wdth.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles/tokens.css";
 import "./styles/base.css";

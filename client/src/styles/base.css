@@ -137,7 +137,18 @@ button {
   -webkit-backdrop-filter: blur(14px);
 }
 
+/*
+ * The three pieces sit on a shared baseline, and the gap between the two words
+ * is zero on purpose: "Dove" and "BUS" separate optically, by the jump in width
+ * and weight, not by space. The dot is the only thing that gets air, and it gets
+ * its own margin rather than a flex `gap`, which would push the words apart too.
+ * Six pixels — the dot's own diameter — because at a 13 px body the 8 px the
+ * handoff tabulates for the word gap reads as detached from the mark.
+ */
 .brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
   font-size: var(--text-sm);
   letter-spacing: 0.01em;
 }
@@ -151,10 +162,29 @@ button {
 /* The wordmark's whole idea: the question is soft, the answer is stamped. */
 .brand__bus {
   font-stretch: 78%;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--text);
+}
+
+/*
+ * The live dot: the one coloured thing in the wordmark, and the reason the mark
+ * says "a position from now" rather than just naming the product.
+ *
+ * It does not pulse. The animation belongs to `.trip__livedot`, where a blink
+ * means a fix actually arrived — a mark that blinked would be claiming to be
+ * data. And it is a circle rather than a bus pictogram because that is the shape
+ * the vehicles take on the map.
+ */
+.brand__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fresh-recent);
+  align-self: center;
+  margin-left: 6px;
+  flex: none;
 }
 
 .fleet {
@@ -228,8 +258,12 @@ body:has(.sheet[data-detent="full"]) .mapctl {
 }
 
 .plate__code {
-  font-stretch: 74%;
-  font-weight: 750;
+  /* 78% and 700 are the floor and ceiling of Instrument Sans, which is narrower
+     than the Archivo this replaces: at 74%/750 the old face measured 23.6 px on
+     a three-digit code, the new one 23.4 px at 78%/700. The plate keeps its
+     size without the axes it no longer has. */
+  font-stretch: 78%;
+  font-weight: 700;
   font-size: var(--text-base);
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -303,7 +337,7 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   background: var(--alarm);
   border-color: var(--alarm);
   font-stretch: 92%;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .badge--quiet {
