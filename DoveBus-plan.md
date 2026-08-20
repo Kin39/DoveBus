@@ -169,6 +169,22 @@ Must-haves proven in the brief's tests: **DISTINCT + calendar filter** (raw join
 - **Rejected:** Render free (sleeps), Cloudflare Workers (1-min cron + Durable Objects overhead for the trail) — reconsider only as a later optimization.
 - **Est. run cost:** ~€4/mo. Domain extra.
 
+### 6.1 Blockers found before deploying — verified on the running stack 2026-08-19
+
+Measured against the real servers, not read off the code. Netlify is not implicated in any of them: it serves `client/dist` and the only couplings are `VITE_API_BASE`, which Vite **bakes into the bundle at build time** (changing the API address needs a rebuild, not an env var), and CORS.
+
+**a. `npm ci --omit=dev` breaks both the API and the refresh — fix before the first deploy.** `server/package.json` has no build script: production runs `tsx src/cli/serve.ts`, and `tsx` + `typescript` sit in `devDependencies`. A standard production install leaves nothing able to start. Either install with dev dependencies, move `tsx` into `dependencies`, or add a compile step.
+
+**b. The refresh spawn does work — verified, not assumed.** `serve.ts` spawns `node [...process.execArgv] refresh.ts`, i.e. it hands Node a TypeScript file, which only survives if the tsx loader is in `execArgv`. Tested under `npm run serve`'s own invocation: `execArgv` carries `--require tsx/preflight.cjs --import tsx/loader.mjs`, and the child ran a `.ts` file to exit 0. No change needed.
+
+**c. `AUTO_REFRESH` will re-download 142 MB every hour, forever, without ever fixing what it is reacting to.** On 2026-08-19 a manual refresh moved the unmatched-trip ratio only 0.204 → 0.169, against a 0.10 threshold — not the 0.3% the 2026-08-15 incident settled at. The cause is not a stale timetable: **trip ids `78000–79999` are wholly absent from the static feed** (0 rows, against 27,345 in `70000–77999`) while the realtime feed broadcasts 26 live buses on them. Both feeds are the operator's; they disagree. No refresh can reconcile that, so `timetableMatch` stays `stale`, `/healthz` stays `degraded`, and the watch fires on every cooldown — 24 rebuilds/day, ~2.5 GB written each, ~60 GB/day of SSD writes plus minutes of a shared vCPU at 100%. `watch.ts` anticipated the shape of this ("if a refresh did not fix it, running it again immediately will not either") but the cooldown only slows the loop, it does not break it. **Deploy with `DOVEBUS_AUTO_REFRESH=false` and the daily timer alone until the watch can give up**: the durable fix is to stop retrying when a refresh fails to improve the ratio, and only rearm when the static feed's SHA1 changes. Excluding the chronically unresolvable ids from the sample would also make the ratio measure staleness again rather than this.
+
+**d. Nothing locks the two refresh paths against each other.** The README installs a `Type=oneshot` timer at 04:30 *and* the API runs the reactive watch. The watch's `running` guard is in-process only and knows nothing about the systemd unit, so both can build `gtfs.new.db` at once and `rename` over each other. No `flock`, lockfile or `O_EXCL` anywhere in `refresh.ts`, `swap.ts` or the import.
+
+**e. CORS ships wide open.** `API_CORS_ORIGIN` defaults to `*`; set `DOVEBUS_CORS_ORIGIN` to the Netlify origin. `API_HOST` is already correct at `127.0.0.1` behind Caddy, and the README's unit sets it explicitly.
+
+**f. Disk is not a constraint.** Peak during a refresh is the live database plus the staging copy — 1.24 GB each — plus the extraction, and `data/tmp/` is cleaned afterwards. Comfortable on the CX22's 40 GB.
+
 ---
 
 ## 7. Testing (per your TDD/coverage rules, 80%)
