@@ -185,6 +185,24 @@ Measured against the real servers, not read off the code. Netlify is not implica
 
 **f. Disk is not a constraint.** Peak during a refresh is the live database plus the staging copy — 1.24 GB each — plus the extraction, and `data/tmp/` is cleaned afterwards. Comfortable on the CX22's 40 GB.
 
+### 6.2 Security review — findings 2026-08-21, verified against the running API
+
+Static review plus probes against a live server. No CRITICAL, and the codebase held up well under adversarial input (see "sound" below). Three items to fix, ordered.
+
+**a. HIGH — the rate limit and the per-IP SSE cap are bypassable with a header.** `TRUST_PROXY` (`config.ts:182`) is `process.env.DOVEBUS_TRUST_PROXY !== "false"`, i.e. **on unless explicitly disabled**, so Fastify trusts `X-Forwarded-For` — which the client writes. Measured on the running API: 30 concurrent SSE connections from one machine were **all accepted** when each carried a different forged `X-Forwarded-For`, against **20 × `503`** (cap 10) without it; `x-ratelimit-remaining` likewise reset to 299 for every invented IP. The setting survives a reverse proxy: `trustProxy: true` is a boolean that trusts the *whole* chain, and Caddy/nginx **append** to `X-Forwarded-For` rather than overwriting it, so `proxy-addr` walks back to the attacker's leftmost value. Fix both halves: set `DOVEBUS_TRUST_PROXY=false` if the process is exposed directly, or configure the proxy to overwrite the header and pass a trusted-hop *count* instead of `true`; and **invert the default to `=== "true"`** so the unsafe mode requires a deliberate act.
+
+**b. MEDIUM — the SSE endpoint breaks any CORS whitelist.** `stream.ts:36-37,80` writes the configured `corsOrigin` string verbatim into `access-control-allow-origin`, instead of reflecting the request's matching origin the way `@fastify/cors` does everywhere else. Measured with `DOVEBUS_CORS_ORIGIN="https://a.example,https://b.example"`: `/api/routes` correctly returned `https://a.example` for a matching origin and no header for a non-matching one, while the stream returned **`https://a.example,https://b.example`** — a comma-joined value browsers reject, which breaks SSE for *every* whitelisted origin. Fails closed, not open, so it is not a hole; but it detonates precisely at the deploy that moves off `*`. **Fix it in the same change that sets the real origin.**
+
+**c. MEDIUM — production source maps.** `vite.config.ts:14` sets `sourcemap: true`, emitting `dist/assets/index-*.js.map` — **2,462,968 bytes** of original TypeScript, published. Set `false`, or `"hidden"` if error tracking needs them without serving them.
+
+**d. MEDIUM — no security headers, and nowhere to put them.** No `X-Content-Type-Options`, `Referrer-Policy` or HSTS on the API (low impact: JSON/SSE only, no HTML surface). On the client a CSP matters, and **the repo has no deploy config at all** — no `netlify.toml`, no `_headers`, no Dockerfile. The real origins a CSP must allow, read from the source: `tiles.openfreemap.org`, `{a,b,c}.basemaps.cartocdn.com`, `dati.toscana.it`, `www.openstreetmap.org`.
+
+**e. LOW — `download.ts:25-54` has no byte ceiling**, unlike `rt/fetch.ts` (64 MB). The URLs are hardcoded constants and unreachable from client input, so this is defence-in-depth against a compromised or misbehaving upstream, not an exposed path.
+
+**f. Cost, not a vulnerability.** `/api/vehicles` without a `bbox` returns **448 KB in 4.5 ms**; at 300 req/min that is ~134 MB/min of egress per client. Worth a default bbox or a lower cap before it becomes a bill.
+
+**Verified sound — checked and found correct, not merely "nothing found".** SQL injection is absent by construction: every query uses prepared statements; the two interpolations build only `?,?,?` placeholders from an array length, and `LIKE` patterns escape `%` `_` `\` with `ESCAPE`. Confirmed with live payloads — `date=2026-08-20' OR 1=1--` and `q=' OR 1=1--` were both rejected by the validator. Zip Slip does not apply: the importer never writes zip entries to disk, streaming a fixed filename list from `yauzl` into `csv-parse`. Input bounds hold under probing: `limit=999999999` clamped to **500 with `truncated: true`**, `bbox` rejected for NaN, out-of-range and wrong arity, a 10,000-character `route` returned empty without incident, URL path traversal resolved to a clean 404. Error responses carry no stack traces or filesystem paths. Client XSS surface is clean: all feed-derived strings go through `textContent`, and the five `innerHTML` uses in the codebase contain only hardcoded templates. `npm audit`: **0 vulnerabilities across 309 dependencies**; no secrets in the git history (`-S` across nine patterns, zero hits); `.env` files untracked. `licensePlate` is decoded from the RT feed but deliberately **not** serialized to the public API — the one semi-identifying field never leaves the server.
+
 ---
 
 ## 7. Testing (per your TDD/coverage rules, 80%)
@@ -203,7 +221,9 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 5. **Phase 4 — Frontend ✅ DONE (2026-08-14), revised the same day after the owner's manual check.** Four findings, all addressed: a light theme replaced the dark one outright (owner's call, busbus.it as reference — the data ramp was re-picked against paper, not inverted, since a luminous aqua carries under 2:1 on white); the search button died on the *second* search (a control detached from the DOM was never re-enabled — and the screenshot loop had not caught it because every state started from a fresh page load, so a continuous-journey state was added); markers moved only when a snapshot landed, every ~2 minutes; and the travelled trail was drawn as straight chords between fixes up to 2.7 km apart, cutting through hillsides. The last two shared one fix — **projecting position onto the trip's `shape`** (`client/src/map/route.ts`), which yields both a distance-along-route to advance the marker smoothly along the road and a travelled path that *is* the road. Estimated motion was chosen with its uncertainty made visible (owner's option (a)): the trip view states how far the marker has been advanced past the last real fix, a disc on the map shows how far off it could be, the raw fixes stay drawn as separate marks so reconstruction is never confused with observation, and buses unheard-from for 5 minutes leave the map. The estimate also stops being *extended* at that same 5 minutes: the followed bus is exempt from the cutoff so it never vanishes mid-watch, but a code review found that exemption also made its extrapolation unbounded — a selected bus going silent drifted **58.7 km in an hour** while the interface announced the number. The age reported stays truthful past the cap; only the guess is bounded. **One API change came out of it:** estimating a speed needs two fixes, and a client starting cold has one — so `/api/vehicles` now sends each bus's previous position, taken from the trail buffer the server already keeps. Verified on the live feed: RT positions project onto the published shape to within **0–7 m**, the reconstructed trail carries **1,800 vertices where the raw fixes gave 15**, and **59% of markers move within 14 s of a cold load** against 0% before. The feed also produces a "previous" stamped *later* than the current fix (a trail point falls back to the server clock for a bus reporting none), so that case is withheld rather than served — covered by `server/test/serialize.test.ts`. Original build notes follow.
    **Phase 4 — original build notes:** Vite + TypeScript + MapLibre on port 5280 (`strictPort`), built with the `frontend-design` skill and mobile-first at 375×812. Full-screen petrol-tinted raster basemap (no API key), a three-detent draggable bottom sheet holding both search modes, comune/line autocomplete as an ARIA combobox, a trip list led by the line's own code plate, and a live view with the planned shape, the GPS trail, the delay badge and the freshness meter. Vehicles are a GeoJSON circle layer with `requestAnimationFrame` interpolation on the source data — never DOM markers. Above 720 px the sheet becomes a left column and the map's padding follows it. **Verified by the screenshot loop** (`npm run shots`, committed): 12 states × 6 viewports = 72 shots against the live API, two consecutive clean rounds — no horizontal scroll, no interactive target under 44 px, no unexpected console errors, every state reachable. **One design change against the plan:** freshness is recomputed on the client every frame from the bus's own `timestamp` rather than trusted from the payload — the server's bucket is correct on delivery and wrong a minute later, and a colour frozen at send time would keep claiming "recente" for a bus that had gone silent. **One observation for the owner:** with the Phase-2 bands (90/180/300 s) and the measured 116→240 s age cycle, the whole fleet still swings green→amber together on the publisher's ~120 s rhythm — the bands describe the bus better than the old ones did, but "attenuato" is still reached by healthy buses for roughly half of every cycle. See "colour cycling" below.
 6. **`shapes` import + planned-route line** — mandatory: `/api/trip/:tripId` serves the trip's `shape` polyline; the frontend draws it as the route the bus will follow.
-7. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
+7. **Phase 5 — public web surface (planned 2026-08-21):** split the app to `/mappa/`, build the landing page and the three trust pages, add the head/social/JSON-LD block, `og-image`, manifest, `robots.txt` and `sitemap.xml`. Full plan and the measurements behind it in **§10**; the CC-BY attribution moves out of the JS footer and into a served document as part of this.
+8. **Pre-deploy fixes:** §6.2 (a) `TRUST_PROXY` default, (c) production source maps, (d) deploy config + CSP — plus the §6.1 items. §6.2 (b), the SSE CORS bug, lands **with** the change that sets the real origin.
+9. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
 ### Phase 2+
 - **Expose the timetable match rate as a metric**, not only as a health flag — it moved 3% → 21% → 0.3% across the 2026-08-15 republish and was the only thing that noticed.
@@ -232,6 +252,70 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 | GPS outliers → ghost buses | Low | Tuscany bbox sanity filter (confirmed still needed). |
 | **Upstream RT endpoints intermittently hang** (new, Phase 2) | Medium | Measured 4 timeouts in a 5-minute run on both feeds: the connection hangs, is aborted at 15 s, and the next request succeeds in <1 s. Mitigated: 15 s fetch timeout, first retry at normal cadence then exponential backoff (cap 4 min), the two feeds fail independently, and the last good state keeps being served rather than blanking the map. |
 | 5M-row `stop_times` (~268 MB) + `shapes` (~277 MB) import memory/time | Low | Streamed CSV + batched single transaction (better-sqlite3). |
+
+---
+
+## 10. SEO & the public web surface — planned 2026-08-21
+
+Written after a security + SEO review of the running stack. Everything numeric below was **measured**, not estimated: the client was built and the shell parsed, the entity counts come from `data/gtfs.db`.
+
+### 10.1 The baseline, measured
+
+Built `client/dist` and stripped the scripts from `index.html` to see what a crawler reads before executing JS. **The entire indexable content of the site is eleven words:**
+
+> DoveBus — i bus della Toscana, adesso · Vai alla ricerca · Dove Bus · — · bus in vista
+
+Bundle as shipped: **1,098 KB JS** (299 KB gzip), **88.8 KB CSS** (14.3 KB gzip), `index.html` 2.69 KB. Google renders JS in a second wave, so *something* would eventually be recovered — but the structural problem is not rendering. **Search, results and trip detail all live on the single URL `/`**, reachable only by submitting a form. There is no URL for "line SI381" to rank, and no URL to share with a friend. That second half is a product defect before it is an SEO one.
+
+### 10.2 Decision — landing at `/`, app at `/mappa/`
+
+The root becomes a static, text-real, near-zero-JS landing page; the MapLibre app moves to `/mappa/`. Rationale: for the foreseeable future **every visitor arrives cold** — from a search result or a shared link — so optimising the root for returning users optimises for a population that does not exist yet. A landing that paints in ~200 ms beats one that ships 1.1 MB of JS before saying anything.
+
+- **Build:** Vite multi-page via `build.rollupOptions.input`, with `client/index.html` (landing) and `client/mappa/index.html` (app). Directory form, not `mappa.html`, so the URLs are host-agnostic rather than relying on Netlify's `.html` stripping. Each entry gets its own bundle — **the landing must not import `maplibre-gl`**, and that is the whole point of the split; verify it in the build output, do not assume it.
+- **Canonical form is the trailing slash** (`/mappa/`); Netlify redirects the bare form to it.
+- **Manifest `start_url` becomes `/mappa/`**, not `/` — a user who installs the app wants the map, not the pitch.
+- **Deliberately not built now:** the `localStorage` redirect that bounces returning visitors from `/` straight to `/mappa/`. It is a strict superset of this decision — roughly six lines added later, no rearchitecting — and today it would solve friction the site does not have. If it is ever added: key it on stored state, **never on user-agent** (that is cloaking), gate it behind an inline `<head>` script using `location.replace()` so there is no flash and no history entry, and give it an escape hatch (`/?home=1`) so the landing stays readable.
+
+### 10.3 Rejected — mass-generating 877 comune/line pages
+
+An SEO review proposed generating one static page per comune (267) and per line (610). **Rejected on measured grounds.** Counted over `data/gtfs.db`, lines-per-comune is severely concentrated and the tail is empty:
+
+| | |
+|---|---|
+| Firenze / Siena | 101 / 97 lines |
+| top 10 comuni | 23.4% of line coverage |
+| top 30 comuni | 42.6% |
+| comuni with ≤3 lines | **108 of 267** |
+| comuni with ≤5 lines | **164 of 267 (61%)** |
+
+Sixty-one percent of those pages would say little more than *"line 123 passes through Chiusdino"* — templated, near-empty, in volume. That is the exact profile Google's **scaled content abuse** policy targets, and the downside (a sitewide quality signal) is worse than the upside. Stop pages (**28,985**) were never on the table for the same reason at larger scale.
+
+**What is worth doing instead, later and by hand:** a curated page for each of the ~20–30 comuni that actually carry lines, written as content rather than emitted by a template. Small, defensible, and it captures most of the realistic long-tail volume anyway.
+
+**The better lever, and a product win first:** make the app's state addressable — `/mappa/?linea=381`, `/mappa/?corsa=78231-2`. Today a rider cannot send anyone the bus they are watching. It costs a fraction of 877 pages, serves a real user, and incidentally gives Google URLs that exist. Note the dependency: **`WebSite` + `SearchAction` JSON-LD must not be added until this exists**, or the markup declares a navigation feature the site does not have.
+
+### 10.4 To build now — the pre-deploy SEO set
+
+1. **Landing page `/`** — real prose, in Italian: what it does, that it covers Tuscany and Autolinee Toscane, how live the data is, a prominent "Apri la mappa" CTA to `/mappa/`, and text links to the three trust pages. This is the page that has to carry the brand and the query relevance; it is the one piece here that needs design, not just markup.
+2. **`/come-funziona`** — data source, the 30 s poll cadence, and the honest limits (runs the operator broadcasts that the static timetable does not contain — the same caveat `messageFor` already shows at runtime).
+3. **`/fonte-dati`** — full attribution: Regione Toscana (CC BY 4.0), OpenStreetMap, openpolis. **This is a licence obligation, not an SEO nicety:** the CC-BY attribution currently exists *only* in the JS-rendered footer, so it is absent from the served document. A static page makes it permanent and verifiable.
+4. **`/privacy`** — short and truthful; check what the code actually does (browser geolocation, no tracking, no cookies beyond essentials) before writing it rather than asserting the usual boilerplate.
+5. **`<head>` block** on every page: `canonical`, Open Graph (`og:type|site_name|title|description|url|image|locale`), Twitter `summary_large_image`, and `WebApplication` + `Organization` JSON-LD. Per-page `title` and `description`, never copied between pages.
+6. **`og-image.png`, 1200×630** — does not exist and **cannot be cropped from the current icons**, which are all square (16/32/180/192/512). Needs to be produced.
+7. **`site.webmanifest`** — `icon-192.png` and `icon-512.png` already sit in `client/public/` and are **referenced by nothing**; they are dead assets until a manifest exists. `start_url: "/mappa/"`.
+8. **`robots.txt` + `sitemap.xml`** — the sitemap lists `/`, `/mappa/`, and the three trust pages. **No `Disallow: /api/`**: the API is on a separate origin (`VITE_API_BASE`) and is not under this host at all.
+9. **`preconnect` to `https://tiles.openfreemap.org`**, `dns-prefetch` for the raster fallback `{a,b,c}.basemaps.cartocdn.com`. On `/mappa/` only — the landing does not talk to them.
+
+### 10.5 Core Web Vitals — two findings that cancel work
+
+- **Do not lazy-load MapLibre to "protect LCP".** A `<canvas>` is **not an LCP-eligible element** (the spec counts `<img>`, SVG `<image>`, video posters, CSS `background-image`, and text blocks). The LCP element is shell text, which MapLibre does not gate. Delaying the map would degrade the product to move a metric it does not touch.
+- **Do not split `maplibre-gl.css` out of the bundle.** The proposed trigger was "if the combined CSS exceeds ~30–40 KB gzip". Measured: **14.3 KB gzip**. Comfortably under — the refactor is unnecessary.
+
+What does remain: **1.1 MB of JS (299 KB gzip) executing at mount**, on phones used at a bus stop. That is an INP concern, not LCP. Measure with `rollup-plugin-visualizer` before optimising anything. The `/mappa/` split does not shrink it — it only keeps it off the landing, which is the point.
+
+### 10.6 Deferred, on purpose
+
+Curated comune pages (§10.3) · URL-addressable app state and the `SearchAction` that depends on it · `localStorage` return-visitor redirect (§10.2) · Netlify's bot prerendering extension — Googlebot has not needed it for years, and it only matters for non-Google crawlers.
 
 ---
 
