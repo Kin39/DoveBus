@@ -394,12 +394,25 @@ Curated comune pages (§10.3) · URL-addressable app state and the `SearchAction
 
 Neither blocks a build; both make the deployed site wrong if left as they are.
 
-1. **`SITE_URL` is still the placeholder `https://dovebus.it`.** It lives once, at the top of
-   `client/vite.config.ts`, and feeds `canonical`, every `og:url`, the JSON-LD `@id`s, `robots.txt`
-   and `sitemap.xml` — so if the real domain differs, **every one of those points at the wrong host**
-   until it is changed. Overridable at build time with `SITE_URL=…`, same for `CONTACT_EMAIL`
-   (currently `ciao@dovebus.it`), which appears in the footer, the privacy page and the
-   `Organization` markup.
+1. **`SITE_URL` is still the placeholder `https://dovebus.it`.** It lives once, now in
+   `client/site-url.ts`, and feeds `canonical`, every `og:url`, the JSON-LD `@id`s, `robots.txt`,
+   `sitemap.xml` **and the domain printed inside `og-image.png`** — so if the real domain differs,
+   **every one of those points at the wrong host** until it is changed. Overridable at build time
+   with `SITE_URL=…`, same for `CONTACT_EMAIL` (currently `ciao@dovebus.it`), which appears in the
+   footer, the privacy page and the `Organization` markup.
+
+   **The card was the exception until 2026-08-22, and it was the worst place for one.** `scripts/`
+   `og.html` had `dovebus.it` typed into it by hand, so the constant moved and the share image did
+   not — and that domain is **rasterised into a PNG**, where a canonical tag cannot correct it after
+   the fact and nobody re-reads it. It is a `%SITE_HOST%` token now, substituted by `npm run og`
+   from the same module the build reads, which is also why `SITE_URL` left `vite.config.ts`: the
+   card script is a second consumer, and a constant with two consumers in one file is a constant
+   about to be copied. The script **throws** if the token is ever renamed away rather than
+   rasterising the literal. Verified both ways — overriding the origin changes the domain in the
+   image, and rendering with the default reproduces the committed PNG **byte for byte**.
+
+   **Deploy note:** changing the domain means `npm run og` as well as a rebuild. The head blocks
+   update from a build; the image does not.
 2. **`/privacy/` names the static host generically** ("un fornitore di hosting"). Once Netlify is
    confirmed it should be named, since the point of the page is that it says what actually happens.
 

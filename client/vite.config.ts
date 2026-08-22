@@ -1,16 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
-
-/**
- * The public origin, written once.
- *
- * `canonical`, Open Graph, the JSON-LD, `robots.txt` and `sitemap.xml` all have
- * to agree on the absolute address of every page — five places to get wrong by
- * hand. They are all fed from here instead, and `SITE_URL` overrides it so a
- * preview deploy can be built without editing a committed file.
- */
-const SITE_URL = (process.env.SITE_URL ?? "https://dovebus.it").replace(/\/+$/, "");
+// `canonical`, Open Graph, the JSON-LD, `robots.txt`, `sitemap.xml` and the
+// domain printed inside the share card all have to name the same origin. It is
+// resolved in one module so they cannot disagree — see `site-url.ts`.
+import { SITE_URL } from "./site-url";
 
 /** Where an abuse or privacy request should land. Same reasoning as `SITE_URL`. */
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "ciao@dovebus.it";

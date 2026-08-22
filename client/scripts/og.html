@@ -238,7 +238,14 @@
       </div>
       <p class="foot">
         <span>Ogni posizione ha un'età, ed è scritta accanto.</span>
-        <span class="foot__url">dovebus.it</span>
+        <!--
+          Substituted by `npm run og` from the one `SITE_URL` the head blocks
+          use. Written as a token rather than as a literal domain because this
+          one ends up *inside a PNG*: a canonical tag can be corrected after the
+          fact, a rasterised domain cannot. Opening this file raw shows the
+          token, which is the honest thing for a build input to show.
+        -->
+        <span class="foot__url">%SITE_HOST%</span>
       </p>
     </div>
   </body>
