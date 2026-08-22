@@ -16,5 +16,15 @@
 
 # The app used to be the whole site. Anything that bookmarked or linked the old
 # single-page entry points should land on the map, not on the pitch.
-/index.html      /                 301!
-/mappa/index.html /mappa/          301!
+#
+# All five `index.html` forms are listed, not just these two. Netlify's Pretty
+# URLs setting would strip them anyway — but that is the setting this file exists
+# to not depend on, and covering two pages out of five made the guarantee true
+# for `/` and `/mappa/` and a hope for the other three. Every one of these is a
+# single hop straight to the canonical form: no chain, and each target is exactly
+# the URL its page's `<link rel="canonical">` names.
+/index.html                /                 301!
+/mappa/index.html          /mappa/           301!
+/come-funziona/index.html  /come-funziona/   301!
+/fonte-dati/index.html     /fonte-dati/      301!
+/privacy/index.html        /privacy/         301!

@@ -17,28 +17,50 @@
     />
     <meta property="og:url" content="%SITE_URL%/fonte-dati/" />
 
+    <!--
+      One `Dataset` describing what this page is about, narrowed to the thing it
+      can honestly describe: the Regione Toscana transport feeds. The comune
+      boundaries are named in the prose but are **not** in this node — they come
+      from openpolis/ISTAT, and a `Dataset` whose `creator` is one publisher must
+      not have a second publisher's data folded into its `description`.
+
+      `contentUrl` on both distributions, because a `DataDownload` without one
+      claims a download exists and then declines to say where. These two URLs are
+      the same ones the server polls; they are what «puoi usarli anche tu», three
+      sections down, is an invitation to.
+    -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Dataset",
-        "name": "Dati di trasporto pubblico usati da DoveBus",
-        "description": "Orari (GTFS) e posizioni in tempo reale (GTFS-RT) del trasporto pubblico su gomma della Regione Toscana, con i confini comunali openpolis/ISTAT usati per la ricerca fra comuni.",
+        "name": "Orari e posizioni in tempo reale del trasporto pubblico toscano",
+        "description": "Orari programmati (GTFS) e posizioni, ritardi e avvisi in tempo reale (GTFS-RT) del trasporto pubblico su gomma della Regione Toscana, i due feed su cui DoveBus è costruito.",
         "inLanguage": "it-IT",
         "url": "%SITE_URL%/fonte-dati/",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "creator": { "@type": "GovernmentOrganization", "name": "Regione Toscana" },
+        "publisher": { "@type": "GovernmentOrganization", "name": "Regione Toscana" },
         "spatialCoverage": { "@type": "AdministrativeArea", "name": "Toscana" },
+        "keywords": ["GTFS", "GTFS-RT", "trasporto pubblico locale", "autobus", "Toscana"],
         "distribution": [
           {
             "@type": "DataDownload",
             "name": "Orari GTFS del trasporto pubblico su gomma",
-            "encodingFormat": "application/zip"
+            "encodingFormat": "application/zip",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs"
           },
           {
             "@type": "DataDownload",
-            "name": "Posizioni, ritardi e avvisi in tempo reale (GTFS-RT)",
-            "encodingFormat": "application/octet-stream"
+            "name": "Posizioni dei mezzi in tempo reale (GTFS-RT)",
+            "encodingFormat": "application/octet-stream",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs-rt/vehicle-positions"
+          },
+          {
+            "@type": "DataDownload",
+            "name": "Ritardi e corse soppresse in tempo reale (GTFS-RT)",
+            "encodingFormat": "application/octet-stream",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs-rt/trip-updates"
           }
         ]
       }
@@ -99,7 +121,8 @@
               Il flusso che rende la mappa viva: dove si trova ogni mezzo, quando l'ha detto, quanto
               è in ritardo e quali corse sono state soppresse. Viene ripubblicato per intero circa
               ogni due minuti. È lo stesso dato che alimenta i canali ufficiali, letto direttamente
-              alla fonte.
+              alla fonte — <a href="/come-funziona/">che strada faccia per arrivare sulla mappa</a>
+              è raccontato per intero altrove.
             </p>
           </article>
 

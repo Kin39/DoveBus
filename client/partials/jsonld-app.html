@@ -1,0 +1,66 @@
+<!--
+  The site's two persistent entities: who publishes DoveBus, and what DoveBus is.
+
+  Shared by `/` and `/mappa/` because both pages need them for different reasons.
+  The landing needs `Organization` — it is the page a crawler treats as the site's
+  identity. `/mappa/` needs `WebApplication`: the node's own `url` is `/mappa/`,
+  so declaring it only on the landing described a page from a different page and
+  left the described one with no markup at all.
+
+  Same `@id` in both places on purpose — one entity, asserted twice, not two.
+  Kept as a partial rather than copied so the `featureList` cannot claim one set
+  of features on the landing and another on the app.
+
+  **No `WebSite` + `SearchAction`** until the app's state is addressable by URL
+  (`/mappa/?linea=381`): that markup declares a search endpoint a crawler can
+  send a query to, and there is nothing here to send it to yet.
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "%SITE_URL%/#org",
+      "name": "DoveBus",
+      "url": "%SITE_URL%/",
+      "logo": "%SITE_URL%/icon-512.png",
+      "email": "%CONTACT_EMAIL%",
+      "description": "Progetto indipendente che pubblica su una mappa i dati aperti di trasporto pubblico della Regione Toscana."
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "%SITE_URL%/#app",
+      "name": "DoveBus",
+      "url": "%SITE_URL%/mappa/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Qualsiasi browser web",
+      "inLanguage": "it-IT",
+      "browserRequirements": "Richiede JavaScript.",
+      "publisher": {
+        "@id": "%SITE_URL%/#org"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Posizione in tempo reale delle corse Autolinee Toscane",
+        "Ricerca per linea con giorno e fascia oraria",
+        "Ricerca di collegamenti diretti fra due comuni toscani",
+        "Ritardi e corse soppresse",
+        "Età dichiarata di ogni posizione"
+      ],
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Toscana",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "IT"
+        }
+      }
+    }
+  ]
+}
+</script>

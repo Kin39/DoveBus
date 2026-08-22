@@ -17,122 +17,88 @@
     />
     <meta property="og:url" content="%SITE_URL%/" />
 
+    <!--@partial:jsonld-app-->
+
     <!--
-      `WebApplication` and `Organization` only. **No `WebSite` + `SearchAction`**
-      until the app's state is addressable by URL (`/mappa/?linea=381`): that
-      markup declares a search endpoint a crawler can send a query to, and there
-      is nothing here to send it to yet.
+      The FAQ, as its own script rather than a third node in the graph above:
+      the graph is shared with `/mappa/`, and these eight answers are only on
+      this page. Markup that claims content the page does not show is the one
+      thing `FAQPage` must never do.
     -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@graph": [
+        "@type": "FAQPage",
+        "@id": "%SITE_URL%/#faq",
+        "mainEntity": [
           {
-            "@type": "Organization",
-            "@id": "%SITE_URL%/#org",
-            "name": "DoveBus",
-            "url": "%SITE_URL%/",
-            "logo": "%SITE_URL%/icon-512.png",
-            "email": "%CONTACT_EMAIL%",
-            "description": "Progetto indipendente che pubblica su una mappa i dati aperti di trasporto pubblico della Regione Toscana."
-          },
-          {
-            "@type": "WebApplication",
-            "@id": "%SITE_URL%/#app",
-            "name": "DoveBus",
-            "url": "%SITE_URL%/mappa/",
-            "applicationCategory": "TravelApplication",
-            "operatingSystem": "Qualsiasi browser web",
-            "inLanguage": "it-IT",
-            "browserRequirements": "Richiede JavaScript.",
-            "publisher": { "@id": "%SITE_URL%/#org" },
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-            "featureList": [
-              "Posizione in tempo reale delle corse Autolinee Toscane",
-              "Ricerca per linea con giorno e fascia oraria",
-              "Ricerca di collegamenti diretti fra due comuni toscani",
-              "Ritardi e corse soppresse",
-              "Età dichiarata di ogni posizione"
-            ],
-            "areaServed": {
-              "@type": "AdministrativeArea",
-              "name": "Toscana",
-              "address": { "@type": "PostalAddress", "addressCountry": "IT" }
+            "@type": "Question",
+            "name": "Che cos'è DoveBus?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Una mappa web indipendente che mostra dove si trovano gli autobus in Toscana, usando i dati aperti pubblicati dalla Regione Toscana."
             }
           },
           {
-            "@type": "FAQPage",
-            "@id": "%SITE_URL%/#faq",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "Che cos'è DoveBus?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Una mappa web indipendente che mostra dove si trovano gli autobus in Toscana, usando i dati aperti pubblicati dalla Regione Toscana."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Su quali linee funziona?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Sulle linee Autolinee Toscane presenti nel feed regionale: circa 610 linee urbane ed extraurbane che toccano 267 comuni della Toscana."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Devo installare un'app o registrarmi?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No. DoveBus funziona dal browser di telefono, tablet o computer. Non c'è nessun account e non serve installare niente."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Quanto sono aggiornate le posizioni?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Il feed della Regione Toscana si rigenera circa ogni 120 secondi e DoveBus lo rilegge ogni 30 secondi. Una posizione arriva quindi già vecchia di circa due minuti: per questo l'età del dato è sempre scritta accanto al mezzo."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Perché un autobus non compare sulla mappa?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Può non essere in servizio, può non trasmettere la posizione, oppure la sua ultima posizione ha più di cinque minuti. In quel caso DoveBus lo toglie dalla mappa invece di mostrarlo come se fosse attuale."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Posso seguire una persona che si trova sull'autobus?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No. DoveBus vede i mezzi, non le persone: non sa chi è a bordo e non localizza nessuno. Non chiede mai la posizione di chi lo usa."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "DoveBus è un servizio ufficiale di Autolinee Toscane?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "No. È un progetto indipendente e non ufficiale, non affiliato ad Autolinee Toscane né alla Regione Toscana. Si limita a leggere i dati aperti che vengono pubblicati."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Quanto costa?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Niente. Non ci sono abbonamenti, pubblicità né tracciamento."
-                }
-              }
-            ]
+            "@type": "Question",
+            "name": "Su quali linee funziona?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sulle linee Autolinee Toscane presenti nel feed regionale: circa 610 linee urbane ed extraurbane, che toccano 267 comuni della Toscana e quasi 29.000 fermate."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Devo installare un'app o registrarmi?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. DoveBus funziona dal browser di telefono, tablet o computer. Non c'è nessun account, nessuna email da lasciare e niente da installare"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quanto sono aggiornate le posizioni?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Il feed della Regione Toscana si rigenera circa ogni 120 secondi e DoveBus lo rilegge ogni 30 secondi, quindi una posizione arriva già vecchia di circa due minuti. È il motivo per cui l'età del dato è sempre scritta accanto al mezzo invece di essere nascosta dietro la parola «live»."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Perché un autobus non compare sulla mappa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tre motivi possibili: non è in servizio in quel momento, non sta trasmettendo la posizione, oppure la sua ultima posizione ha più di cinque minuti. In quest'ultimo caso DoveBus lo toglie dalla mappa di proposito: un mezzo disegnato dove stava cinque minuti fa è un'informazione sbagliata travestita da informazione."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Posso seguire una persona che si trova sull'autobus?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. DoveBus vede i mezzi, non le persone: non sa chi è a bordo, non ha modo di saperlo e non chiede mai la posizione di chi lo sta usando."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "DoveBus è un servizio ufficiale di Autolinee Toscane?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. È un progetto indipendente e non ufficiale, non affiliato ad Autolinee Toscane né alla Regione Toscana. Si limita a leggere i dati aperti che vengono pubblicati e a disegnarli su una mappa, come la licenza CC BY 4.0 consente espressamente."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quanto costa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Niente. Non ci sono abbonamenti, pubblicità, cookie di profilazione né tracciamento di alcun tipo."
+            }
           }
         ]
       }
     </script>
+
   </head>
 
   <body>

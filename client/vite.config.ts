@@ -16,6 +16,28 @@ const SITE_URL = (process.env.SITE_URL ?? "https://dovebus.it").replace(/\/+$/, 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "ciao@dovebus.it";
 
 /**
+ * The day `/privacy/` last changed, written once and rendered twice.
+ *
+ * That page promises in prose that the date under it is the date of the last
+ * change, and repeats the same day as `dateModified` in its JSON-LD. Two
+ * hand-kept copies of one fact in one file is the CC-BY problem again at
+ * smaller scale, so it gets the same answer: one constant, two substitutions.
+ *
+ * **Deliberately not `process.env` and deliberately not "today".** `SITE_URL`
+ * is a deploy fact and belongs in the environment; this is an editorial claim
+ * about when a document changed. Stamping it at build time would make every
+ * rebuild announce a privacy policy revision that did not happen — a livelier
+ * lie than a stale date, not a fix for one. Edit it here when the page changes.
+ */
+const PRIVACY_UPDATED = "2026-08-22";
+
+/** The same day in the prose's own register: "22 agosto 2026". */
+const PRIVACY_UPDATED_IT = new Intl.DateTimeFormat("it-IT", {
+  dateStyle: "long",
+  timeZone: "UTC",
+}).format(new Date(`${PRIVACY_UPDATED}T00:00:00Z`));
+
+/**
  * Every indexable URL, in canonical form.
  *
  * Trailing slash throughout, including `/mappa/`: the pages are directories on
@@ -68,7 +90,9 @@ function siteConstants(): Plugin {
             }
           })
           .replaceAll("%SITE_URL%", SITE_URL)
-          .replaceAll("%CONTACT_EMAIL%", CONTACT_EMAIL);
+          .replaceAll("%CONTACT_EMAIL%", CONTACT_EMAIL)
+          .replaceAll("%PRIVACY_UPDATED_IT%", PRIVACY_UPDATED_IT)
+          .replaceAll("%PRIVACY_UPDATED%", PRIVACY_UPDATED);
       },
     },
     /** Vite watches entry HTML, not the files it pulls in. Reload on both. */

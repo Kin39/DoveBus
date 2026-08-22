@@ -222,9 +222,80 @@ async function auditHead(page: Page, path: string): Promise<readonly string[]> {
     } catch (error) {
       problems.push(`JSON-LD does not parse: ${String(error)}`);
     }
-    if (block.includes("%SITE_URL%")) problems.push("JSON-LD has an unsubstituted %SITE_URL%");
+    // Was `%SITE_URL%` alone; there are four constants now and a shipped
+    // `%PRIVACY_UPDATED%` would be as wrong as a shipped `%SITE_URL%`.
+    const token = /%[A-Z_]+%/.exec(block);
+    if (token) problems.push(`JSON-LD has an unsubstituted ${token[0]}`);
   }
+  problems.push(...(await auditFaqParity(page)));
   return problems;
+}
+
+/**
+ * Every answer in `FAQPage` must be findable in the page's own text.
+ *
+ * This is the one structured-data rule that is a rule and not a preference:
+ * markup describing content a reader cannot see is what the guideline forbids,
+ * and it is the easiest to break by accident — the JSON and the `<details>` are
+ * three hundred lines apart in the same file, so editing the prose and leaving
+ * the markup behind takes no carelessness at all. Four of the eight answers had
+ * already drifted into paraphrase that way before this check existed.
+ *
+ * Substring, not equality: an answer may quote the page's first sentences and
+ * stop, which is often the better excerpt — the page's version sometimes ends
+ * in a link, and «Il percorso completo del dato è qui.» is not an answer once
+ * it is lifted out of the document that made "qui" mean something.
+ */
+async function auditFaqParity(page: Page): Promise<readonly string[]> {
+  // Same rule as `auditHead`: no named inner functions in here, and a `const`
+  // arrow counts as named — esbuild rewrites it with a `__name` helper the page
+  // does not have, and the evaluate throws before it asserts anything. Hence the
+  // repeated `.replace(/\s+/g, " ").trim()` instead of a `flat()` helper.
+  return await page.evaluate(() => {
+    const problems: string[] = [];
+    // `textContent`, not `innerText`. The eight answers live in closed
+    // `<details>`, and `innerText` reports what is laid out — so it returns
+    // nothing for a collapsed one and every answer would fail a check it should
+    // pass. Google indexes accordion content and its own FAQ guidance allows
+    // expandable sections; the requirement is that the answer be in the document
+    // and reachable, which is exactly what `<details>` gives.
+    //
+    // The scripts have to come out first, or the JSON-LD would satisfy the
+    // check by containing itself.
+    const readable = document.body.cloneNode(true) as HTMLElement;
+    for (const node of readable.querySelectorAll("script, style, template")) node.remove();
+    const pageText = (readable.textContent ?? "").replace(/\s+/g, " ").trim();
+
+    for (const node of document.querySelectorAll('script[type="application/ld+json"]')) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(node.textContent ?? "");
+      } catch {
+        continue; // already reported by the caller
+      }
+      const graph = (parsed as { "@graph"?: unknown[] })["@graph"] ?? [parsed];
+      for (const entity of graph as { "@type"?: string; mainEntity?: unknown[] }[]) {
+        if (entity["@type"] !== "FAQPage") continue;
+        for (const item of (entity.mainEntity ?? []) as {
+          name?: string;
+          acceptedAnswer?: { text?: string };
+        }[]) {
+          for (const [label, text] of [
+            ["question", item.name],
+            ["answer", item.acceptedAnswer?.text],
+          ] as const) {
+            if (!text) {
+              problems.push(`FAQPage entry with no ${label}`);
+            } else if (!pageText.includes(text.replace(/\s+/g, " ").trim())) {
+              const shown = text.replace(/\s+/g, " ").trim().slice(0, 60);
+              problems.push(`FAQPage ${label} not on the page: "${shown}…"`);
+            }
+          }
+        }
+      }
+    }
+    return problems;
+  });
 }
 
 async function report(findings: readonly Findings[]): Promise<void> {

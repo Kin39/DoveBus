@@ -10,17 +10,25 @@
          the dark theme this replaced. -->
     <meta name="theme-color" content="#ffffff" />
 
-    <title>Mappa live dei bus in Toscana — DoveBus</title>
+    <!--
+      Deliberately *not* "Mappa live dei bus in Toscana": that is the landing
+      page's phrase, and two URLs on one head term is one URL too many — Google
+      picks a winner and the loser's equity goes nowhere. `/` keeps «dove sono
+      gli autobus in Toscana» because it is the page that can actually rank on
+      it (prose, FAQ, entity markup). This page takes the intent `/` cannot
+      serve and does not compete for: *which* line, *which* connection.
+    -->
+    <title>Cerca la tua linea o un collegamento — DoveBus</title>
     <meta
       name="description"
-      content="La mappa in tempo reale delle corse Autolinee Toscane: cerca una linea o un collegamento fra due comuni, segui la corsa e vedi ritardo, percorso ed età di ogni posizione."
+      content="Cerca una linea Autolinee Toscane o un collegamento diretto fra due comuni toscani, poi segui la corsa: posizione, ritardo, percorso ed età del dato."
     />
     <link rel="canonical" href="%SITE_URL%/mappa/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DoveBus" />
     <meta property="og:locale" content="it_IT" />
-    <meta property="og:title" content="Mappa live dei bus in Toscana — DoveBus" />
+    <meta property="og:title" content="Cerca la tua linea o un collegamento — DoveBus" />
     <meta
       property="og:description"
       content="Cerca una linea o un collegamento fra due comuni toscani e segui la corsa in diretta, con ritardo, percorso ed età della posizione."
@@ -61,10 +69,21 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
+    <!--@partial:jsonld-app-->
+
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
     <a class="skip-link" href="#sheet">Vai alla ricerca</a>
+
+    <!--
+      The page's heading, clipped rather than drawn. The design puts the wordmark
+      where an H1 would go, which is right for a full-bleed map and wrong for
+      anything reading the document: without this the served page has no heading
+      at all. It is not a keyword insertion — it is the same sentence the title
+      makes, said once in the body where a heading belongs.
+    -->
+    <h1 class="sr-only">Cerca la tua corsa Autolinee Toscane e seguila sulla mappa</h1>
 
     <div id="map" class="map" role="application" aria-label="Mappa dei bus in Toscana"></div>
 
@@ -113,7 +132,34 @@
       >
         <span class="sheet__grip" aria-hidden="true"></span>
       </button>
-      <div class="sheet__scroll" id="sheet-scroll"></div>
+      <!--
+        What the sheet holds before the app fills it — and everything a reader
+        without JavaScript gets. `#showSearch()` runs in the constructor and
+        `clear()`s this node, so it is gone by first paint and cannot duplicate
+        the footer the app renders.
+
+        It exists because the CC-BY line and the three site links were, on this
+        page alone, produced by a script. Every other page carries them in the
+        served HTML through the footer partial; a licence obligation discharged
+        only for clients that execute JavaScript is not discharged. The links
+        also mean this page stops being a dead end: before this it had exactly
+        one outbound internal link, the wordmark.
+
+        The basemap is credited generically here, as the app does until its style
+        settles — naming CARTO for tiles OpenFreeMap served would be a false
+        statement in the one place the licence asks for an exact one.
+      -->
+      <div class="sheet__scroll" id="sheet-scroll">
+        <footer class="credits">
+          <p>Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)</p>
+          <p>Confini comunali: openpolis / ISTAT · Mappa © OpenStreetMap</p>
+          <nav class="credits__nav" aria-label="Pagine del sito">
+            <a href="/come-funziona/">Come funziona</a>
+            <a href="/fonte-dati/">Fonte dati</a>
+            <a href="/privacy/">Privacy</a>
+          </nav>
+        </footer>
+      </div>
     </section>
 
     <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>

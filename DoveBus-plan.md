@@ -1,6 +1,6 @@
 # DoveBus — Implementation Plan
 
-**Status:** ✅ APPROVED 2026-08-11 · **Phase 4 BUILT + verified by the screenshot loop, then revised after the owner's manual check 2026-08-14** (MapLibre frontend, mobile-first, **light theme**; position estimated along the route between fixes with its uncertainty drawn; travelled path reconstructed on the shape; buses unheard-from 5 min hidden — see [`README.md`](README.md); code in [`client/`](client/)) · **Phase 0 spikes VERIFIED 2026-08-12** (full results: [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md); throwaway spikes in [`spikes/`](spikes/)) · **Phase 1 BUILT + verified on the live feed 2026-08-12** (static import, comune enrichment, refresh job, atomic swap) · **Phase 2 BUILT + verified on the live feeds 2026-08-12** (realtime pollers, trails, freshness, delay/cancellation join) · **Phase 3 BUILT + verified against the live database and feeds 2026-08-13** (Fastify API: both search modes, vehicles-in-bbox, trip detail with planned shape, SSE live stream, healthz — see [`README.md`](README.md); code in [`server/`](server/)) · **Phase 5 — public web surface ✅ COMPLETE 2026-08-22** (landing at `/`, the three trust pages, app moved to `/mappa/`, head + JSON-LD + og-image + manifest + robots + sitemap; both screenshot loops clean — see §10.4). Next: deploy (Hetzner + Netlify) — set the real `SITE_URL` first, see §10.7. · **Complexity:** Medium (MVP), Large (with all phases)
+**Status:** ✅ APPROVED 2026-08-11 · **Phase 4 BUILT + verified by the screenshot loop, then revised after the owner's manual check 2026-08-14** (MapLibre frontend, mobile-first, **light theme**; position estimated along the route between fixes with its uncertainty drawn; travelled path reconstructed on the shape; buses unheard-from 5 min hidden — see [`README.md`](README.md); code in [`client/`](client/)) · **Phase 0 spikes VERIFIED 2026-08-12** (full results: [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md); throwaway spikes in [`spikes/`](spikes/)) · **Phase 1 BUILT + verified on the live feed 2026-08-12** (static import, comune enrichment, refresh job, atomic swap) · **Phase 2 BUILT + verified on the live feeds 2026-08-12** (realtime pollers, trails, freshness, delay/cancellation join) · **Phase 3 BUILT + verified against the live database and feeds 2026-08-13** (Fastify API: both search modes, vehicles-in-bbox, trip detail with planned shape, SSE live stream, healthz — see [`README.md`](README.md); code in [`server/`](server/)) · **Phase 5 — public web surface ✅ COMPLETE 2026-08-22** (landing at `/`, the three trust pages, app moved to `/mappa/`, head + JSON-LD + og-image + manifest + robots + sitemap; both screenshot loops clean — see §10.4) · **Technical SEO audit of the built site ✅ DONE 2026-08-22** (run against `client/dist`, not the sources; seven fixes — intent split between `/` and `/mappa/`, the map page given a heading, shared entity markup and a crawlable attribution, the redirect table completed, `FAQPage` made quotable and guarded by a new assertion — see §10.8). Next: deploy (Hetzner + Netlify) — set the real `SITE_URL` first, see §10.7. · **Complexity:** Medium (MVP), Large (with all phases)
 
 > **Phase 0 verified deltas (baked into the sections below):** RT↔static `trip_id` join **96.6% exact / 100% route+direction+shape** (top risk retired). Calendar is a **`calendar_dates`-only** model (weekday columns all zero — resolver keys on `calendar_dates` first). RT header regenerates **~120 s → poll 30 s**, not 15 s. Static `/gtfs` is a **125 MB, 10-file consolidated feed** (not 82 MB / 62 files); `shapes.txt` **277 MB**, `stop_times.txt` **268 MB**. Comuni source = **openpolis `limits_R_9`** GeoJSON (273 comuni), PIP **99.3%**. License **CC BY**, string `Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)`.
 
@@ -221,7 +221,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 5. **Phase 4 — Frontend ✅ DONE (2026-08-14), revised the same day after the owner's manual check.** Four findings, all addressed: a light theme replaced the dark one outright (owner's call, busbus.it as reference — the data ramp was re-picked against paper, not inverted, since a luminous aqua carries under 2:1 on white); the search button died on the *second* search (a control detached from the DOM was never re-enabled — and the screenshot loop had not caught it because every state started from a fresh page load, so a continuous-journey state was added); markers moved only when a snapshot landed, every ~2 minutes; and the travelled trail was drawn as straight chords between fixes up to 2.7 km apart, cutting through hillsides. The last two shared one fix — **projecting position onto the trip's `shape`** (`client/src/map/route.ts`), which yields both a distance-along-route to advance the marker smoothly along the road and a travelled path that *is* the road. Estimated motion was chosen with its uncertainty made visible (owner's option (a)): the trip view states how far the marker has been advanced past the last real fix, a disc on the map shows how far off it could be, the raw fixes stay drawn as separate marks so reconstruction is never confused with observation, and buses unheard-from for 5 minutes leave the map. The estimate also stops being *extended* at that same 5 minutes: the followed bus is exempt from the cutoff so it never vanishes mid-watch, but a code review found that exemption also made its extrapolation unbounded — a selected bus going silent drifted **58.7 km in an hour** while the interface announced the number. The age reported stays truthful past the cap; only the guess is bounded. **One API change came out of it:** estimating a speed needs two fixes, and a client starting cold has one — so `/api/vehicles` now sends each bus's previous position, taken from the trail buffer the server already keeps. Verified on the live feed: RT positions project onto the published shape to within **0–7 m**, the reconstructed trail carries **1,800 vertices where the raw fixes gave 15**, and **59% of markers move within 14 s of a cold load** against 0% before. The feed also produces a "previous" stamped *later* than the current fix (a trail point falls back to the server clock for a bus reporting none), so that case is withheld rather than served — covered by `server/test/serialize.test.ts`. Original build notes follow.
    **Phase 4 — original build notes:** Vite + TypeScript + MapLibre on port 5280 (`strictPort`), built with the `frontend-design` skill and mobile-first at 375×812. Full-screen petrol-tinted raster basemap (no API key), a three-detent draggable bottom sheet holding both search modes, comune/line autocomplete as an ARIA combobox, a trip list led by the line's own code plate, and a live view with the planned shape, the GPS trail, the delay badge and the freshness meter. Vehicles are a GeoJSON circle layer with `requestAnimationFrame` interpolation on the source data — never DOM markers. Above 720 px the sheet becomes a left column and the map's padding follows it. **Verified by the screenshot loop** (`npm run shots`, committed): 12 states × 6 viewports = 72 shots against the live API, two consecutive clean rounds — no horizontal scroll, no interactive target under 44 px, no unexpected console errors, every state reachable. **One design change against the plan:** freshness is recomputed on the client every frame from the bus's own `timestamp` rather than trusted from the payload — the server's bucket is correct on delivery and wrong a minute later, and a colour frozen at send time would keep claiming "recente" for a bus that had gone silent. **One observation for the owner:** with the Phase-2 bands (90/180/300 s) and the measured 116→240 s age cycle, the whole fleet still swings green→amber together on the publisher's ~120 s rhythm — the bands describe the bus better than the old ones did, but "attenuato" is still reached by healthy buses for roughly half of every cycle. See "colour cycling" below.
 6. **`shapes` import + planned-route line** — mandatory: `/api/trip/:tripId` serves the trip's `shape` polyline; the frontend draws it as the route the bus will follow.
-7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**.
+7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**. Auditing the *result* of those nine items then found seven more things, none of which were in the plan — including two places §10.4 claimed more than the code did: **§10.8**.
 8. **Pre-deploy fixes:** §6.2 (a) `TRUST_PROXY` default, (c) production source maps, (d) deploy config + CSP — plus the §6.1 items. §6.2 (b), the SSE CORS bug, lands **with** the change that sets the real origin.
 9. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
@@ -312,7 +312,10 @@ chunk alone. Indexable prose went from the **eleven words** measured in §10.1 t
 3. **`/fonte-dati/`** ✅ — four sources each with licence and link, what DoveBus adds, the exact
    attribution string, and the not-affiliated disclaimer. **openpolis/ISTAT confirmed CC BY 4.0**
    (fetched, not assumed). The CC-BY line is now in the served HTML of *every* page via a build-time
-   partial, which discharges the licence obligation the JS-only footer did not.
+   partial, which discharges the licence obligation the JS-only footer did not. **«Every» was four
+   pages out of five when this was written** — `/mappa/` does not use the partial and kept rendering
+   its attribution from `main.ts`, so on the one page with a third-party basemap the obligation was
+   discharged only for clients that run JavaScript. Closed in §10.8.
 4. **`/privacy/`** ✅ — **and the plan was wrong here.** This item assumed the client used browser
    geolocation. It does not: greps for `navigator.`, `localStorage`, `sessionStorage` and `cookie`
    over `client/src` return **nothing**. The page says so, and states instead what genuinely leaves
@@ -322,7 +325,9 @@ chunk alone. Indexable prose went from the **eleven words** measured in §10.1 t
 5. **`<head>` block** ✅ — per-page `title`/`description`/`canonical`, full Open Graph, Twitter
    `summary_large_image`, `Organization` + `WebApplication` on the landing, `TechArticle` /
    `Dataset` / `WebPage` on the trust pages, and `FAQPage` for the FAQ. **No `WebSite` +
-   `SearchAction`**, per §10.3 — the app's state is still not URL-addressable.
+   `SearchAction`**, per §10.3 — the app's state is still not URL-addressable. `/mappa/` got no
+   JSON-LD at all here, which left `WebApplication` describing `/mappa/` from `/`; §10.8 moves it to
+   a partial both pages share.
 6. **`og-image.png`, 1200×630** ✅ — produced from HTML by `npm run og` (`client/scripts/og.html`)
    rather than drawn once in an editor, so it stays editable and in sync. It carries the ageing band,
    not a map thumbnail: a map at feed size is an unreadable grey rectangle.
@@ -407,3 +412,100 @@ path, not the origin.
 
 **Phase 0 done — proceed to Phase 1?** Reply to confirm, or adjust any amended detail
 (poll cadence, calendar resolver, comuni source) before the static-import build begins.
+
+### 10.8 Technical SEO audit of the built site — ✅ DONE 2026-08-22
+
+Run against `client/dist` after a build, not against the sources — `robots.txt` and `sitemap.xml`
+do not exist until `crawlerFiles()` emits them, and a source `<head>` is incomplete by construction
+until the partials expand. Seven fixes, a build after each, `npm run site-shots` clean on 24 shots.
+**Nothing in this section was in the plan before today**; §10.4 shipped nine planned items and this
+is what auditing the result of them found.
+
+**1. Cannibalisation — `/` and `/mappa/` were competing for one query.** Invisible to every
+per-page check, because each page passes on its own; it only shows when the five are laid side by
+side. `/` said «dove sono gli autobus **in Toscana**», `/mappa/` said «**Mappa** live dei **bus in
+Toscana**», and both descriptions opened on *«…mappa in tempo reale delle corse Autolinee
+Toscane…»*. Google picks one and the other's equity goes nowhere — and it would pick `/`, since
+`/mappa/` was an empty document to a crawler. **One primary intent per URL, assigned:**
+
+| URL | Primary intent | Owns |
+|---|---|---|
+| `/` | *where are the buses* | the head term — the only page that can rank on it |
+| `/mappa/` | *which line, which connection* | «Cerca la tua linea o un collegamento» |
+| `/come-funziona/` | *how fresh is this, how does it work* | the cadence and the limits |
+| `/fonte-dati/` | *where is the data from, may I reuse it* | GTFS / GTFS-RT / licences |
+| `/privacy/` | *what do you collect* | branded trust |
+
+**2. `/mappa/` was a dead end with one outbound link** — the wordmark — no `H1` and no JSON-LD, on a
+page that is `Allow`ed and sits in the sitemap at 0.9. The choice was never «index it or not»: it
+was «index it as an eleven-word rival to `/`, or as the page that answers a different question». An
+empty indexed document next to a full one is what made finding 1 worse. Closed with:
+
+- **A clipped `H1`** (`.sr-only` in `base.css`). Not a keyword insertion — the page *has* a heading,
+  the design draws it as the wordmark because a title bar over a full-bleed map is chrome competing
+  with what the chrome is for. `display: none` would take it out of the accessibility tree too;
+  clipping a 1 px box leaves it in.
+- **`partials/jsonld-app.html`** — `Organization` + `WebApplication`, shared by `/` and `/mappa/`
+  under the same `@id`. The node's own `url` is `/mappa/`, so declaring it only on the landing
+  described one page from another and left the described one bare. A partial rather than a copy so
+  the `featureList` cannot claim one set of features on the landing and another on the app. The
+  landing's `FAQPage` became its own second `<script>`, since those eight answers are only there.
+- **A static credits block as the initial content of `#sheet-scroll`.** `#showSearch()` runs in the
+  constructor and `clear()`s that node, so it is gone by first paint and cannot duplicate the footer
+  the app renders — *verified in the browser, not deduced: one `footer.credits`, zero layout shift.*
+  It carries the CC-BY line and the three page links, which closes the §10.4 item 3 gap above. The
+  basemap is credited generically, as `main.ts` does until its style settles.
+
+Served HTML on `/mappa/`: **11 words → 41**, four outbound internal links, 2.17 → 4.11 KB gzip.
+
+**3. `_redirects` — clean, and half-finished.** No chains: every rule is one hop, and every target is
+exactly the URL that page's `canonical` names. But only two of the five `index.html` forms had a
+rule. The file's stated reason for existing is to not depend on Netlify's Pretty URLs setting — so
+the guarantee was real for `/` and `/mappa/` and a hope for the other three. Three rules added.
+
+**4. Four of eight `FAQPage` answers were not on the page** — abridged rewrites, not excerpts. Easy
+to do by accident: the JSON and the `<details>` are three hundred lines apart in the same file. All
+eight are now contiguous excerpts, and **`auditFaqParity()` in `scripts/site-shots.ts` fails the run
+if one ever drifts again.** Negative-tested: swap an answer for a paraphrase and it goes red.
+
+Two things that check taught, both now in its comments: **a `const` arrow counts as a named inner
+function** for the `__name` trap `auditHead` already warned about; and it must read `textContent`,
+not `innerText`, because the answers live in *closed* `<details>` and `innerText` reports only what
+is laid out — it saw nothing and failed all eight. Google indexes accordion content and its FAQ
+guidance permits expandable sections, so `innerText` was the wrong yardstick, not the markup. The
+existing `%SITE_URL%` guard was widened to any `%TOKEN%`, there being four constants now.
+
+**5. `Dataset` promised downloads without saying where.** Two `DataDownload` nodes had no
+`contentUrl`. They now carry the three real artifact URLs the server already polls. The
+openpolis/ISTAT boundaries came out of the `description`: a `Dataset` whose `creator` is one
+publisher must not fold a second publisher's data into what it describes.
+
+**6. `dateModified` on `/privacy/` was a hardcoded second copy** of the day the page states in prose,
+in the same file. Now one `PRIVACY_UPDATED` constant, two substitutions, and a `<time datetime>` in
+the prose. **Deliberately not `process.env` and deliberately not «today»** — `SITE_URL` is a deploy
+fact, this is an editorial claim about when a document changed, and stamping it at build time would
+make every rebuild announce a policy revision that did not happen.
+
+**7. Internal linking.** Anchor text was already good — not one «clicca qui» in the site. The gap was
+that the three trust pages reached each other only through nav chrome, never from prose. Two
+contextual links added, `/come-funziona/` ↔ `/fonte-dati/`, plus `author` on the `TechArticle`.
+
+**Checklist items that do not apply here, recorded so they are not re-raised.** `hreflang` — one
+language. **Font preload for LCP** — `font-display: swap` is set, so the fallback paint *is* the LCP
+paint and the webfont gates nothing; §10.5's «findings that cancel work» applies a third time.
+`BreadcrumbList` — four pages at one level. Image `alt` — the site has no `<img>` at all. Sitemap
+`<priority>` — Google ignores it; left alone because it costs nothing and misleads nobody.
+
+**Left undone on purpose.** `og:type` says `website` on `/come-funziona/` while its JSON-LD says
+`TechArticle`: fixing it means an override in the shared head partial, and the field moves social
+cards, not rankings. And **no `datePublished` on that article** — the page displays no date, and
+invisible date markup would break the rule the site keeps on `/privacy/`, where the date is
+readable. Owner's call.
+
+**One correction made mid-audit, recorded because it is the standing lesson pointing a third way.**
+A landing FAQ sentence was edited so a markup excerpt would come out tidy. That is backwards — the
+markup quotes the prose, not the reverse — so the sentence was restored and the excerpt cut at the
+clause instead. Proved rather than asserted: the site was rebuilt from `HEAD` in a scratch worktree
+and the rendered body text of all five pages diffed. **`/` is character-identical**; the only
+visible copy changes in the whole site are the two links in item 7 and the `<time>` wrapper in
+item 6.
