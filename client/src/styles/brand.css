@@ -1,0 +1,61 @@
+/*
+ * The wordmark, shared by the map app and the content pages.
+ *
+ * It lives on its own because it is the one thing that must be identical
+ * everywhere: the mark in the map's top bar and the mark in the site header are
+ * the same object at different sizes, and a copy in each stylesheet is a copy
+ * that drifts. Only the letterforms and the dot are here — whatever chrome the
+ * mark sits in (the map's blurred pill, the header's hairline row) belongs to
+ * the surface that owns it.
+ *
+ * The three pieces sit on a shared baseline, and the gap between the two words
+ * is zero on purpose: "Dove" and "BUS" separate optically, by the jump in width
+ * and weight, not by space. The dot is the only thing that gets air, and it gets
+ * its own margin rather than a flex `gap`, which would push the words apart too.
+ */
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+}
+
+.brand__dove {
+  font-stretch: 100%;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+/* The wordmark's whole idea: the question is soft, the answer is stamped. */
+.brand__bus {
+  font-stretch: 78%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+/*
+ * The live dot: the one coloured thing in the wordmark, and the reason the mark
+ * says "a position from now" rather than just naming the product.
+ *
+ * It does not pulse. The animation belongs to `.trip__livedot`, where a blink
+ * means a fix actually arrived — a mark that blinked would be claiming to be
+ * data. And it is a circle rather than a bus pictogram because that is the shape
+ * the vehicles take on the map.
+ *
+ * Sized from the type rather than in fixed pixels so the mark scales with its
+ * surface: 6 px at the map's 13 px body, ~8 px in the site header, and the
+ * margin tracks it so the optical air stays constant.
+ */
+.brand__dot {
+  width: 0.46em;
+  height: 0.46em;
+  border-radius: 50%;
+  background: var(--fresh-recent);
+  align-self: center;
+  margin-left: 0.46em;
+  flex: none;
+}

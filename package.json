@@ -13,6 +13,8 @@
     "dev": "npm run dev --workspace=client",
     "build:client": "npm run build --workspace=client",
     "shots": "npm run shots --workspace=client --",
+    "site-shots": "npm run site-shots --workspace=client --",
+    "og": "npm run og --workspace=client",
     "import": "npm run import --workspace=server --",
     "refresh": "npm run refresh --workspace=server --",
     "verify": "npm run verify --workspace=server --",

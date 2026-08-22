@@ -3,6 +3,7 @@
 import "@fontsource-variable/instrument-sans/wdth.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles/tokens.css";
+import "./styles/brand.css";
 import "./styles/base.css";
 import "./styles/sheet.css";
 import "./styles/panel.css";
@@ -158,6 +159,14 @@ class App {
    * until the style settles — crediting CARTO for tiles OpenFreeMap served, or
    * the reverse, would be a false statement in the one place the licence asks us
    * to be exact. Until then it credits only OpenStreetMap, which is true of both.
+   *
+   * It also carries the links to the site's three content pages, and that is
+   * deliberate: this page has no menu, because a hamburger in the top bar would
+   * compete with the fleet counter at 320 px and cost a drawer and a focus trap
+   * on the heaviest page of the site. The bottom of the sheet is where the
+   * attribution already is, it is thumb-reachable, and someone looking for
+   * "who publishes this data" or "what do you store about me" looks at the fine
+   * print — so the links live in the fine print.
    */
   #swapFooter(): void {
     const basemap = this.#map.basemapCredit ?? "Mappa © OpenStreetMap";
@@ -165,6 +174,11 @@ class App {
       el("footer", { class: "credits" }, [
         el("p", { text: "Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)" }),
         el("p", { text: `Confini comunali: openpolis / ISTAT · ${basemap}` }),
+        el("nav", { class: "credits__nav", "aria-label": "Pagine del sito" }, [
+          el("a", { href: "/come-funziona/", text: "Come funziona" }),
+          el("a", { href: "/fonte-dati/", text: "Fonte dati" }),
+          el("a", { href: "/privacy/", text: "Privacy" }),
+        ]),
       ]),
     );
   }

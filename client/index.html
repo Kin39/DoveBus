@@ -1,72 +1,552 @@
 <!doctype html>
 <html lang="it">
   <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
-    />
-    <meta name="theme-color" content="#060a11" />
+    <!--@partial:head-common-->
+
+    <title>DoveBus — dove sono gli autobus in Toscana, adesso</title>
     <meta
       name="description"
-      content="Dov'è il tuo bus in Toscana, adesso. Posizione in tempo reale delle corse Autolinee Toscane, con ritardi e percorso."
+      content="Mappa in tempo reale delle corse Autolinee Toscane: posizione dei mezzi, ritardi e percorso, con l'età di ogni dato sempre dichiarata. Senza app e senza account."
     />
-    <title>DoveBus — i bus della Toscana, adesso</title>
+    <link rel="canonical" href="%SITE_URL%/" />
+
+    <meta property="og:title" content="DoveBus — dove sono gli autobus in Toscana, adesso" />
+    <meta
+      property="og:description"
+      content="Mappa in tempo reale delle corse Autolinee Toscane, con l'età di ogni posizione sempre dichiarata. Gratis, senza app e senza registrazione."
+    />
+    <meta property="og:url" content="%SITE_URL%/" />
+
     <!--
-      The wordmark composes in HTML, but an icon cannot: these are exported at
-      their real size. The background is opaque #0d1825 in every cut, never
-      transparent — the green dot on a light browser bar measures 1.97:1 and
-      disappears. At 16 px the lettering stops being readable, so that cut is the
-      dot alone.
+      `WebApplication` and `Organization` only. **No `WebSite` + `SearchAction`**
+      until the app's state is addressable by URL (`/mappa/?linea=381`): that
+      markup declares a search endpoint a crawler can send a query to, and there
+      is nothing here to send it to yet.
     -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "%SITE_URL%/#org",
+            "name": "DoveBus",
+            "url": "%SITE_URL%/",
+            "logo": "%SITE_URL%/icon-512.png",
+            "email": "%CONTACT_EMAIL%",
+            "description": "Progetto indipendente che pubblica su una mappa i dati aperti di trasporto pubblico della Regione Toscana."
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "%SITE_URL%/#app",
+            "name": "DoveBus",
+            "url": "%SITE_URL%/mappa/",
+            "applicationCategory": "TravelApplication",
+            "operatingSystem": "Qualsiasi browser web",
+            "inLanguage": "it-IT",
+            "browserRequirements": "Richiede JavaScript.",
+            "publisher": { "@id": "%SITE_URL%/#org" },
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "featureList": [
+              "Posizione in tempo reale delle corse Autolinee Toscane",
+              "Ricerca per linea con giorno e fascia oraria",
+              "Ricerca di collegamenti diretti fra due comuni toscani",
+              "Ritardi e corse soppresse",
+              "Età dichiarata di ogni posizione"
+            ],
+            "areaServed": {
+              "@type": "AdministrativeArea",
+              "name": "Toscana",
+              "address": { "@type": "PostalAddress", "addressCountry": "IT" }
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "%SITE_URL%/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Che cos'è DoveBus?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Una mappa web indipendente che mostra dove si trovano gli autobus in Toscana, usando i dati aperti pubblicati dalla Regione Toscana."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Su quali linee funziona?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sulle linee Autolinee Toscane presenti nel feed regionale: circa 610 linee urbane ed extraurbane che toccano 267 comuni della Toscana."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Devo installare un'app o registrarmi?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. DoveBus funziona dal browser di telefono, tablet o computer. Non c'è nessun account e non serve installare niente."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Quanto sono aggiornate le posizioni?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Il feed della Regione Toscana si rigenera circa ogni 120 secondi e DoveBus lo rilegge ogni 30 secondi. Una posizione arriva quindi già vecchia di circa due minuti: per questo l'età del dato è sempre scritta accanto al mezzo."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Perché un autobus non compare sulla mappa?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Può non essere in servizio, può non trasmettere la posizione, oppure la sua ultima posizione ha più di cinque minuti. In quel caso DoveBus lo toglie dalla mappa invece di mostrarlo come se fosse attuale."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Posso seguire una persona che si trova sull'autobus?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. DoveBus vede i mezzi, non le persone: non sa chi è a bordo e non localizza nessuno. Non chiede mai la posizione di chi lo usa."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "DoveBus è un servizio ufficiale di Autolinee Toscane?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. È un progetto indipendente e non ufficiale, non affiliato ad Autolinee Toscane né alla Regione Toscana. Si limita a leggere i dati aperti che vengono pubblicati."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Quanto costa?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Niente. Non ci sono abbonamenti, pubblicità né tracciamento."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
+
   <body>
-    <a class="skip-link" href="#sheet">Vai alla ricerca</a>
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
 
-    <div id="map" class="map" role="application" aria-label="Mappa dei bus in Toscana"></div>
+    <!--@partial:header-->
 
-    <header class="topbar" id="topbar">
-      <p class="brand">
-        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span
-        ><span class="brand__dot" aria-hidden="true"></span>
-      </p>
-      <p class="fleet" id="fleet" aria-live="polite">
-        <span class="fleet__count" id="fleet-count">—</span>
-        <span class="fleet__unit">bus in vista</span>
-      </p>
-    </header>
+    <main id="contenuto">
+      <!-- ---- hero ------------------------------------------------------ -->
 
-    <div class="mapctl">
-      <button
-        type="button"
-        class="mapctl__button"
-        id="recenter"
-        aria-label="Inquadra tutta la Toscana"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="4.2" />
-          <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
-        </svg>
-      </button>
-    </div>
+      <section class="hero shell">
+        <p class="eyebrow">Toscana · dati aperti · servizio non ufficiale</p>
 
-    <section class="sheet" id="sheet" aria-label="Ricerca corse">
-      <button
-        type="button"
-        class="sheet__handle"
-        id="sheet-handle"
-        aria-label="Trascina per ridimensionare il pannello"
-      >
-        <span class="sheet__grip" aria-hidden="true"></span>
-      </button>
-      <div class="sheet__scroll" id="sheet-scroll"></div>
-    </section>
+        <h1 class="headline">
+          <span class="headline__soft">Non a che ora doveva passare il bus.</span>
+          <span class="headline__stamp">Dov'è adesso.</span>
+        </h1>
 
-    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+        <p class="hero__lead">
+          DoveBus mostra su una mappa dove si trovano davvero le corse
+          <strong>Autolinee Toscane</strong>, in tutta la Toscana, leggendo i dati aperti pubblicati
+          dalla Regione. Niente app da installare, niente registrazione, niente costo.
+        </p>
 
-    <script type="module" src="/src/main.ts"></script>
+        <div class="hero__actions">
+          <a class="button" href="/mappa/">
+            Apri la mappa <span class="button__arrow" aria-hidden="true">→</span>
+          </a>
+          <p class="hero__note">Si apre nel browser, anche sul telefono.</p>
+        </div>
+
+        <!--
+          Four measured facts, not four claims. The line and comune counts come
+          from the timetable currently loaded; the fleet figure is what the live
+          feed carries on an ordinary weekday.
+        -->
+        <dl class="counts">
+          <div>
+            <dt class="counts__label">Linee coperte</dt>
+            <dd class="counts__value">610</dd>
+          </div>
+          <div>
+            <dt class="counts__label">Comuni toscani</dt>
+            <dd class="counts__value">267</dd>
+          </div>
+          <div>
+            <dt class="counts__label">Mezzi che trasmettono</dt>
+            <dd class="counts__value counts__value--approx">~1.000</dd>
+          </div>
+          <div>
+            <dt class="counts__label">Ogni quanto rileggiamo</dt>
+            <dd class="counts__value">30 s</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ---- the ageing band: the signature ---------------------------- -->
+
+      <section class="section shell" id="eta" aria-labelledby="eta-titolo">
+        <div class="section__head">
+          <p class="eyebrow">Freschezza del dato</p>
+          <h2 class="section__title" id="eta-titolo">
+            Ogni pallino sulla mappa ha un'età, ed è scritta accanto.
+          </h2>
+          <p class="section__intro">
+            Una posizione non è «adesso» solo perché è appena comparsa sullo schermo. DoveBus conta i
+            secondi passati dall'ultimo dato ricevuto da ciascun mezzo e li mostra sempre. Questa è
+            la scala vera che usa il prodotto, non un'illustrazione.
+          </p>
+        </div>
+
+        <figure class="band">
+          <!--
+            0–300 s occupies 86% of the track, to scale. The last 14% is the
+            unbounded tail past the cutoff, which is not a scale and is not drawn
+            as one — it is where a vehicle leaves the map.
+          -->
+          <div class="band__track">
+            <div class="band__seg" data-bucket="live" style="--w: 25.8%"></div>
+            <div class="band__seg" data-bucket="recent" style="--w: 25.8%"></div>
+            <div class="band__seg" data-bucket="delayed" style="--w: 34.4%"></div>
+            <div class="band__seg" data-bucket="gone" style="--w: 14%">
+              <span class="band__tail">fuori mappa</span>
+            </div>
+            <!--
+              The head marks the age of a real fix while you look at it: it enters
+              at 116 s, because that is how old a position already is when it
+              reaches us, and climbs for the ~120 s until the next snapshot lands.
+            -->
+            <div class="band__head" aria-hidden="true"></div>
+          </div>
+
+          <div class="band__ticks" aria-hidden="true">
+            <span class="band__tick" style="--w: 25.8%">0 s</span>
+            <span class="band__tick" style="--w: 25.8%">90 s</span>
+            <span class="band__tick" style="--w: 34.4%">180 s</span>
+            <span class="band__tick">300 s</span>
+          </div>
+
+          <div class="band__keys">
+            <div class="band__key" data-bucket="live">
+              <span class="band__word">In diretta</span>
+              <span class="band__gloss">
+                0–90 s. Oggi non si accende mai: il feed regionale non è così veloce, e non facciamo
+                finta di sì.
+              </span>
+            </div>
+            <div class="band__key" data-bucket="recent">
+              <span class="band__word">Recente</span>
+              <span class="band__gloss">91–180 s. È qui che sta quasi tutta la flotta.</span>
+            </div>
+            <div class="band__key" data-bucket="delayed">
+              <span class="band__word">Attenuato</span>
+              <span class="band__gloss">
+                181–300 s. Il mezzo sta tardando a farsi sentire e il colore si spegne.
+              </span>
+            </div>
+            <div class="band__key" data-bucket="gone">
+              <span class="band__word">Silenzioso</span>
+              <span class="band__gloss">
+                Oltre 5 minuti: esce dalla mappa, invece di restare lì come se fosse attuale.
+              </span>
+            </div>
+          </div>
+
+          <figcaption class="band__caption">
+            Il segno nero è l'età di un dato reale. Il feed della Regione Toscana si rigenera circa
+            ogni 120 secondi, quindi una posizione arriva già vecchia di circa due minuti e continua
+            a invecchiare fino alla successiva. Preferiamo dirlo che nasconderlo:
+            <a href="/come-funziona/">il percorso completo del dato è qui</a>.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ---- the two questions a rider actually asks -------------------- -->
+
+      <section class="section shell" aria-labelledby="cerca-titolo">
+        <div class="section__head">
+          <p class="eyebrow">Due modi di chiedere</p>
+          <h2 class="section__title" id="cerca-titolo">
+            Sai il numero della linea, oppure sai solo dove sei.
+          </h2>
+          <p class="section__intro">
+            Le due domande portano allo stesso posto: l'elenco delle corse, e da lì la corsa in
+            diretta. Nessuna delle due richiede di sapere l'altra.
+          </p>
+        </div>
+
+        <div class="pair">
+          <article class="card">
+            <span class="plate">SI381</span>
+            <h3 class="card__title">Cerco una linea</h3>
+            <p class="card__body">
+              Scrivi il numero com'è scritto sul mezzo, scegli il giorno e la fascia oraria, e vedi
+              tutte le corse di quella linea. Quelle con un bus in strada in questo momento sono
+              marcate.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="od">
+              Siena <span class="od__arrow" aria-hidden="true">→</span> Poggibonsi
+            </span>
+            <h3 class="card__title">Cerco un collegamento</h3>
+            <p class="card__body">
+              Scrivi il comune da cui parti e quello dove vai. DoveBus cerca le corse dirette fra i
+              due, senza cambi, nella fascia oraria che indichi. I 273 comuni toscani sono tutti
+              nell'elenco.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ---- the live view --------------------------------------------- -->
+
+      <section class="section shell" aria-labelledby="corsa-titolo">
+        <div class="section__head">
+          <p class="eyebrow">La corsa in diretta</p>
+          <h2 class="section__title" id="corsa-titolo">
+            Quando segui una corsa, vedi tutto quello che si può sapere.
+          </h2>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">Il percorso completo</dt>
+            <dd class="deflist__desc">
+              La strada che il mezzo deve fare, da capolinea a capolinea, come sta nell'orario
+              ufficiale — non una linea dritta fra due punti.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Il tratto già percorso</dt>
+            <dd class="deflist__desc">
+              Ricostruito sulla strada vera. Le posizioni GPS ricevute si appoggiano al percorso
+              pubblicato entro pochi metri, quindi la scia segue le curve invece di tagliare le
+              colline.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Ritardo, anticipo, soppressione</dt>
+            <dd class="deflist__desc">
+              In orario, <em>+7 min</em>, oppure <span class="chip-alarm">soppressa</span> quando
+              l'operatore comunica che la corsa non si fa. Circa nove corse in viaggio su dieci
+              hanno questo dato.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Quanto è pieno</dt>
+            <dd class="deflist__desc">
+              Da «vuoto» a «solo in piedi», quando il mezzo lo dichiara. Molti non lo dichiarano, e
+              in quel caso non c'è scritto niente.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Quanto stiamo indovinando</dt>
+            <dd class="deflist__desc">
+              Fra un dato GPS e il successivo il mezzo viene fatto avanzare lungo il percorso, per
+              non lasciarlo fermo due minuti. Un cerchio mostra di quanto quella stima potrebbe
+              sbagliare, e le posizioni davvero ricevute restano disegnate a parte: la ricostruzione
+              non si confonde mai con l'osservazione.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ---- the limits ------------------------------------------------ -->
+
+      <section class="section shell" aria-labelledby="limiti-titolo">
+        <div class="section__head">
+          <p class="eyebrow">Detto prima che lo scopra da solo</p>
+          <h2 class="section__title" id="limiti-titolo">Quello che DoveBus non è.</h2>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">Non è un servizio ufficiale</p>
+            <p class="limits__body">
+              DoveBus è un progetto indipendente. Non è gestito né approvato da Autolinee Toscane o
+              dalla Regione Toscana: legge i dati aperti che vengono pubblicati, e basta. Per
+              informazioni ufficiali su biglietti, orari e disservizi il riferimento resta
+              l'operatore.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Non vede le persone</p>
+            <p class="limits__body">
+              Vede i mezzi. Non sa chi c'è a bordo, non localizza nessuno e non ti chiede mai dove
+              sei: DoveBus non usa la geolocalizzazione del browser.
+              <a href="/privacy/">La pagina privacy lo spiega per intero</a>.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Non conosce le corse aggiunte all'ultimo momento</p>
+            <p class="limits__body">
+              Circa il 3% delle corse che viaggiano non esiste nell'orario ufficiale del giorno:
+              sono servizi aggiunti dall'operatore. Si vedono lo stesso sulla mappa, ma con meno
+              dettagli — il percorso pianificato può mancare.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Non inventa una posizione che non ha</p>
+            <p class="limits__body">
+              Se un mezzo non si fa sentire da più di cinque minuti sparisce dalla mappa, e la
+              stima di dove sarebbe arrivato smette di essere estesa. Un pallino fermo che sembra
+              attuale è peggio di nessun pallino.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Non pianifica il viaggio</p>
+            <p class="limits__body">
+              Non calcola itinerari con cambi, non confronta alternative e non vende biglietti. Fa
+              una cosa sola: dice dove sono i mezzi, adesso.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- FAQ ------------------------------------------------------- -->
+
+      <section class="section shell" aria-labelledby="faq-titolo">
+        <div class="section__head">
+          <p class="eyebrow">Domande frequenti</p>
+          <h2 class="section__title" id="faq-titolo">Le cose da sapere.</h2>
+        </div>
+
+        <div class="faq">
+          <details class="faq__item">
+            <summary class="faq__q">
+              Che cos'è DoveBus? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Una mappa web indipendente che mostra dove si trovano gli autobus in Toscana, usando
+                i dati aperti pubblicati dalla Regione Toscana. Si apre in un browser, non è un'app
+                e non ha un account.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Su quali linee funziona? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Sulle linee Autolinee Toscane presenti nel feed regionale: circa 610 linee urbane ed
+                extraurbane, che toccano 267 comuni della Toscana e quasi 29.000 fermate. Firenze e
+                Siena da sole ne concentrano circa un centinaio ciascuna; i comuni più piccoli ne
+                hanno spesso una o due.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Devo installare un'app o registrarmi?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. DoveBus funziona dal browser di telefono, tablet o computer. Non c'è nessun
+                account, nessuna email da lasciare e niente da installare — anche se il telefono
+                permette di aggiungerlo alla schermata iniziale, se vuoi.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Quanto sono aggiornate le posizioni?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Il feed della Regione Toscana si rigenera circa ogni 120 secondi e DoveBus lo
+                rilegge ogni 30 secondi, quindi una posizione arriva già vecchia di circa due
+                minuti. È il motivo per cui l'età del dato è sempre scritta accanto al mezzo invece
+                di essere nascosta dietro la parola «live».
+                <a href="/come-funziona/">Il percorso completo del dato è qui</a>.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Perché un autobus non compare sulla mappa?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Tre motivi possibili: non è in servizio in quel momento, non sta trasmettendo la
+                posizione, oppure la sua ultima posizione ha più di cinque minuti. In quest'ultimo
+                caso DoveBus lo toglie dalla mappa di proposito: un mezzo disegnato dove stava
+                cinque minuti fa è un'informazione sbagliata travestita da informazione.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Posso seguire una persona che si trova sull'autobus?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. DoveBus vede i mezzi, non le persone: non sa chi è a bordo, non ha modo di
+                saperlo e non chiede mai la posizione di chi lo sta usando.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              DoveBus è un servizio ufficiale di Autolinee Toscane?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. È un progetto indipendente e non ufficiale, non affiliato ad Autolinee Toscane
+                né alla Regione Toscana. Si limita a leggere i dati aperti che vengono pubblicati e
+                a disegnarli su una mappa, come la licenza CC BY 4.0 consente espressamente.
+                <a href="/fonte-dati/">Tutte le fonti e le licenze sono elencate qui</a>.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Quanto costa? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Niente. Non ci sono abbonamenti, pubblicità, cookie di profilazione né tracciamento
+                di alcun tipo.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ---- closer ---------------------------------------------------- -->
+
+      <section class="closer shell">
+        <h2 class="closer__title">Apri la mappa.</h2>
+        <p class="closer__body">
+          Nessun account, nessun cookie, nessuna app. Si apre e ti dice dove sono i mezzi.
+        </p>
+        <a class="button" href="/mappa/">
+          Vai alla mappa <span class="button__arrow" aria-hidden="true">→</span>
+        </a>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
   </body>
 </html>

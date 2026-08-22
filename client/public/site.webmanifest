@@ -1,0 +1,28 @@
+{
+  "name": "DoveBus — i bus della Toscana, adesso",
+  "short_name": "DoveBus",
+  "description": "Mappa in tempo reale delle corse Autolinee Toscane, con l'età di ogni posizione sempre dichiarata.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "/mappa/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "categories": ["travel", "navigation", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

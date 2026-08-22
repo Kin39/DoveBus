@@ -18,7 +18,8 @@ import { type ConsoleMessage, chromium, type Page } from "playwright";
  *   npm run shots -- 375x812   one viewport
  */
 
-const APP_URL = process.env.SHOTS_URL ?? "http://localhost:5280";
+/** The map lives at `/mappa/`; `/` is the landing page, which this does not shoot. */
+const APP_URL = process.env.SHOTS_URL ?? "http://localhost:5280/mappa/";
 const OUT_DIR = resolve(import.meta.dirname, "../shots");
 
 interface Viewport {

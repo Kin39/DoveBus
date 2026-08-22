@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>Privacy — DoveBus non ti chiede niente</title>
+    <meta
+      name="description"
+      content="Nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione. Cosa esce davvero dal tuo browser quando usi DoveBus, chi lo vede e per quanto tempo."
+    />
+    <link rel="canonical" href="%SITE_URL%/privacy/" />
+
+    <meta property="og:title" content="Privacy — DoveBus non ti chiede niente" />
+    <meta
+      property="og:description"
+      content="Nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione. E l'elenco onesto di cosa esce comunque dal browser."
+    />
+    <meta property="og:url" content="%SITE_URL%/privacy/" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Privacy di DoveBus",
+        "description": "Informativa sulla privacy: nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione.",
+        "inLanguage": "it-IT",
+        "url": "%SITE_URL%/privacy/",
+        "dateModified": "2026-08-22",
+        "publisher": { "@type": "Organization", "name": "DoveBus", "url": "%SITE_URL%/" }
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+
+    <!--@partial:header-->
+
+    <main id="contenuto">
+      <div class="page shell">
+        <p class="eyebrow">Privacy</p>
+        <h1 class="page__title">Non ti chiediamo niente</h1>
+        <p class="page__standfirst">
+          DoveBus non ha un account da creare, non installa cookie, non usa strumenti di analisi e
+          non chiede mai dove ti trovi. Questa pagina non si limita a dirlo: elenca anche cosa esce
+          comunque dal tuo browser quando usi il sito, perché qualcosa esce sempre.
+        </p>
+
+        <nav class="subnav" aria-label="Pagine informative">
+          <a href="/come-funziona/">Come funziona</a>
+          <a href="/fonte-dati/">Fonte dati e licenze</a>
+          <a href="/privacy/" aria-current="page">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="breve-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="breve-titolo">In breve.</h2>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">Nessun account</dt>
+            <dd class="deflist__desc">
+              Non c'è registrazione, non c'è login, non c'è nessuna email da lasciare. Non esiste un
+              profilo tuo da nessuna parte perché non esiste il concetto di utente.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Nessun cookie</dt>
+            <dd class="deflist__desc">
+              DoveBus non scrive cookie, né tecnici né di profilazione, e per questo non c'è nessun
+              banner da chiudere. Non usa nemmeno la memoria locale del browser: chiudi la scheda e
+              non resta niente.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Nessun tracciamento</dt>
+            <dd class="deflist__desc">
+              Niente Google Analytics o strumenti simili, nessun pixel, nessuna pubblicità, nessun
+              social network incorporato. Anche i caratteri tipografici sono serviti da qui, quindi
+              aprire una pagina non contatta un fornitore di font.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Nessuna geolocalizzazione</dt>
+            <dd class="deflist__desc">
+              DoveBus non chiede mai al browser la tua posizione. Non vedrai la finestra di permesso,
+              perché la funzione non è proprio usata: la mappa parte dalla Toscana e sei tu a
+              spostarla dove vuoi.
+            </dd>
+          </div>
+        </dl>
+
+        <div class="prose">
+          <div class="note">
+            <p>
+              DoveBus mostra dove sono i mezzi, non dove sono le persone. Non sa chi c'è a bordo di
+              un autobus, non ha modo di saperlo, e non può essere usato per seguire qualcuno.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="esce-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="esce-titolo">Cosa esce comunque dal tuo browser.</h2>
+          <p class="section__intro">
+            Una pagina web non si carica dal nulla. Questi sono tutti i contatti che il tuo browser
+            apre mentre usi DoveBus, e cosa vede chi sta dall'altra parte.
+          </p>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">Le richieste al server di DoveBus</p>
+            <p class="limits__body">
+              Quando cerchi una linea o un collegamento, il server riceve quello che hai chiesto: il
+              numero della linea o i due comuni, il giorno e la fascia oraria. Quando muovi la mappa
+              riceve il rettangolo di Toscana che stai guardando, per non mandarti i mezzi di tutta
+              la regione. Riceve inoltre, come qualunque server, il tuo indirizzo IP: è l'indirizzo
+              a cui deve rispondere.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Cosa il server conserva di tutto questo</p>
+            <p class="limits__body">
+              Non tiene un registro delle richieste ordinarie: una ricerca andata a buon fine non
+              lascia traccia. Conta però quante richieste arrivano da ciascun indirizzo IP nell'arco
+              di un minuto, per fermare chi lo martella, e quel conteggio sta in memoria e sparisce
+              con il minuto. Se una richiesta provoca un errore del server, l'errore viene scritto
+              nei log tecnici con l'indirizzo della richiesta — che contiene i termini cercati, non
+              l'IP.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Le piastrelle della mappa</p>
+            <p class="limits__body">
+              Lo sfondo cartografico è servito da OpenFreeMap (con CARTO come riserva), che sono
+              fornitori esterni. Per consegnarti le immagini vedono il tuo indirizzo IP e quali
+              riquadri chiedi, cioè, indirettamente, quale zona della Toscana stai guardando. È
+              l'unico contatto con terzi che il sito apre, e avviene solo sulla mappa: le pagine di
+              testo che stai leggendo non lo fanno.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Chi ospita le pagine</p>
+            <p class="limits__body">
+              Le pagine statiche sono servite da un fornitore di hosting, che per consegnarle tratta
+              indirizzo IP e tipo di browser e ne tiene traccia nei propri registri tecnici, secondo
+              le sue politiche. È il minimo indispensabile perché una pagina arrivi a destinazione, e
+              vale per qualunque sito.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="diritti-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="diritti-titolo">I tuoi dati, e i tuoi diritti.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Un indirizzo IP è un dato personale, quindi non diciamo che DoveBus «non tratta dati
+            personali»: sarebbe comodo e falso. Diciamo una cosa più precisa e più utile.
+            <strong
+              >Non conserviamo niente che permetta di ricostruire cosa hai cercato o dove sei
+              stato.</strong
+            >
+            Non c'è un archivio da interrogare, non c'è un profilo da esportare e non c'è niente da
+            cancellare, perché non viene creato in partenza.
+          </p>
+          <p>
+            Nessun dato viene venduto, ceduto o usato per profilazione, e non ne esiste nessuno da
+            vendere. I contatti con terzi sono solo quelli tecnici elencati qui sopra.
+          </p>
+          <p>
+            Se hai una domanda su questa pagina, se pensi che qualcosa qui descritto non corrisponda
+            a quello che il sito fa davvero, o se vuoi esercitare uno dei diritti previsti dal
+            Regolamento europeo sulla protezione dei dati, scrivi a
+            <a href="mailto:%CONTACT_EMAIL%">%CONTACT_EMAIL%</a>.
+          </p>
+
+          <h2>Se questa pagina cambia</h2>
+          <p>
+            Se DoveBus dovesse iniziare a fare qualcosa che qui è scritto che non fa, questa pagina
+            cambia <em>prima</em>, non dopo. La data qui sotto è quella dell'ultima modifica.
+          </p>
+          <p><strong>Ultimo aggiornamento: 22 agosto 2026.</strong></p>
+        </div>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>

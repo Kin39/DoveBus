@@ -1,0 +1,1372 @@
+/*
+ * The content pages: the landing at `/` and the three trust pages.
+ *
+ * These do not share `base.css`. That file is map chrome — it pins `html, body`
+ * to `overflow: hidden` so the bottom sheet is the only thing that scrolls, and
+ * fixes a full-viewport `.map` behind everything. A page of prose needs the
+ * opposite of all of it. What the two surfaces genuinely share is `tokens.css`
+ * (the palette, the type, the spacing scale) and `brand.css` (the wordmark),
+ * and those are imported by both.
+ *
+ * The design rule inherited from the app holds here without exception: **the
+ * chrome is monochrome, and every saturated colour means something.** There is
+ * no marketing accent, no gradient and no second palette. The only colours on
+ * these pages are the freshness ramp and the single alarm red, used exactly
+ * where they carry the meaning they carry in the product.
+ *
+ * There is also no second typeface. The wordmark's device is a width contrast
+ * inside one family — soft roman question, stamped condensed answer — and that
+ * device is what the display type here is built from, at 5rem instead of 13px.
+ * Condensed caps are also the vernacular of the subject: it is how a bus writes
+ * its destination on the front of itself.
+ */
+
+/* ---- site-scale type and measure ---------------------------------------- */
+
+:root {
+  /* The app's scale tops out at 1.75rem, which is correct for a control panel
+     and far too small for a page that has to say one thing from across a room.
+     These are additive and site-only; nothing in `tokens.css` changes. */
+  --display: clamp(2.6rem, 12vw, 5.25rem);
+  --title: clamp(1.65rem, 5.5vw, 2.6rem);
+  --lead: clamp(1.0625rem, 2.6vw, 1.3125rem);
+
+  /* Reading measure. 62ch for prose, 34ch for a stamped headline that must
+     break where the meaning breaks rather than where the box ends. */
+  --measure: 62ch;
+  --shell: 66rem;
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+
+  /* The vertical rhythm of a content page is coarser than the sheet's 16 px. */
+  --band-gap: clamp(3.5rem, 9vw, 6.5rem);
+}
+
+/* ---- reset -------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* An in-page anchor must not land under the sticky header. */
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-stretch: 100%;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ol,
+ul,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fresh-live);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--s2);
+  left: var(--s2);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: var(--s2) var(--s4);
+  background: var(--text);
+  color: var(--paper);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* ---- shell -------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---- header ------------------------------------------------------------- */
+
+/*
+ * One row, 56 px, on every viewport down to 320 px — and that constraint is what
+ * decides the navigation. Four destinations plus a wordmark do not fit, so the
+ * header carries the wordmark and the one action a visitor came for, and the
+ * other three pages are reached from the footer, from the body copy that
+ * mentions them, and from a sub-navigation on the trust pages themselves, where
+ * they are siblings of each other.
+ *
+ * No hamburger. A drawer would be a script, a focus trap and an overlay bought
+ * to hide three links from a page that has room to show them where they are
+ * relevant.
+ */
+.sitehead {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--edge);
+}
+
+.sitehead__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  min-height: 3.5rem;
+}
+
+/*
+ * The mark is a 44 px target even though its letterforms are much shorter — and
+ * the height comes from padding, never from `min-height` plus centring.
+ *
+ * The dot is positioned with `align-self: center`, so it centres against
+ * whatever line box the flex container gives it. Stretch that box to 44 px and
+ * the dot falls to the middle of the box while the two words, aligned on the
+ * baseline, stay at the top — measured 8.4 px of drift, and the mark visibly
+ * comes apart. Padding grows the box around the text instead, so the line box
+ * still hugs the letterforms and the dot stays inside the word.
+ */
+.sitehead .brand {
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  padding-block: calc((var(--touch) - 1.6em) / 2);
+  min-height: var(--touch);
+  text-decoration: none;
+}
+
+.sitehead__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+}
+
+/*
+ * Below 600 px only the action survives in the header. The links it replaces
+ * are not lost — they are in the footer of every page and in the sub-navigation
+ * of the pages they belong to.
+ */
+.sitehead__link {
+  display: none;
+  align-items: center;
+  min-height: var(--touch);
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+  text-underline-offset: 0.3em;
+}
+
+.sitehead__link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.sitehead__link[aria-current="page"] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (min-width: 600px) {
+  .sitehead__link {
+    display: inline-flex;
+  }
+}
+
+/* ---- buttons ------------------------------------------------------------ */
+
+/*
+ * The app's `.cta` in a form a page of prose can use: it sits inline rather than
+ * filling its container, because a full-width button under a paragraph reads as
+ * a form control rather than a destination.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: var(--touch);
+  padding: var(--s3) var(--s5);
+  border-radius: var(--radius);
+  /*
+   * The dot's green — the owner's call, and the one place the site spends a
+   * saturated colour on something that is not data.
+   *
+   * Two things follow from it and are handled here rather than left to chance.
+   * White on #018164 measures 4.86:1: it clears AA for this 15 px bold label,
+   * against about 16:1 for the ink it replaces, so the button is no longer the
+   * highest-contrast object on the page. And the focus ring below can no longer
+   * be the default `--fresh-live`, which is a neighbouring green and would go
+   * invisible on this fill.
+   */
+  background: var(--fresh-recent);
+  color: var(--on-ink);
+  font-size: var(--text-base);
+  font-stretch: 96%;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+}
+
+.button:hover {
+  /* Derived from the token rather than a second hex, so the two can never
+     drift apart into "nearly the same green". */
+  background: color-mix(in srgb, var(--fresh-recent) 86%, #000);
+}
+
+/*
+ * Ink, not the sitewide green. The default `:focus-visible` outline is
+ * `--fresh-live` (#0f9d76) — a hair off this button's #018164 — so on a green
+ * fill the ring all but disappears, and the button is the most important thing
+ * on the page to be able to reach by keyboard.
+ */
+.button:focus-visible {
+  outline-color: var(--text);
+}
+
+.button:active {
+  transform: scale(0.985);
+}
+
+.button__arrow {
+  /* The arrow leans into the destination on hover — the only hover flourish on
+     these pages, and it is on the one element whose whole job is to be left. */
+  transition: transform 160ms var(--ease-sheet);
+}
+
+.button:hover .button__arrow {
+  transform: translateX(3px);
+}
+
+.button--compact {
+  padding: var(--s2) var(--s4);
+  font-size: var(--text-sm);
+}
+
+/* ---- hero --------------------------------------------------------------- */
+
+.hero {
+  padding-block: clamp(2.5rem, 8vw, 5rem) 0;
+}
+
+/*
+ * The eyebrow, the section labels and the band's tick labels are all set in the
+ * app's `.meter__label` voice: 11 px, uppercase, 0.13em tracking, 88% width.
+ * That is the product's own label register, and reusing it is what keeps a page
+ * of marketing prose recognisably part of the same object as the map.
+ */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--text-dim);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: var(--edge-strong);
+  flex: none;
+}
+
+/*
+ * The headline is the wordmark's grammar at architectural scale: the question
+ * stays roman, dim and normal-width; the answer is stamped in condensed caps at
+ * full ink. Nothing else on the page is allowed to be this loud.
+ */
+.headline {
+  margin-top: var(--s5);
+  max-width: 20ch;
+  font-size: var(--display);
+  line-height: 0.94;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.headline__soft {
+  display: block;
+  font-size: 0.42em;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  font-stretch: 100%;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-bottom: 0.35em;
+}
+
+.headline__stamp {
+  display: block;
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  color: var(--text);
+}
+
+.hero__lead {
+  margin-top: var(--s6);
+  max-width: 48ch;
+  font-size: var(--lead);
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.hero__lead strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s4);
+  margin-top: var(--s8);
+}
+
+.hero__note {
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+/* ---- the count row ------------------------------------------------------ */
+
+/*
+ * Four measured facts, set as data rather than as a feature grid: the figure is
+ * the loud part and the noun is the quiet one, which is the same relationship
+ * the fleet counter has in the map's top bar.
+ */
+.counts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s5) var(--s4);
+  margin-top: var(--band-gap);
+  /* Symmetric, because this block sits between two hairlines. It had padding
+     above and none below, so the labels rested on the lower rule: 25 px of air
+     over the figures against 0 under the labels. */
+  padding-block: var(--s6);
+  border-top: 1px solid var(--edge);
+}
+
+@media (min-width: 720px) {
+  .counts {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/*
+ * `column-reverse` so the figure sits above its noun while the markup keeps the
+ * `<dt>` before its `<dd>`, which is the order a definition list has to be in
+ * and the order a screen reader announces. Only the painting is flipped.
+ */
+.counts > div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+/*
+ * The approximation sign hangs out of the column.
+ *
+ * Measured against the other three figures: the tilde's ink is 19 px wide but
+ * only 6 px tall, where a digit's is 19×25 — about a quarter of a digit's mass
+ * spread over a full 18 px advance. Nothing is wrong with the metric alignment;
+ * all four columns start on the same pixel. The leading 18 px of this one is
+ * simply almost empty, so the eye reads the column as indented.
+ *
+ * So the correction is hanging punctuation. The amount was picked by rendering
+ * the cell at 0 / 0.12 / 0.2 / 0.3 / 0.536em and looking: hanging the tilde's
+ * whole 18 px advance does align the digits with 610, 267 and 30 s, but it
+ * visibly pulls the figure left of *its own label*, and that pair sits 8 px
+ * apart where the other figures are 240 px away. The near relationship wins.
+ *
+ * 0.12em lets the tilde's stroke break the column just enough to fill the void
+ * above it, without the block detaching from the label under it. It is a ratio,
+ * so it holds at every size in the clamp.
+ */
+.counts__value--approx {
+  margin-left: -0.12em;
+}
+
+.counts__value {
+  display: block;
+  font-size: clamp(1.5rem, 5vw, 2.1rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.counts__label {
+  display: block;
+  margin-top: var(--s1);
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+/* ---- the ageing band: this page's signature ----------------------------- */
+
+/*
+ * The freshness ramp, drawn at page scale on a real axis of seconds.
+ *
+ * This is the one thing on the site that is not a claim: the segment widths are
+ * the product's actual thresholds (90 / 180 / 300 s, from `ui/format.ts`), the
+ * colours are the ones the map paints with, and the sweep runs at the publisher's
+ * measured cadence — a fix arrives already about 116 s old and the next one
+ * lands about 120 s later.
+ *
+ * The first segment is hatched because it is unreachable. 0–90 s exists in the
+ * code and never lights up, since the regional feed is not that fast. Showing an
+ * empty band where a marketing page would show a full one is the whole argument
+ * this product makes.
+ */
+.band {
+  margin-top: var(--band-gap);
+}
+
+.band__track {
+  position: relative;
+  display: flex;
+  height: 2.75rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper-sunk);
+  border: 1px solid var(--edge);
+}
+
+.band__seg {
+  flex: 0 0 var(--w);
+  background: var(--seg);
+  opacity: 0.9;
+}
+
+.band__seg + .band__seg {
+  border-left: 1px solid color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+.band__seg[data-bucket="live"] {
+  --seg: var(--fresh-live);
+  /* Unreachable today: drawn as an outline the ramp never fills. */
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--fresh-live) 16%, var(--paper)) 0 6px,
+    var(--paper-sunk) 6px 12px
+  );
+}
+
+.band__seg[data-bucket="recent"] {
+  --seg: var(--fresh-recent);
+}
+
+.band__seg[data-bucket="delayed"] {
+  --seg: var(--fresh-delayed);
+}
+
+/*
+ * Past 300 s the axis stops being a scale — "silent" has no upper bound — so the
+ * tail is a fixed block rather than a proportional one, and it is the only part
+ * of the track with no colour at all. That is the cutoff made visible: it is
+ * where a vehicle leaves the map instead of being drawn a shade paler.
+ */
+.band__seg[data-bucket="gone"] {
+  --seg: var(--paper-raise);
+  opacity: 1;
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--edge-strong);
+  overflow: hidden;
+}
+
+/*
+ * The tail's label only fits from 720 px up — below that 14% of the track is
+ * about 40 px and the words clip. It is a caption on a block that already reads
+ * as "outside the scale", and the key underneath says the same thing in full, so
+ * dropping it costs nothing a narrow screen needed.
+ */
+.band__tail {
+  display: none;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+@media (min-width: 720px) {
+  .band__tail {
+    display: block;
+  }
+}
+
+/*
+ * The head of the sweep: where a bus's age actually is, right now.
+ *
+ * 120 s linear then an instant reset, because that is what happens — the age
+ * climbs in real time and drops to zero the moment a new snapshot lands. It
+ * enters at 116 s rather than at 0, since a fix is already that old when it
+ * reaches us.
+ *
+ * The percentages are on the track, not on the axis: 0–300 s occupies 86% of
+ * the width and the unbounded tail takes the remaining 14%, so 116 s sits at
+ * 116/300 × 86 = 33.3% and 236 s at 67.7%.
+ */
+.band__head {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: 33.3%;
+  width: 2px;
+  background: var(--text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .band__head {
+    animation: band-age 120s linear infinite;
+  }
+}
+
+/*
+ * Resting position and start of the sweep are the same 33.3%. A reader who
+ * asked for less motion sees the marker parked at the age a real fix has when
+ * it arrives, which is the fact the animation exists to communicate; they lose
+ * the ticking, not the point.
+ */
+@keyframes band-age {
+  from {
+    left: 33.3%;
+  }
+  to {
+    left: 67.7%;
+  }
+}
+
+/* The tick row: real seconds, tabular so the numbers line up under the edges. */
+.band__ticks {
+  display: flex;
+  margin-top: var(--s2);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.band__tick {
+  flex: 0 0 var(--w);
+  padding-left: var(--s1);
+  border-left: 1px solid var(--edge);
+}
+
+.band__tick:last-child {
+  flex: 1;
+}
+
+.band__keys {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3) var(--s4);
+  margin-top: var(--s5);
+}
+
+@media (min-width: 720px) {
+  .band__keys {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.band__key {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-top: var(--s2);
+  border-top: 2px solid var(--key, var(--edge-strong));
+}
+
+/*
+ * Dashed, like the segment above it is hatched.
+ *
+ * `--fresh-live` and `--fresh-recent` are two greens a hair apart (#0f9d76 and
+ * #018164) — which is fine in the app, where the first one never lights up, and
+ * useless here, where the two keys sit side by side. The rule cannot be solved
+ * by picking a livelier colour: the band's whole claim is that it is the
+ * product's real scale, and inventing a blue for this page would make the
+ * diagram a lie. So the difference is carried by the line style instead, which
+ * says the true thing — this bucket is defined and never fills.
+ */
+.band__key[data-bucket="live"] {
+  --key: var(--fresh-live);
+  border-top-style: dashed;
+}
+.band__key[data-bucket="recent"] {
+  --key: var(--fresh-recent);
+}
+.band__key[data-bucket="delayed"] {
+  --key: var(--fresh-delayed);
+}
+.band__key[data-bucket="gone"] {
+  --key: var(--edge-strong);
+}
+
+.band__word {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--key, var(--text-dim));
+}
+
+.band__gloss {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.band__caption {
+  margin-top: var(--s5);
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}
+
+/* ---- sections ----------------------------------------------------------- */
+
+.section {
+  position: relative;
+  padding-block: var(--band-gap);
+}
+
+/*
+ * The section divider, drawn as a pseudo-element rather than a `border-top`.
+ *
+ * `.section` and `.closer` carry `.shell`'s gutter padding, and a border paints
+ * on the *padding box* — so a `border-top` ran a full gutter past the type on
+ * each side (measured: 112→1168 against the column's 160→1120 at 1280 px),
+ * while every other hairline on the page belongs to a child and stops at the
+ * text. Sixteen dividers, every one disagreeing with the column it separates.
+ *
+ * An absolutely positioned box is laid out against the padding box, so insetting
+ * it by one gutter lands it exactly on the type column — and because the gutter
+ * is a clamp, it tracks the column at every width for free.
+ */
+.section::before,
+.closer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 1px;
+  background: var(--edge);
+}
+
+.section__head {
+  max-width: var(--measure);
+}
+
+.section__title {
+  margin-top: var(--s4);
+  font-size: var(--title);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.section__intro {
+  margin-top: var(--s4);
+  max-width: var(--measure);
+  color: var(--text-dim);
+  font-size: var(--text-lg);
+  line-height: 1.55;
+}
+
+/* ---- paired cards ------------------------------------------------------- */
+
+/*
+ * Two ways to find a run, and they are peers rather than steps — so they are
+ * drawn as two equal panels with no ordinal on either. A rider who knows the
+ * line number and a rider who only knows where they are standing are the same
+ * rider on different days.
+ */
+.pair {
+  display: grid;
+  gap: var(--s4);
+  margin-top: var(--s8);
+}
+
+@media (min-width: 760px) {
+  .pair {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  padding: var(--s5);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  background: var(--paper-sunk);
+}
+
+.card__title {
+  margin-top: var(--s3);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.card__body {
+  margin-top: var(--s2);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+/* The line plate, as it appears on the front of the bus and in the app. */
+.plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.4rem;
+  padding: 0.28rem 0.5rem;
+  border: 1.5px solid var(--edge-strong);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  font-stretch: 78%;
+  font-weight: 700;
+  font-size: var(--text-base);
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Two comune names with the direction between them: the other way to ask. */
+.od {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.od__arrow {
+  color: var(--text-faint);
+}
+
+/* ---- feature list ------------------------------------------------------- */
+
+/*
+ * What the live view shows, as a definition list: the term is the thing on
+ * screen, the description is what it means. A hairline per row and nothing else
+ * — no icons, because every icon here would be a drawing of a line on a map.
+ */
+.deflist {
+  margin-top: var(--s8);
+}
+
+.deflist__row {
+  display: grid;
+  gap: var(--s1) var(--s5);
+  padding-block: var(--s4);
+  border-top: 1px solid var(--edge);
+}
+
+.deflist__row:last-child {
+  border-bottom: 1px solid var(--edge);
+}
+
+@media (min-width: 760px) {
+  .deflist__row {
+    grid-template-columns: 15rem 1fr;
+  }
+}
+
+.deflist__term {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.deflist__desc {
+  color: var(--text-dim);
+  line-height: 1.55;
+  max-width: 58ch;
+}
+
+/* ---- the honest limits -------------------------------------------------- */
+
+/*
+ * Set on sunk paper inside a rounded box so it reads as a held-apart aside
+ * rather than as more page. It is the section a normal landing page does not
+ * have, and it should look deliberate rather than apologetic.
+ */
+.limits {
+  margin-top: var(--s8);
+  padding: var(--s5);
+  border-radius: var(--radius-lg);
+  background: var(--paper-sunk);
+  border: 1px solid var(--edge);
+}
+
+@media (min-width: 760px) {
+  .limits {
+    padding: var(--s6) var(--s8);
+    /* The panel hugs its own measure instead of stretching to the shell: a
+       sunk box twice as wide as the text inside it reads as an empty box with
+       some writing in the left half. */
+    max-width: calc(62ch + 2 * var(--s8));
+  }
+}
+
+.limits__item {
+  padding-block: var(--s4);
+  max-width: 62ch;
+}
+
+.limits__item + .limits__item {
+  border-top: 1px solid var(--edge);
+}
+
+.limits__title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.limits__body {
+  margin-top: var(--s1);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+/* The one alarm on the whole site, on the one word that earns it. */
+.chip-alarm {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--alarm);
+  color: var(--on-ink);
+  font-size: var(--text-xs);
+  font-stretch: 92%;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ---- FAQ ---------------------------------------------------------------- */
+
+/*
+ * `<details>` rather than a scripted accordion: it opens without JavaScript, it
+ * is keyboard-operable for free, and — the reason it matters here — the answers
+ * are in the served document, so a crawler reads them whether or not anything
+ * executes.
+ */
+.faq {
+  margin-top: var(--s8);
+  max-width: 72ch;
+}
+
+.faq__item {
+  border-top: 1px solid var(--edge);
+}
+
+.faq__item:last-child {
+  border-bottom: 1px solid var(--edge);
+}
+
+.faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  min-height: var(--touch);
+  padding-block: var(--s3);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.faq__sign {
+  flex: none;
+  position: relative;
+  width: 14px;
+  height: 14px;
+  color: var(--text-faint);
+}
+
+/* A plus that becomes a minus: two rules, one of which rotates away. */
+.faq__sign::before,
+.faq__sign::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1.5px;
+  background: currentcolor;
+  transition: transform 180ms var(--ease-sheet);
+}
+
+.faq__sign::after {
+  transform: rotate(90deg);
+}
+
+.faq__item[open] .faq__sign::after {
+  transform: rotate(0deg);
+}
+
+.faq__a {
+  padding-bottom: var(--s5);
+  max-width: var(--measure);
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.faq__a a {
+  color: var(--text);
+}
+
+/* ---- closing call ------------------------------------------------------- */
+
+.closer {
+  position: relative;
+  padding-block: var(--band-gap);
+  text-align: center;
+}
+
+.closer__title {
+  font-size: var(--title);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.closer__body {
+  margin: var(--s4) auto 0;
+  max-width: 44ch;
+  color: var(--text-dim);
+}
+
+.closer .button {
+  margin-top: var(--s6);
+}
+
+/* ---- footer ------------------------------------------------------------- */
+
+.sitefoot {
+  padding-block: var(--s8);
+  border-top: 1px solid var(--edge);
+  background: var(--paper-sunk);
+}
+
+.sitefoot__grid {
+  display: grid;
+  gap: var(--s6);
+}
+
+@media (min-width: 760px) {
+  .sitefoot__grid {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+}
+
+.sitefoot__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+}
+
+.sitefoot__nav a {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+  text-underline-offset: 0.3em;
+}
+
+.sitefoot__nav a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/*
+ * The CC-BY line. It is a licence obligation, so it is served in the HTML of
+ * every page rather than rendered by a script that a crawler — or a reader with
+ * JavaScript off — may never run.
+ */
+.sitefoot__credits {
+  margin-top: var(--s5);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--edge);
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  max-width: var(--measure);
+}
+
+.sitefoot__credits a {
+  color: var(--text-dim);
+}
+
+/* ---- trust pages -------------------------------------------------------- */
+
+.page {
+  padding-block: clamp(2rem, 6vw, 3.5rem) 0;
+}
+
+.page__title {
+  margin-top: var(--s5);
+  max-width: 18ch;
+  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  line-height: 0.98;
+}
+
+.page__standfirst {
+  margin-top: var(--s5);
+  max-width: 52ch;
+  font-size: var(--lead);
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+/*
+ * Sub-navigation between the three trust pages. They are siblings — someone
+ * reading about the data source is one tap from the privacy page, without
+ * scrolling to the footer and without a menu having to exist.
+ */
+.subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-top: var(--s6);
+  padding-bottom: var(--s6);
+  border-bottom: 1px solid var(--edge);
+}
+
+.subnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: var(--s2) var(--s4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--edge);
+  background: var(--paper);
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.subnav a:hover {
+  border-color: var(--edge-strong);
+  color: var(--text);
+}
+
+.subnav a[aria-current="page"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--on-ink);
+  font-weight: 600;
+}
+
+/* ---- prose -------------------------------------------------------------- */
+
+.prose {
+  padding-block: var(--s8);
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-top: var(--s4);
+}
+
+.prose h2 {
+  margin-top: var(--s8);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.prose h3 {
+  margin-top: var(--s6);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.prose p,
+.prose li {
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--edge-strong);
+}
+
+.prose a:hover {
+  text-decoration-color: currentcolor;
+}
+
+.prose ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.prose ul li {
+  position: relative;
+  padding-left: var(--s5);
+}
+
+.prose ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--edge-strong);
+}
+
+/*
+ * A hairline aside for the sentence on a page that a reader must not miss —
+ * "we never ask for your location", "this is not an official service". One
+ * per page at most; a page of highlighted boxes highlights nothing.
+ */
+.note {
+  padding: var(--s4) var(--s5);
+  border-left: 2px solid var(--fresh-recent);
+  background: var(--paper-sunk);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.note p {
+  color: var(--text);
+}
+
+/* ---- the pipeline, where the content genuinely is a sequence ------------ */
+
+/*
+ * Numbered — and only here. The path a position takes from a bus's transmitter
+ * to a dot on a phone has a real order, and each step's number is the thing a
+ * reader counts back through when they ask why a dot is two minutes old. Nothing
+ * else on this site is numbered, because nothing else on it is a sequence.
+ */
+.steps {
+  margin-top: var(--s8);
+  counter-reset: step;
+}
+
+.steps__item {
+  position: relative;
+  padding: var(--s5) 0 var(--s5) 3.25rem;
+  border-top: 1px solid var(--edge);
+  counter-increment: step;
+  max-width: 62ch;
+}
+
+.steps__item:last-child {
+  border-bottom: 1px solid var(--edge);
+}
+
+.steps__item::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: calc(var(--s5) + 0.15em);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--text-faint);
+}
+
+.steps__title {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.steps__body {
+  margin-top: var(--s2);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.steps__meta {
+  display: inline-block;
+  margin-top: var(--s2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--fresh-recent);
+}
+
+/* ---- source table ------------------------------------------------------- */
+
+/*
+ * Sources as rows rather than as a `<table>`: on a 320 px screen a four-column
+ * table either scrolls sideways or crushes, and the licence line is the part
+ * that must never be the one that gets cut off.
+ */
+.sources {
+  margin-top: var(--s6);
+}
+
+.source {
+  padding-block: var(--s5);
+  border-top: 1px solid var(--edge);
+}
+
+.source:last-child {
+  border-bottom: 1px solid var(--edge);
+}
+
+.source__name {
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.source__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s3);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-stretch: 88%;
+  font-weight: 650;
+  color: var(--text-faint);
+}
+
+.source__licence {
+  color: var(--fresh-recent);
+}
+
+.source__body {
+  margin-top: var(--s3);
+  max-width: 58ch;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.source__body a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--edge-strong);
+}
+
+/* The exact attribution string the licence asks for, quotable and selectable. */
+.attribution {
+  margin-top: var(--s6);
+  padding: var(--s4) var(--s5);
+  border: 1px dashed var(--edge-strong);
+  border-radius: var(--radius);
+  background: var(--paper-sunk);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: honouring a reduced-motion
+       request has to beat every animation and transition declared above. */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above. */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above. */
+    transition-duration: 0.01ms !important;
+  }
+}

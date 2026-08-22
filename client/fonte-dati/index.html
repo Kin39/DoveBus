@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>Fonte dei dati e licenze — DoveBus</title>
+    <meta
+      name="description"
+      content="Orari e posizioni in tempo reale della Regione Toscana (CC BY 4.0), confini comunali openpolis/ISTAT, cartografia OpenStreetMap: ogni fonte con la sua licenza."
+    />
+    <link rel="canonical" href="%SITE_URL%/fonte-dati/" />
+
+    <meta property="og:title" content="Fonte dei dati e licenze — DoveBus" />
+    <meta
+      property="og:description"
+      content="Orari e posizioni dalla Regione Toscana (CC BY 4.0), confini comunali openpolis/ISTAT, cartografia OpenStreetMap. Ogni fonte con la sua licenza e il suo link."
+    />
+    <meta property="og:url" content="%SITE_URL%/fonte-dati/" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Dati di trasporto pubblico usati da DoveBus",
+        "description": "Orari (GTFS) e posizioni in tempo reale (GTFS-RT) del trasporto pubblico su gomma della Regione Toscana, con i confini comunali openpolis/ISTAT usati per la ricerca fra comuni.",
+        "inLanguage": "it-IT",
+        "url": "%SITE_URL%/fonte-dati/",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "isAccessibleForFree": true,
+        "creator": { "@type": "GovernmentOrganization", "name": "Regione Toscana" },
+        "spatialCoverage": { "@type": "AdministrativeArea", "name": "Toscana" },
+        "distribution": [
+          {
+            "@type": "DataDownload",
+            "name": "Orari GTFS del trasporto pubblico su gomma",
+            "encodingFormat": "application/zip"
+          },
+          {
+            "@type": "DataDownload",
+            "name": "Posizioni, ritardi e avvisi in tempo reale (GTFS-RT)",
+            "encodingFormat": "application/octet-stream"
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+
+    <!--@partial:header-->
+
+    <main id="contenuto">
+      <div class="page shell">
+        <p class="eyebrow">Fonte dei dati</p>
+        <h1 class="page__title">Da dove arriva tutto</h1>
+        <p class="page__standfirst">
+          DoveBus non produce nessun dato. Legge dati aperti pubblicati da altri, li incrocia e li
+          disegna. Questa pagina dice quali, di chi sono e con quale licenza — perché è una
+          condizione di quelle licenze, prima ancora che una cortesia.
+        </p>
+
+        <nav class="subnav" aria-label="Pagine informative">
+          <a href="/come-funziona/">Come funziona</a>
+          <a href="/fonte-dati/" aria-current="page">Fonte dati e licenze</a>
+          <a href="/privacy/">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="fonti-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="fonti-titolo">Le fonti, una per una.</h2>
+        </div>
+
+        <div class="sources">
+          <article class="source">
+            <h3 class="source__name">Orari e corse programmate</h3>
+            <p class="source__meta">
+              <span>Regione Toscana</span>
+              <span>Formato GTFS</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              L'orario ufficiale del trasporto pubblico su gomma: linee, corse, fermate, giorni di
+              servizio e il tracciato che ogni corsa deve seguire. È quello che permette a DoveBus
+              di dire che linea è un mezzo, dove sta andando e quale strada farà. Pubblicato sul
+              portale <a href="https://dati.toscana.it/">dati.toscana.it</a>.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Posizioni, ritardi e soppressioni in tempo reale</h3>
+            <p class="source__meta">
+              <span>Regione Toscana</span>
+              <span>Formato GTFS-RT</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              Il flusso che rende la mappa viva: dove si trova ogni mezzo, quando l'ha detto, quanto
+              è in ritardo e quali corse sono state soppresse. Viene ripubblicato per intero circa
+              ogni due minuti. È lo stesso dato che alimenta i canali ufficiali, letto direttamente
+              alla fonte.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Confini dei comuni toscani</h3>
+            <p class="source__meta">
+              <span>openpolis / ISTAT</span>
+              <span>Formato GeoJSON</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              Serve per la ricerca da comune a comune: ogni fermata dell'orario viene assegnata al
+              comune in cui cade geometricamente, così «Siena → Poggibonsi» diventa una domanda che
+              si può fare. I confini amministrativi sono di ISTAT e sono ridistribuiti da
+              <a href="https://github.com/openpolis/geojson-italy">openpolis</a> con la stessa
+              licenza.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Cartografia di sfondo</h3>
+            <p class="source__meta">
+              <span>OpenStreetMap</span>
+              <span>OpenMapTiles · OpenFreeMap</span>
+              <span class="source__licence">ODbL</span>
+            </p>
+            <p class="source__body">
+              Strade, paesi e coste sotto i mezzi vengono da
+              <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, nello schema
+              OpenMapTiles, serviti da OpenFreeMap senza chiavi di accesso. Se quel servizio non
+              risponde, la mappa passa a una cartografia di riserva di CARTO, sempre su dati
+              OpenStreetMap: cambia il fornitore delle piastrelle, non i dati sotto.
+            </p>
+          </article>
+        </div>
+
+        <p class="attribution">Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)</p>
+      </section>
+
+      <section class="section shell" aria-labelledby="aggiunge-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="aggiunge-titolo">Cosa ci mette DoveBus.</h2>
+          <p class="section__intro">
+            Niente di misurato. Tutto il lavoro sta nel mettere insieme fonti che nascono separate.
+          </p>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">L'incrocio fra tempo reale e orario</dt>
+            <dd class="deflist__desc">
+              Un mezzo nel flusso in tempo reale è un identificativo, non una linea. Collegarlo alla
+              sua corsa nell'orario è quello che gli dà un numero, una destinazione e un percorso.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">La ricerca fra due comuni</dt>
+            <dd class="deflist__desc">
+              Non esiste nei dati di partenza: nasce assegnando ogni fermata al suo comune e
+              cercando le corse che ne toccano due nell'ordine giusto.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">L'età di ogni posizione</dt>
+            <dd class="deflist__desc">
+              Il dato porta con sé l'ora in cui è stato rilevato. Trasformarla in un numero che sale
+              mentre guardi lo schermo è una scelta di prodotto, non un'informazione della fonte.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">La scia sulla strada</dt>
+            <dd class="deflist__desc">
+              Le posizioni ricevute vengono appoggiate sul percorso pubblicato della corsa per
+              ricostruire il tratto già fatto seguendo le curve reali.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="section shell" aria-labelledby="tu-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="tu-titolo">Puoi usarli anche tu.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            Le licenze CC BY 4.0 permettono espressamente di riusare questi dati, anche per farne un
+            prodotto derivato come questo, a una condizione: citare la fonte. DoveBus la cita in
+            fondo a ogni pagina, dentro l'applicazione e qui sopra, nella forma esatta che la Regione
+            Toscana indica.
+          </p>
+          <p>
+            Se vuoi partire dagli stessi dati, il punto di ingresso è il portale open data della
+            Regione Toscana: <a href="https://dati.toscana.it/">dati.toscana.it</a>. I formati GTFS
+            e GTFS-RT sono standard aperti e documentati, non un'invenzione locale.
+          </p>
+
+          <div class="note">
+            <p>
+              DoveBus è un progetto indipendente e non ufficiale. Non è affiliato ad Autolinee
+              Toscane né alla Regione Toscana, non le rappresenta e non parla per loro. Per
+              informazioni ufficiali su orari, biglietti e disservizi il riferimento resta
+              l'operatore del servizio.
+            </p>
+          </div>
+
+          <p>
+            Un errore in questa pagina è un problema di licenza, non solo di contenuto: se qualcosa
+            è attribuito male, <a href="mailto:%CONTACT_EMAIL%">scrivilo</a> e viene corretto.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>

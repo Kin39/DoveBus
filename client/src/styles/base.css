@@ -128,8 +128,19 @@ button {
 .fleet {
   display: flex;
   align-items: baseline;
-  gap: var(--s2);
-  padding: var(--s2) var(--s3);
+  /*
+   * 44 px, not the 37 the old padding produced. The wordmark became a link back
+   * to the landing page, and a link has to be a target; the counter is not
+   * interactive but grows with it, because the two pills read as a matched pair
+   * and a 44/37 mismatch is visible at a glance.
+   *
+   * Grown with vertical padding rather than `min-height` plus centring: both
+   * pills align their contents on the *baseline* — that is what keeps the
+   * counter's 15 px figure sitting on the same line as its 13 px unit — and
+   * switching to `center` to fill a taller box would break exactly that.
+   */
+  min-height: var(--touch);
+  padding: var(--s3);
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
   border: 1px solid color-mix(in srgb, var(--edge) 70%, transparent);
@@ -137,57 +148,20 @@ button {
   -webkit-backdrop-filter: blur(14px);
 }
 
-/*
- * The three pieces sit on a shared baseline, and the gap between the two words
- * is zero on purpose: "Dove" and "BUS" separate optically, by the jump in width
- * and weight, not by space. The dot is the only thing that gets air, and it gets
- * its own margin rather than a flex `gap`, which would push the words apart too.
- * Six pixels — the dot's own diameter — because at a 13 px body the 8 px the
- * handoff tabulates for the word gap reads as detached from the mark.
- */
-.brand {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0;
-  font-size: var(--text-sm);
-  letter-spacing: 0.01em;
-}
-
-.brand__dove {
-  font-stretch: 100%;
-  font-weight: 400;
-  color: var(--text-dim);
-}
-
-/* The wordmark's whole idea: the question is soft, the answer is stamped. */
-.brand__bus {
-  font-stretch: 78%;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text);
-}
-
-/*
- * The live dot: the one coloured thing in the wordmark, and the reason the mark
- * says "a position from now" rather than just naming the product.
- *
- * It does not pulse. The animation belongs to `.trip__livedot`, where a blink
- * means a fix actually arrived — a mark that blinked would be claiming to be
- * data. And it is a circle rather than a bus pictogram because that is the shape
- * the vehicles take on the map.
- */
-.brand__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--fresh-recent);
-  align-self: center;
-  margin-left: 6px;
-  flex: none;
+/* The wordmark itself lives in `brand.css` — it is shared with the content
+   pages, and the pill it sits in above is the only part the map owns. The link
+   affordance is the same: the mark is a way back to the landing page. */
+.topbar .brand {
+  pointer-events: auto;
+  text-decoration: none;
 }
 
 .fleet {
+  /* The counter's own spacing. It lives here rather than in the shared rule
+     above because the wordmark next to it must stay at `gap: 0` — its two words
+     separate optically, by width and weight, and a flex gap in a rule that also
+     styles the pill would override `brand.css` on import order alone. */
+  gap: var(--s2);
   font-size: var(--text-xs);
   color: var(--text-dim);
 }
@@ -506,6 +480,38 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   line-height: 1.6;
   border-top: 1px solid var(--edge);
   margin-top: var(--s5);
+}
+
+/*
+ * This page has no menu bar — see `#swapFooter` in `main.ts` for why. These are
+ * the site's other pages, sitting with the attribution they belong with, at the
+ * bottom of the sheet where a thumb already is. Full touch height, because a
+ * 12 px link is not a target.
+ */
+.credits__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s4);
+  margin-top: var(--s2);
+}
+
+.credits__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  /* "Privacy" sets 38 px wide at this size — a 44 px tall target you still have
+     to hit sideways. The floor applies to both axes; it only ever bites on the
+     shortest word, and that word is last in the row, so the extra few pixels are
+     trailing space nobody sees. */
+  min-width: var(--touch);
+  color: var(--text-dim);
+  text-decoration: none;
+  text-underline-offset: 0.25em;
+}
+
+.credits__nav a:hover {
+  color: var(--text);
+  text-decoration: underline;
 }
 
 @media (prefers-reduced-motion: reduce) {

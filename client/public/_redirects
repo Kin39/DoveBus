@@ -1,0 +1,20 @@
+# Netlify redirects.
+#
+# The canonical form of every page is the trailing slash, because the pages are
+# directories on disk — `/mappa/index.html`, not `/mappa.html`. That form is
+# host-agnostic: it stays correct if the site ever moves off Netlify, whereas
+# relying on Netlify's own `.html` stripping does not.
+#
+# Netlify normally adds the slash itself, but making it explicit means the bare
+# form redirects the same way whatever the site settings say — and one URL per
+# page is the whole point of having a canonical.
+
+/mappa           /mappa/           301!
+/come-funziona   /come-funziona/   301!
+/fonte-dati      /fonte-dati/      301!
+/privacy         /privacy/         301!
+
+# The app used to be the whole site. Anything that bookmarked or linked the old
+# single-page entry points should land on the map, not on the pitch.
+/index.html      /                 301!
+/mappa/index.html /mappa/          301!

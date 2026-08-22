@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>DoveBus — sorgente della card di condivisione</title>
+    <style>
+      /*
+       * The 1200×630 card, rendered to `public/og-image.png` by `npm run og`.
+       *
+       * It is a source file rather than a hand-made image so it can be reopened
+       * and re-exported when the wording or the thresholds change — the same
+       * reason the screenshot loop is a committed script. Fonts are pulled from
+       * `node_modules` by relative path, so this renders offline and identically
+       * on any machine that has installed the dependencies.
+       *
+       * The card carries the ageing band rather than a screenshot of the map.
+       * A map thumbnail at feed size is an unreadable grey rectangle; the band
+       * is legible at 300 px wide and says the one thing that makes this product
+       * different from every other bus map.
+       */
+      @font-face {
+        font-family: "Instrument Sans Variable";
+        font-style: normal;
+        font-display: block;
+        font-weight: 400 700;
+        font-stretch: 75% 100%;
+        src: url("../../node_modules/@fontsource-variable/instrument-sans/files/instrument-sans-latin-wdth-normal.woff2")
+          format("woff2-variations");
+      }
+
+      :root {
+        --paper: #ffffff;
+        --paper-sunk: #f4f7fa;
+        --paper-raise: #e7edf4;
+        --ink: #0d1825;
+        --dim: #4a5b70;
+        --faint: #7a8798;
+        --edge: #dde5ee;
+        --edge-strong: #b9c6d6;
+        /* The product's real tokens. `--live` is a green a hair off `--recent`
+           on purpose: they are what the map paints with, and swapping in a
+           livelier blue for the share card would make the card describe a
+           product that does not exist. The unreachable bucket is distinguished
+           by the hatch and the dashed rule instead. */
+        --live: #0f9d76;
+        --recent: #018164;
+        --delayed: #b06a00;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      body {
+        width: 1200px;
+        height: 630px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 64px 72px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Instrument Sans Variable", system-ui, sans-serif;
+        font-stretch: 100%;
+        /* The hairline frame keeps the card from bleeding into a white feed
+           background, which is what a borderless white card does. */
+        border: 1px solid var(--edge);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: baseline;
+        font-size: 30px;
+        letter-spacing: 0.01em;
+      }
+      .brand__dove {
+        font-weight: 400;
+        color: var(--dim);
+      }
+      .brand__bus {
+        font-stretch: 78%;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .brand__dot {
+        width: 0.46em;
+        height: 0.46em;
+        border-radius: 50%;
+        background: var(--recent);
+        align-self: center;
+        margin-left: 0.46em;
+      }
+
+      .soft {
+        font-size: 34px;
+        font-weight: 400;
+        color: var(--dim);
+        letter-spacing: -0.01em;
+      }
+
+      .stamp {
+        margin-top: 10px;
+        font-size: 118px;
+        font-stretch: 75%;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.004em;
+        line-height: 0.94;
+      }
+
+      /* ---- the ageing band, on the product's real thresholds -------------- */
+
+      .band__track {
+        position: relative;
+        display: flex;
+        height: 30px;
+        border: 1px solid var(--edge);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--paper-sunk);
+      }
+      .seg {
+        opacity: 0.9;
+      }
+      .seg + .seg {
+        border-left: 1px solid rgba(255, 255, 255, 0.55);
+      }
+      /*
+       * 0–300 s occupies 86% of the track, to scale. The last 14% is the
+       * unbounded tail past the cutoff — not a scale, and not drawn as one.
+       */
+      .seg--live {
+        flex: 0 0 25.8%;
+        /* 0–90 s: drawn as an outline because it is unreachable today. */
+        background: repeating-linear-gradient(-45deg, #dff0e9 0 6px, var(--paper-sunk) 6px 12px);
+      }
+      .seg--recent {
+        flex: 0 0 25.8%;
+        background: var(--recent);
+      }
+      .seg--delayed {
+        flex: 0 0 34.4%;
+        background: var(--delayed);
+      }
+      .seg--gone {
+        flex: 0 0 14%;
+        background: var(--paper-raise);
+        border-left: 1px solid var(--edge-strong);
+      }
+      .head {
+        position: absolute;
+        top: -1px;
+        bottom: -1px;
+        left: 33.3%;
+        width: 3px;
+        background: var(--ink);
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.75);
+      }
+
+      .keys {
+        display: flex;
+        margin-top: 14px;
+      }
+      .key {
+        padding-top: 10px;
+        border-top: 3px solid var(--tone);
+        font-size: 18px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-stretch: 88%;
+        font-weight: 650;
+        color: var(--tone);
+        white-space: nowrap;
+      }
+      .key--live {
+        flex: 0 0 25.8%;
+        --tone: var(--live);
+        /* Dashed like the segment is hatched: defined, never filled. */
+        border-top-style: dashed;
+      }
+      .key--recent {
+        flex: 0 0 25.8%;
+        --tone: var(--recent);
+      }
+      .key--delayed {
+        flex: 0 0 34.4%;
+        --tone: var(--delayed);
+      }
+      .key--gone {
+        flex: 0 0 14%;
+        --tone: var(--edge-strong);
+        color: var(--faint);
+      }
+
+      .foot {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-top: 26px;
+        font-size: 22px;
+        color: var(--dim);
+      }
+      .foot__url {
+        font-stretch: 88%;
+        font-weight: 650;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <p class="brand">
+      <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span
+      ><span class="brand__dot"></span>
+    </p>
+
+    <div>
+      <p class="soft">Non a che ora doveva passare il bus.</p>
+      <p class="stamp">Dov'è adesso.</p>
+    </div>
+
+    <div>
+      <div class="band__track">
+        <div class="seg seg--live"></div>
+        <div class="seg seg--recent"></div>
+        <div class="seg seg--delayed"></div>
+        <div class="seg seg--gone"></div>
+        <div class="head"></div>
+      </div>
+      <div class="keys">
+        <span class="key key--live">In diretta</span>
+        <span class="key key--recent">Recente</span>
+        <span class="key key--delayed">Attenuato</span>
+        <span class="key key--gone">Silenzioso</span>
+      </div>
+      <p class="foot">
+        <span>Ogni posizione ha un'età, ed è scritta accanto.</span>
+        <span class="foot__url">dovebus.it</span>
+      </p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <!-- The theme is light paper; the browser chrome should match the map, not
+         the dark theme this replaced. -->
+    <meta name="theme-color" content="#ffffff" />
+
+    <title>Mappa live dei bus in Toscana — DoveBus</title>
+    <meta
+      name="description"
+      content="La mappa in tempo reale delle corse Autolinee Toscane: cerca una linea o un collegamento fra due comuni, segui la corsa e vedi ritardo, percorso ed età di ogni posizione."
+    />
+    <link rel="canonical" href="%SITE_URL%/mappa/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DoveBus" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:title" content="Mappa live dei bus in Toscana — DoveBus" />
+    <meta
+      property="og:description"
+      content="Cerca una linea o un collegamento fra due comuni toscani e segui la corsa in diretta, con ritardo, percorso ed età della posizione."
+    />
+    <meta property="og:url" content="%SITE_URL%/mappa/" />
+    <meta property="og:image" content="%SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="DoveBus: la scala della freschezza del dato, da «in diretta» a «silenzioso»."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!--
+      The basemap host, opened as early as the parser can manage: the style, the
+      glyphs and the first tiles are all behind this one TLS handshake, and it is
+      the only third party this page contacts. `dns-prefetch` covers the raster
+      fallback, which is only reached if OpenFreeMap does not answer — worth a
+      DNS lookup, not worth a connection that usually goes unused.
+
+      Neither belongs on the content pages: those talk to nobody.
+    -->
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+    <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
+    <link rel="dns-prefetch" href="https://b.basemaps.cartocdn.com" />
+    <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
+
+    <!--
+      The wordmark composes in HTML, but an icon cannot: these are exported at
+      their real size. The background is opaque #0d1825 in every cut, never
+      transparent — the green dot on a light browser bar measures 1.97:1 and
+      disappears. At 16 px the lettering stops being readable, so that cut is the
+      dot alone.
+    -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#sheet">Vai alla ricerca</a>
+
+    <div id="map" class="map" role="application" aria-label="Mappa dei bus in Toscana"></div>
+
+    <header class="topbar" id="topbar">
+      <!--
+        The wordmark is the way back to the landing page — and the only chrome
+        this page gains from having a site around it.
+
+        Deliberately not a hamburger. The map owns the screen and the sheet owns
+        the thumb; a third control in the top bar would compete with the fleet
+        counter at 320 px and buy a drawer, a focus trap and more script on the
+        heaviest page of the site. The pages a rider might want from here —
+        privacy, sources — are linked from the credits block at the bottom of the
+        sheet, which is where the attribution they belong with already lives.
+      -->
+      <a class="brand" href="/" aria-label="DoveBus — vai alla pagina iniziale">
+        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span
+        ><span class="brand__dot" aria-hidden="true"></span>
+      </a>
+      <p class="fleet" id="fleet" aria-live="polite">
+        <span class="fleet__count" id="fleet-count">—</span>
+        <span class="fleet__unit">bus in vista</span>
+      </p>
+    </header>
+
+    <div class="mapctl">
+      <button
+        type="button"
+        class="mapctl__button"
+        id="recenter"
+        aria-label="Inquadra tutta la Toscana"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
+        </svg>
+      </button>
+    </div>
+
+    <section class="sheet" id="sheet" aria-label="Ricerca corse">
+      <button
+        type="button"
+        class="sheet__handle"
+        id="sheet-handle"
+        aria-label="Trascina per ridimensionare il pannello"
+      >
+        <span class="sheet__grip" aria-hidden="true"></span>
+      </button>
+      <div class="sheet__scroll" id="sheet-scroll"></div>
+    </section>
+
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+  </body>
+</html>

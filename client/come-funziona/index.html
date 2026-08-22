@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>Come funziona DoveBus — dal GPS del bus al pallino sulla mappa</title>
+    <meta
+      name="description"
+      content="Il feed GTFS-RT della Regione Toscana si rigenera ogni 120 secondi, DoveBus lo rilegge ogni 30 e dichiara sempre l'età della posizione. Con i limiti, per intero."
+    />
+    <link rel="canonical" href="%SITE_URL%/come-funziona/" />
+
+    <meta property="og:title" content="Come funziona DoveBus — dal GPS del bus alla mappa" />
+    <meta
+      property="og:description"
+      content="Quattro passaggi dal trasmettitore del mezzo al pallino sullo schermo, cosa è misurato, cosa è stimato, e i limiti detti per intero."
+    />
+    <meta property="og:url" content="%SITE_URL%/come-funziona/" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Come funziona DoveBus",
+        "description": "Il percorso del dato dalla trasmissione del mezzo alla mappa, cosa è misurato, cosa è stimato e quali sono i limiti noti.",
+        "inLanguage": "it-IT",
+        "url": "%SITE_URL%/come-funziona/",
+        "mainEntityOfPage": "%SITE_URL%/come-funziona/",
+        "publisher": { "@type": "Organization", "name": "DoveBus", "url": "%SITE_URL%/" }
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+
+    <!--@partial:header-->
+
+    <main id="contenuto">
+      <div class="page shell">
+        <p class="eyebrow">Come funziona</p>
+        <h1 class="page__title">Dal mezzo alla mappa</h1>
+        <p class="page__standfirst">
+          Un pallino su DoveBus non è una telecamera puntata su un autobus. È l'ultimo dato che
+          quell'autobus ha trasmesso, passato per tre mani prima di arrivare al tuo schermo. Ecco
+          quali, quanto ci mette e cosa si perde per strada.
+        </p>
+
+        <nav class="subnav" aria-label="Pagine informative">
+          <a href="/come-funziona/" aria-current="page">Come funziona</a>
+          <a href="/fonte-dati/">Fonte dati e licenze</a>
+          <a href="/privacy/">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="percorso-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="percorso-titolo">Il percorso di una posizione.</h2>
+          <p class="section__intro">
+            Quattro passaggi, e ognuno aggiunge del ritardo. I tempi qui sotto sono misurati sul
+            feed reale, non stimati.
+          </p>
+        </div>
+
+        <!--
+          Numbered — and this is the only numbered list on the site. The path a
+          position takes has a real order, and the numbers are what a reader
+          counts back through when they ask why a dot is two minutes old.
+        -->
+        <ol class="steps">
+          <li class="steps__item">
+            <p class="steps__title">Il mezzo trasmette la sua posizione</p>
+            <p class="steps__body">
+              L'apparato di bordo comunica all'operatore dove si trova, su quale corsa sta
+              viaggiando e a che punto del percorso è arrivato. Questo passaggio non lo vediamo:
+              comincia e finisce dentro i sistemi di Autolinee Toscane.
+            </p>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">La Regione Toscana pubblica il feed aperto</p>
+            <p class="steps__body">
+              Le posizioni finiscono in un file pubblico in formato GTFS-RT, insieme ai ritardi e
+              alle corse soppresse. Ogni pubblicazione è una fotografia completa della flotta, non
+              un aggiornamento parziale — e viene rifatta circa ogni due minuti.
+            </p>
+            <span class="steps__meta">Misurato: si rigenera ogni ~120 s</span>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">DoveBus lo rilegge e lo incrocia con l'orario</p>
+            <p class="steps__body">
+              Un solo processo scarica il feed ogni 30 secondi — più spesso di così si
+              riscaricherebbero posizioni identiche — e collega ogni mezzo alla sua corsa
+              nell'orario ufficiale, per sapere che linea è, dove deve andare e quale strada deve
+              fare. L'incrocio riesce per il 96,6% delle corse in viaggio.
+            </p>
+            <span class="steps__meta">Ogni 30 s · nessuna richiesta va mai a monte da qui</span>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">Il browser lo disegna e ne dichiara l'età</p>
+            <p class="steps__body">
+              La mappa chiede solo i mezzi nella parte di Toscana che stai guardando, li disegna, e
+              accanto a ciascuno tiene il conto dei secondi passati dall'ultimo dato. Il conteggio
+              non si ferma: se il feed si blocca, sullo schermo si vede che si è bloccato.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section shell" aria-labelledby="misura-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="misura-titolo">Cosa è misurato e cosa è stimato.</h2>
+          <p class="section__intro">
+            La differenza è il punto di tutto il progetto, e sullo schermo non viene mai confusa.
+          </p>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">Misurato</dt>
+            <dd class="deflist__desc">
+              La posizione GPS trasmessa dal mezzo, l'ora esatta a cui l'ha trasmessa, il ritardo
+              comunicato dall'operatore, la soppressione di una corsa, l'affollamento dichiarato. Le
+              posizioni davvero ricevute restano disegnate sulla mappa come segni distinti.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Stimato</dt>
+            <dd class="deflist__desc">
+              Tutto quello che sta fra un dato e il successivo. Il mezzo viene fatto avanzare lungo
+              il percorso pubblicato alla velocità che aveva, così non resta fermo due minuti e poi
+              salta. La stima è dichiarata: la corsa in diretta scrive di quanto è stato spostato
+              il pallino, e un cerchio mostra di quanto potrebbe sbagliare.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Ricostruito</dt>
+            <dd class="deflist__desc">
+              Il tratto già percorso. Le posizioni ricevute vengono appoggiate sul percorso ufficiale
+              della corsa — cadono sulla strada pubblicata entro pochi metri — e la scia segue la
+              strada invece di tagliare in linea retta fra un dato e l'altro, che su una provinciale
+              toscana può voler dire attraversare una collina.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Mai inventato</dt>
+            <dd class="deflist__desc">
+              Se un mezzo tace da più di cinque minuti, la stima smette di essere estesa e il mezzo
+              esce dalla mappa. L'età continua a essere detta con onestà anche oltre quel limite;
+              quello che si ferma è l'indovinare.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="section shell" aria-labelledby="limiti-titolo">
+        <div class="section__head">
+          <h2 class="section__title" id="limiti-titolo">I limiti, detti per intero.</h2>
+          <p class="section__intro">
+            Nessuno di questi è un guasto. Sono le proprietà dei dati con cui il progetto lavora, e
+            sapere che esistono cambia il modo in cui si legge la mappa.
+          </p>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">Una posizione arriva già vecchia di circa due minuti</p>
+            <p class="limits__body">
+              Il feed regionale si rigenera ogni ~120 secondi, quindi anche il dato più fresco che
+              possiamo avere ha già quell'età. Nella pratica una posizione vive fra i 2 e i 5 minuti
+              prima di essere sostituita. La fascia «in diretta» (0–90 secondi) esiste nel codice e
+              oggi non si accende mai: resta lì per il giorno in cui la pubblicazione diventasse più
+              veloce.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Circa il 3% delle corse in viaggio non è nell'orario</p>
+            <p class="limits__body">
+              Sono servizi che l'operatore mette in strada senza che compaiano nell'orario ufficiale
+              del giorno. DoveBus li mostra lo stesso — sarebbe peggio nasconderli — ma di quelle
+              corse può non conoscere il percorso pianificato o l'elenco delle fermate.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Il ritardo non c'è per tutte le corse</p>
+            <p class="limits__body">
+              Circa nove corse in viaggio su dieci hanno un dato di ritardo. Per le altre non
+              scriviamo «in orario» per riempire lo spazio: non scriviamo niente.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">L'orario ufficiale cambia senza preavviso</p>
+            <p class="limits__body">
+              Il file degli orari viene sostituito a monte anche molto prima della data di scadenza
+              che dichiara. DoveBus se ne accorge dal contenuto del file, non dalla data scritta
+              dentro, e ricarica quando cambia davvero — e anche quando si accorge che l'orario
+              caricato non descrive più la flotta che vede in strada.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Un mezzo fermo può essere fermo, o zitto</p>
+            <p class="limits__body">
+              Dal dato non si distingue un autobus in coda da un autobus che ha smesso di
+              trasmettere. Per questo l'età accanto al mezzo conta più della posizione: un pallino
+              con 4 minuti addosso sta dicendo qualcosa di diverso da uno con 2.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="closer shell">
+        <h2 class="closer__title">Guardala all'opera.</h2>
+        <p class="closer__body">
+          Tutto quello che c'è scritto qui è visibile sulla mappa mentre la usi: l'età, la stima,
+          l'incertezza.
+        </p>
+        <a class="button" href="/mappa/">
+          Apri la mappa <span class="button__arrow" aria-hidden="true">→</span>
+        </a>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>
