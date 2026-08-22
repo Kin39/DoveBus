@@ -897,6 +897,19 @@ a {
   line-height: 1.55;
 }
 
+/*
+  The date under a set of measurements. Same size and colour as `.limits__body`,
+  because it is the same register — a note about the numbers, not a claim
+  competing with them.
+*/
+.stamp {
+  margin-top: var(--s6);
+  max-width: var(--measure);
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
 /* The one alarm on the whole site, on the one word that earns it. */
 .chip-alarm {
   display: inline-flex;

@@ -497,10 +497,30 @@ paint and the webfont gates nothing; §10.5's «findings that cancel work» appl
 `<priority>` — Google ignores it; left alone because it costs nothing and misleads nobody.
 
 **Left undone on purpose.** `og:type` says `website` on `/come-funziona/` while its JSON-LD says
-`TechArticle`: fixing it means an override in the shared head partial, and the field moves social
-cards, not rankings. And **no `datePublished` on that article** — the page displays no date, and
-invisible date markup would break the rule the site keeps on `/privacy/`, where the date is
-readable. Owner's call.
+`TechArticle`. Fixing it means an override in the shared head partial, and the field moves social
+cards, not rankings — it is recorded because an audit reports what it saw, not because it should be
+done.
+
+**Decided by the owner, and built — `/come-funziona/` shows its date.** The question was whether that
+article should display a date before its markup claimed one, and the answer settles the general rule:
+**a date the markup declares is a date the page owes a reader.** Anything else is the `FAQPage` fault
+in a smaller costume. The date is placed under the limits, next to the numbers rather than in a
+footer, because that is what earns it: the page carries **measured** figures — the ~120 s cadence,
+the 96,6% join, the ~3% of runs missing from the timetable — and a measurement with no date beside it
+does not tell a reader whether they are looking at yesterday or at two years ago. Here the date
+serves the reader before it serves the crawler.
+
+Built with the §10.8 item 6 mechanism generalised rather than copied: one `UPDATED` map, an
+`inItalian()` renderer, and `%NAME_UPDATED%` / `%NAME_UPDATED_IT%` derived from it, so the second
+page did not become a second pair of hand-typed strings. `datePublished` and `dateModified` on the
+`TechArticle` read the same constant as the prose.
+
+And the rule is now enforced, not remembered: **`auditDateParity()`** fails the run if any JSON-LD
+`datePublished` or `dateModified` is not spelled out in the page's text. It checks the reader's form
+(«22 agosto 2026»), not the ISO one — `datetime="2026-08-22"` satisfies a parser and nobody else. A
+page declaring no date is fine and skipped; the rule forbids declaring one *privately*, not having
+none. Negative-tested: point the markup at 21 agosto while the page says 22 and all six viewports go
+red.
 
 **One correction made mid-audit, recorded because it is the standing lesson pointing a third way.**
 A landing FAQ sentence was edited so a markup excerpt would come out tidy. That is backwards — the

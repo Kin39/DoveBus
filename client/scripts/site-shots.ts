@@ -228,6 +228,7 @@ async function auditHead(page: Page, path: string): Promise<readonly string[]> {
     if (token) problems.push(`JSON-LD has an unsubstituted ${token[0]}`);
   }
   problems.push(...(await auditFaqParity(page)));
+  problems.push(...(await auditDateParity(page)));
   return problems;
 }
 
@@ -290,6 +291,56 @@ async function auditFaqParity(page: Page): Promise<readonly string[]> {
               const shown = text.replace(/\s+/g, " ").trim().slice(0, 60);
               problems.push(`FAQPage ${label} not on the page: "${shown}…"`);
             }
+          }
+        }
+      }
+    }
+    return problems;
+  });
+}
+
+/**
+ * A date the markup declares must be a date the page shows.
+ *
+ * The rule the owner chose when `/come-funziona/` gained one: a page that tells
+ * a crawler when it last changed owes the same sentence to a reader. It is the
+ * `FAQPage` fault in a smaller costume — markup asserting something the document
+ * declines to display — and it is worth an assertion for the same reason, since
+ * the JSON-LD date and the prose date are two substitutions of one constant
+ * today and could become two hand-typed strings the moment someone finds the
+ * constant inconvenient.
+ *
+ * Checks the reader's form, not the ISO one: `datetime="2026-08-22"` satisfies a
+ * parser and nobody else, so the assertion is that «22 agosto 2026» is on the
+ * page. A page declaring no date is fine and skipped — the rule is about not
+ * declaring one privately, not about always having one.
+ */
+async function auditDateParity(page: Page): Promise<readonly string[]> {
+  // No named inner functions, per `auditHead` — a `const` arrow counts.
+  return await page.evaluate(() => {
+    const problems: string[] = [];
+    const readable = document.body.cloneNode(true) as HTMLElement;
+    for (const node of readable.querySelectorAll("script, style, template")) node.remove();
+    const pageText = (readable.textContent ?? "").replace(/\s+/g, " ").trim();
+
+    for (const node of document.querySelectorAll('script[type="application/ld+json"]')) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(node.textContent ?? "");
+      } catch {
+        continue; // already reported by the caller
+      }
+      const graph = (parsed as { "@graph"?: unknown[] })["@graph"] ?? [parsed];
+      for (const entity of graph as Record<string, unknown>[]) {
+        for (const field of ["datePublished", "dateModified"]) {
+          const iso = entity[field];
+          if (typeof iso !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) continue;
+          const spelled = new Date(`${iso}T00:00:00Z`).toLocaleDateString("it-IT", {
+            dateStyle: "long",
+            timeZone: "UTC",
+          });
+          if (!pageText.includes(spelled)) {
+            problems.push(`${field} ${iso} ("${spelled}") is declared but not shown on the page`);
           }
         }
       }

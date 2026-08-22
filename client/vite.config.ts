@@ -16,26 +16,49 @@ const SITE_URL = (process.env.SITE_URL ?? "https://dovebus.it").replace(/\/+$/, 
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "ciao@dovebus.it";
 
 /**
- * The day `/privacy/` last changed, written once and rendered twice.
+ * The day a page claims as its last change, written once and rendered twice.
  *
- * That page promises in prose that the date under it is the date of the last
- * change, and repeats the same day as `dateModified` in its JSON-LD. Two
+ * Both pages promise in prose that the date they show is the date of the last
+ * change, and both repeat that day as `dateModified` in their JSON-LD. Two
  * hand-kept copies of one fact in one file is the CC-BY problem again at
  * smaller scale, so it gets the same answer: one constant, two substitutions.
  *
+ * `/come-funziona/` shows a date for the reader before it shows one to Google.
+ * That page carries **measured numbers** — the ~120 s cadence, the 96.6% join,
+ * the ~3% of runs missing from the timetable — and a measurement without a date
+ * beside it does not tell you whether you are reading yesterday or two years
+ * ago. Declaring the date only in the markup would have been the exact fault
+ * this audit spent its time removing from the FAQ: telling a crawler something
+ * the page declines to tell a person.
+ *
  * **Deliberately not `process.env` and deliberately not "today".** `SITE_URL`
- * is a deploy fact and belongs in the environment; this is an editorial claim
- * about when a document changed. Stamping it at build time would make every
- * rebuild announce a privacy policy revision that did not happen — a livelier
- * lie than a stale date, not a fix for one. Edit it here when the page changes.
+ * is a deploy fact and belongs in the environment; these are editorial claims
+ * about when a document changed. Stamping them at build time would make every
+ * rebuild announce a revision that did not happen — a livelier lie than a stale
+ * date, not a fix for one. Edit them here when the page changes.
  */
-const PRIVACY_UPDATED = "2026-08-22";
+const UPDATED = {
+  PRIVACY: "2026-08-22",
+  COME_FUNZIONA: "2026-08-22",
+} as const;
 
-/** The same day in the prose's own register: "22 agosto 2026". */
-const PRIVACY_UPDATED_IT = new Intl.DateTimeFormat("it-IT", {
-  dateStyle: "long",
-  timeZone: "UTC",
-}).format(new Date(`${PRIVACY_UPDATED}T00:00:00Z`));
+/** The same day in the prose's own register: `2026-08-22` → "22 agosto 2026". */
+function inItalian(iso: string): string {
+  return new Intl.DateTimeFormat("it-IT", { dateStyle: "long", timeZone: "UTC" }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
+}
+
+/**
+ * `%PRIVACY_UPDATED%` → the ISO day for `datetime` and `dateModified`;
+ * `%PRIVACY_UPDATED_IT%` → the same day spelled out for the reader.
+ */
+const UPDATED_TOKENS: readonly (readonly [string, string])[] = Object.entries(UPDATED).flatMap(
+  ([name, iso]) => [
+    [`%${name}_UPDATED_IT%`, inItalian(iso)],
+    [`%${name}_UPDATED%`, iso],
+  ],
+);
 
 /**
  * Every indexable URL, in canonical form.
@@ -76,7 +99,7 @@ function siteConstants(): Plugin {
     transformIndexHtml: {
       order: "pre",
       handler(html) {
-        return html
+        let expanded = html
           .replaceAll(PARTIAL_TOKEN, (_match, name: string) => {
             const file = resolve(PARTIALS_DIR, `${name}.html`);
             if (!file.startsWith(PARTIALS_DIR)) throw new Error(`partial escapes dir: ${name}`);
@@ -90,9 +113,10 @@ function siteConstants(): Plugin {
             }
           })
           .replaceAll("%SITE_URL%", SITE_URL)
-          .replaceAll("%CONTACT_EMAIL%", CONTACT_EMAIL)
-          .replaceAll("%PRIVACY_UPDATED_IT%", PRIVACY_UPDATED_IT)
-          .replaceAll("%PRIVACY_UPDATED%", PRIVACY_UPDATED);
+          .replaceAll("%CONTACT_EMAIL%", CONTACT_EMAIL);
+        // `_IT%` before `%`, so the longer token is never eaten by the shorter.
+        for (const [token, value] of UPDATED_TOKENS) expanded = expanded.replaceAll(token, value);
+        return expanded;
       },
     },
     /** Vite watches entry HTML, not the files it pulls in. Reload on both. */
