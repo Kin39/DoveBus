@@ -1,6 +1,6 @@
 # DoveBus — Implementation Plan
 
-**Status:** ✅ APPROVED 2026-08-11 · **Phase 4 BUILT + verified by the screenshot loop, then revised after the owner's manual check 2026-08-14** (MapLibre frontend, mobile-first, **light theme**; position estimated along the route between fixes with its uncertainty drawn; travelled path reconstructed on the shape; buses unheard-from 5 min hidden — see [`README.md`](README.md); code in [`client/`](client/)) · **Phase 0 spikes VERIFIED 2026-08-12** (full results: [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md); throwaway spikes in [`spikes/`](spikes/)) · **Phase 1 BUILT + verified on the live feed 2026-08-12** (static import, comune enrichment, refresh job, atomic swap) · **Phase 2 BUILT + verified on the live feeds 2026-08-12** (realtime pollers, trails, freshness, delay/cancellation join) · **Phase 3 BUILT + verified against the live database and feeds 2026-08-13** (Fastify API: both search modes, vehicles-in-bbox, trip detail with planned shape, SSE live stream, healthz — see [`README.md`](README.md); code in [`server/`](server/)). Next: deploy (Hetzner + Netlify). · **Complexity:** Medium (MVP), Large (with all phases)
+**Status:** ✅ APPROVED 2026-08-11 · **Phase 4 BUILT + verified by the screenshot loop, then revised after the owner's manual check 2026-08-14** (MapLibre frontend, mobile-first, **light theme**; position estimated along the route between fixes with its uncertainty drawn; travelled path reconstructed on the shape; buses unheard-from 5 min hidden — see [`README.md`](README.md); code in [`client/`](client/)) · **Phase 0 spikes VERIFIED 2026-08-12** (full results: [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md); throwaway spikes in [`spikes/`](spikes/)) · **Phase 1 BUILT + verified on the live feed 2026-08-12** (static import, comune enrichment, refresh job, atomic swap) · **Phase 2 BUILT + verified on the live feeds 2026-08-12** (realtime pollers, trails, freshness, delay/cancellation join) · **Phase 3 BUILT + verified against the live database and feeds 2026-08-13** (Fastify API: both search modes, vehicles-in-bbox, trip detail with planned shape, SSE live stream, healthz — see [`README.md`](README.md); code in [`server/`](server/)) · **Phase 5 — public web surface ✅ COMPLETE 2026-08-22** (landing at `/`, the three trust pages, app moved to `/mappa/`, head + JSON-LD + og-image + manifest + robots + sitemap; both screenshot loops clean — see §10.4). Next: deploy (Hetzner + Netlify) — set the real `SITE_URL` first, see §10.7. · **Complexity:** Medium (MVP), Large (with all phases)
 
 > **Phase 0 verified deltas (baked into the sections below):** RT↔static `trip_id` join **96.6% exact / 100% route+direction+shape** (top risk retired). Calendar is a **`calendar_dates`-only** model (weekday columns all zero — resolver keys on `calendar_dates` first). RT header regenerates **~120 s → poll 30 s**, not 15 s. Static `/gtfs` is a **125 MB, 10-file consolidated feed** (not 82 MB / 62 files); `shapes.txt` **277 MB**, `stop_times.txt` **268 MB**. Comuni source = **openpolis `limits_R_9`** GeoJSON (273 comuni), PIP **99.3%**. License **CC BY**, string `Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)`.
 
@@ -221,7 +221,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 5. **Phase 4 — Frontend ✅ DONE (2026-08-14), revised the same day after the owner's manual check.** Four findings, all addressed: a light theme replaced the dark one outright (owner's call, busbus.it as reference — the data ramp was re-picked against paper, not inverted, since a luminous aqua carries under 2:1 on white); the search button died on the *second* search (a control detached from the DOM was never re-enabled — and the screenshot loop had not caught it because every state started from a fresh page load, so a continuous-journey state was added); markers moved only when a snapshot landed, every ~2 minutes; and the travelled trail was drawn as straight chords between fixes up to 2.7 km apart, cutting through hillsides. The last two shared one fix — **projecting position onto the trip's `shape`** (`client/src/map/route.ts`), which yields both a distance-along-route to advance the marker smoothly along the road and a travelled path that *is* the road. Estimated motion was chosen with its uncertainty made visible (owner's option (a)): the trip view states how far the marker has been advanced past the last real fix, a disc on the map shows how far off it could be, the raw fixes stay drawn as separate marks so reconstruction is never confused with observation, and buses unheard-from for 5 minutes leave the map. The estimate also stops being *extended* at that same 5 minutes: the followed bus is exempt from the cutoff so it never vanishes mid-watch, but a code review found that exemption also made its extrapolation unbounded — a selected bus going silent drifted **58.7 km in an hour** while the interface announced the number. The age reported stays truthful past the cap; only the guess is bounded. **One API change came out of it:** estimating a speed needs two fixes, and a client starting cold has one — so `/api/vehicles` now sends each bus's previous position, taken from the trail buffer the server already keeps. Verified on the live feed: RT positions project onto the published shape to within **0–7 m**, the reconstructed trail carries **1,800 vertices where the raw fixes gave 15**, and **59% of markers move within 14 s of a cold load** against 0% before. The feed also produces a "previous" stamped *later* than the current fix (a trail point falls back to the server clock for a bus reporting none), so that case is withheld rather than served — covered by `server/test/serialize.test.ts`. Original build notes follow.
    **Phase 4 — original build notes:** Vite + TypeScript + MapLibre on port 5280 (`strictPort`), built with the `frontend-design` skill and mobile-first at 375×812. Full-screen petrol-tinted raster basemap (no API key), a three-detent draggable bottom sheet holding both search modes, comune/line autocomplete as an ARIA combobox, a trip list led by the line's own code plate, and a live view with the planned shape, the GPS trail, the delay badge and the freshness meter. Vehicles are a GeoJSON circle layer with `requestAnimationFrame` interpolation on the source data — never DOM markers. Above 720 px the sheet becomes a left column and the map's padding follows it. **Verified by the screenshot loop** (`npm run shots`, committed): 12 states × 6 viewports = 72 shots against the live API, two consecutive clean rounds — no horizontal scroll, no interactive target under 44 px, no unexpected console errors, every state reachable. **One design change against the plan:** freshness is recomputed on the client every frame from the bus's own `timestamp` rather than trusted from the payload — the server's bucket is correct on delivery and wrong a minute later, and a colour frozen at send time would keep claiming "recente" for a bus that had gone silent. **One observation for the owner:** with the Phase-2 bands (90/180/300 s) and the measured 116→240 s age cycle, the whole fleet still swings green→amber together on the publisher's ~120 s rhythm — the bands describe the bus better than the old ones did, but "attenuato" is still reached by healthy buses for roughly half of every cycle. See "colour cycling" below.
 6. **`shapes` import + planned-route line** — mandatory: `/api/trip/:tripId` serves the trip's `shape` polyline; the frontend draws it as the route the bus will follow.
-7. **Phase 5 — public web surface (planned 2026-08-21):** split the app to `/mappa/`, build the landing page and the three trust pages, add the head/social/JSON-LD block, `og-image`, manifest, `robots.txt` and `sitemap.xml`. Full plan and the measurements behind it in **§10**; the CC-BY attribution moves out of the JS footer and into a served document as part of this.
+7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**.
 8. **Pre-deploy fixes:** §6.2 (a) `TRUST_PROXY` default, (c) production source maps, (d) deploy config + CSP — plus the §6.1 items. §6.2 (b), the SSE CORS bug, lands **with** the change that sets the real origin.
 9. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
@@ -255,7 +255,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 
 ---
 
-## 10. SEO & the public web surface — planned 2026-08-21
+## 10. SEO & the public web surface — planned 2026-08-21, ✅ BUILT 2026-08-22
 
 Written after a security + SEO review of the running stack. Everything numeric below was **measured**, not estimated: the client was built and the shell parsed, the entity counts come from `data/gtfs.db`.
 
@@ -267,7 +267,7 @@ Built `client/dist` and stripped the scripts from `index.html` to see what a cra
 
 Bundle as shipped: **1,098 KB JS** (299 KB gzip), **88.8 KB CSS** (14.3 KB gzip), `index.html` 2.69 KB. Google renders JS in a second wave, so *something* would eventually be recovered — but the structural problem is not rendering. **Search, results and trip detail all live on the single URL `/`**, reachable only by submitting a form. There is no URL for "line SI381" to rank, and no URL to share with a friend. That second half is a product defect before it is an SEO one.
 
-### 10.2 Decision — landing at `/`, app at `/mappa/`
+### 10.2 Decision — landing at `/`, app at `/mappa/` — ✅ BUILT 2026-08-22
 
 The root becomes a static, text-real, near-zero-JS landing page; the MapLibre app moves to `/mappa/`. Rationale: for the foreseeable future **every visitor arrives cold** — from a search result or a shared link — so optimising the root for returning users optimises for a population that does not exist yet. A landing that paints in ~200 ms beats one that ships 1.1 MB of JS before saying anything.
 
@@ -294,17 +294,85 @@ Sixty-one percent of those pages would say little more than *"line 123 passes th
 
 **The better lever, and a product win first:** make the app's state addressable — `/mappa/?linea=381`, `/mappa/?corsa=78231-2`. Today a rider cannot send anyone the bus they are watching. It costs a fraction of 877 pages, serves a real user, and incidentally gives Google URLs that exist. Note the dependency: **`WebSite` + `SearchAction` JSON-LD must not be added until this exists**, or the markup declares a navigation feature the site does not have.
 
-### 10.4 To build now — the pre-deploy SEO set
+### 10.4 The pre-deploy SEO set — ✅ COMPLETE 2026-08-22
 
-1. **Landing page `/`** — real prose, in Italian: what it does, that it covers Tuscany and Autolinee Toscane, how live the data is, a prominent "Apri la mappa" CTA to `/mappa/`, and text links to the three trust pages. This is the page that has to carry the brand and the query relevance; it is the one piece here that needs design, not just markup.
-2. **`/come-funziona`** — data source, the 30 s poll cadence, and the honest limits (runs the operator broadcasts that the static timetable does not contain — the same caveat `messageFor` already shows at runtime).
-3. **`/fonte-dati`** — full attribution: Regione Toscana (CC BY 4.0), OpenStreetMap, openpolis. **This is a licence obligation, not an SEO nicety:** the CC-BY attribution currently exists *only* in the JS-rendered footer, so it is absent from the served document. A static page makes it permanent and verifiable.
-4. **`/privacy`** — short and truthful; check what the code actually does (browser geolocation, no tracking, no cookies beyond essentials) before writing it rather than asserting the usual boilerplate.
-5. **`<head>` block** on every page: `canonical`, Open Graph (`og:type|site_name|title|description|url|image|locale`), Twitter `summary_large_image`, and `WebApplication` + `Organization` JSON-LD. Per-page `title` and `description`, never copied between pages.
-6. **`og-image.png`, 1200×630** — does not exist and **cannot be cropped from the current icons**, which are all square (16/32/180/192/512). Needs to be produced.
-7. **`site.webmanifest`** — `icon-192.png` and `icon-512.png` already sit in `client/public/` and are **referenced by nothing**; they are dead assets until a manifest exists. `start_url: "/mappa/"`.
-8. **`robots.txt` + `sitemap.xml`** — the sitemap lists `/`, `/mappa/`, and the three trust pages. **No `Disallow: /api/`**: the API is on a separate origin (`VITE_API_BASE`) and is not under this host at all.
-9. **`preconnect` to `https://tiles.openfreemap.org`**, `dns-prefetch` for the raster fallback `{a,b,c}.basemaps.cartocdn.com`. On `/mappa/` only — the landing does not talk to them.
+All nine items built, in one commit, with the `frontend-design` skill. Built as a Vite multi-page
+app: five entries, and **the split verified in the build output rather than assumed** — the four
+content pages carry **0.8 KB of JavaScript between them**, MapLibre's 1,098 KB stays in the `mappa`
+chunk alone. Indexable prose went from the **eleven words** measured in §10.1 to **1200 / 892 / 655 /
+773** on landing / come-funziona / fonte-dati / privacy.
+
+1. **Landing page `/`** ✅ — hero, the ageing band, the two search modes, the live-view feature list,
+   an honest "what DoveBus is not" section, an eight-question FAQ in `<details>` (so the answers are
+   in the served document, not behind a script), closing CTA, footer.
+2. **`/come-funziona/`** ✅ — the four-step path of a position, a measured/estimated/reconstructed/
+   never-invented table, and five limits stated in full (the ~2 min age on arrival, the ~3% of live
+   runs absent from the timetable, the ~9-in-10 delay coverage, the upstream republish, and a
+   stopped bus being indistinguishable from a silent one).
+3. **`/fonte-dati/`** ✅ — four sources each with licence and link, what DoveBus adds, the exact
+   attribution string, and the not-affiliated disclaimer. **openpolis/ISTAT confirmed CC BY 4.0**
+   (fetched, not assumed). The CC-BY line is now in the served HTML of *every* page via a build-time
+   partial, which discharges the licence obligation the JS-only footer did not.
+4. **`/privacy/`** ✅ — **and the plan was wrong here.** This item assumed the client used browser
+   geolocation. It does not: greps for `navigator.`, `localStorage`, `sessionStorage` and `cookie`
+   over `client/src` return **nothing**. The page says so, and states instead what genuinely leaves
+   the browser — API queries, the viewport bbox, the IP any server sees, the per-IP rate-limit
+   counter held in memory for one minute, error-log lines carrying the URL but not the IP, and the
+   tile provider as the one third party, on `/mappa/` only.
+5. **`<head>` block** ✅ — per-page `title`/`description`/`canonical`, full Open Graph, Twitter
+   `summary_large_image`, `Organization` + `WebApplication` on the landing, `TechArticle` /
+   `Dataset` / `WebPage` on the trust pages, and `FAQPage` for the FAQ. **No `WebSite` +
+   `SearchAction`**, per §10.3 — the app's state is still not URL-addressable.
+6. **`og-image.png`, 1200×630** ✅ — produced from HTML by `npm run og` (`client/scripts/og.html`)
+   rather than drawn once in an editor, so it stays editable and in sync. It carries the ageing band,
+   not a map thumbnail: a map at feed size is an unreadable grey rectangle.
+7. **`site.webmanifest`** ✅ — `start_url: "/mappa/"`; the two orphaned icons finally have a referent.
+8. **`robots.txt` + `sitemap.xml`** ✅ — **emitted by a Vite plugin from the same `SITE_URL` constant
+   the head blocks use**, so a page added to the build cannot silently miss the sitemap. No
+   `Disallow: /api/`, as specified.
+9. **`preconnect` / `dns-prefetch`** ✅ — on `/mappa/` only.
+
+**Navigation, decided rather than defaulted.** No hamburger anywhere. Content pages carry one 44 px
+row — wordmark plus the single action a visitor came for — with the other links in every page's
+footer and in a sub-navigation on the trust pages, where they are siblings. On the map the top bar
+was already a two-object composition tuned at 320 px, so the **wordmark became the way home** and the
+three pages joined the **credits block at the bottom of the sheet** — thumb-reachable, and sitting
+with the attribution they belong with. A drawer would have cost a script, a focus trap and an overlay
+to hide three links from a four-page site.
+
+**Design.** No second typeface and no marketing accent: the product's rule is that the chrome is
+monochrome and every saturated colour is a datum, and a landing page with a gradient would contradict
+what it is selling. Display type is the wordmark's own device at 5 rem instead of 13 px — soft roman
+question, stamped condensed answer — which is also how a bus writes its destination on its front. The
+signature element is **the ageing band**: the real freshness scale on a real axis of seconds, marker
+entering at 116 s and climbing on the publisher's 120 s cadence, the unreachable 0–90 s bucket drawn
+hatched, and the 300 s cutoff drawn as the point where the scale stops being a scale.
+
+**Verification.** `npm run site-shots` is the content-page half of the loop — same six viewports,
+offline and in seconds, so it actually gets run. It also asserts the head block, which no screenshot
+can show, and caught three over-length meta descriptions. Final state: **24 shots clean**, plus a
+rerun of `npm run shots` against the live feed — **78 shots, thirteen states, clean**.
+
+**What the loop could not find, and looking did.** Recorded because it is the same lesson as
+§«measure, don't deduce», pointing the other way:
+
+| Defect | Found by |
+|---|---|
+| Wordmark dot drifting **8.4 px** below the words on content pages (`align-items: center` against `align-self: baseline`) | the owner, by eye |
+| **8 px** opening between "Dove" and "BUS" on the map — extracting the mark to `brand.css` let the pill's `gap` win on import order | measuring after the owner's report |
+| **16 section dividers** a gutter too wide per side (a `border-top` paints on the padding box) | the owner, by eye |
+| Counts row with **25 px above and 0 below**, labels resting on the rule | the same report |
+| `~1.000` reading as indented — the tilde carries a quarter of a digit's mass over a full advance | the same report |
+| `.credits__nav` "Privacy" at **38×44** | `npm run shots`, on all 78 |
+| Three meta descriptions over 165 chars | `npm run site-shots` |
+
+The scripts measure geometry; they cannot see optical alignment. Both halves were needed.
+
+**One change outside the SEO set, at the owner's request:** the map CTAs take the dot's green
+(`--fresh-recent`). Two consequences handled rather than discovered later — white on `#018164` is
+**4.86:1**, clearing AA but no longer the highest-contrast object on the page; and the focus ring had
+to leave `--fresh-live`, a neighbouring green that would have vanished on that fill. It is also the
+first deliberate exception to the "saturated colour means data" rule.
 
 ### 10.5 Core Web Vitals — two findings that cancel work
 
@@ -316,6 +384,24 @@ What does remain: **1.1 MB of JS (299 KB gzip) executing at mount**, on phones u
 ### 10.6 Deferred, on purpose
 
 Curated comune pages (§10.3) · URL-addressable app state and the `SearchAction` that depends on it · `localStorage` return-visitor redirect (§10.2) · Netlify's bot prerendering extension — Googlebot has not needed it for years, and it only matters for non-Google crawlers.
+
+### 10.7 Still open before deploy — two content decisions, not code
+
+Neither blocks a build; both make the deployed site wrong if left as they are.
+
+1. **`SITE_URL` is still the placeholder `https://dovebus.it`.** It lives once, at the top of
+   `client/vite.config.ts`, and feeds `canonical`, every `og:url`, the JSON-LD `@id`s, `robots.txt`
+   and `sitemap.xml` — so if the real domain differs, **every one of those points at the wrong host**
+   until it is changed. Overridable at build time with `SITE_URL=…`, same for `CONTACT_EMAIL`
+   (currently `ciao@dovebus.it`), which appears in the footer, the privacy page and the
+   `Organization` markup.
+2. **`/privacy/` names the static host generically** ("un fornitore di hosting"). Once Netlify is
+   confirmed it should be named, since the point of the page is that it says what actually happens.
+
+Also worth a rerun rather than an assumption: `npm run site-shots` asserts that `canonical` and
+`og:url` end in each page's own path, so a wrong `SITE_URL` will not be caught by it — it checks the
+path, not the origin.
+
 
 ---
 
