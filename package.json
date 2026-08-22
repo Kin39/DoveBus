@@ -23,10 +23,10 @@
     "test": "npm run test --workspace=server",
     "coverage": "npm run coverage --workspace=server",
     "typecheck": "npm run typecheck --workspace=server",
-    "lint": "biome lint server client/src client/scripts",
-    "check": "biome check server client/src client/scripts",
-    "check:fix": "biome check --write server client/src client/scripts",
-    "format": "biome format --write server client/src client/scripts"
+    "lint": "biome lint server client/src client/scripts client/*.ts",
+    "check": "biome check server client/src client/scripts client/*.ts",
+    "check:fix": "biome check --write server client/src client/scripts client/*.ts",
+    "format": "biome format --write server client/src client/scripts client/*.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8"
