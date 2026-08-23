@@ -244,7 +244,7 @@ class App {
       this.#startProgressTicker();
 
       const bounds = boundsOf(detail.shape);
-      if (bounds) this.#map.fit(bounds);
+      if (bounds) this.#map.fitBounds(bounds);
     } catch (error) {
       this.#reportError(error);
     } finally {
@@ -364,7 +364,7 @@ class App {
     if (this.#view === "trip" && this.#openTrip) {
       const bounds = boundsOf(this.#openTrip.shape);
       if (bounds) {
-        this.#map.fit(bounds);
+        this.#map.fitBounds(bounds);
         return;
       }
     }

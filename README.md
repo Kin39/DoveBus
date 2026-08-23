@@ -206,11 +206,29 @@ search, back, switch tab, search again, open a trip, back — and Playwright's
 refusal to click a dead button surfaces that class of bug as an unreachable
 state rather than as a picture nobody looks at closely.
 
+### The following check
+
+Two things a screenshot cannot catch happen between frames: the bus a rider is
+following leaving the map, and the stops list moving under them while they read
+it. Both get a script that watches instead of a shot that samples.
+
+```bash
+npm run follow-check
+```
+
+It opens a run that is genuinely in service, zooms to street level — where the
+viewport becomes narrower than the distance a bus covers between two fixes — and
+watches for eighty seconds, across at least two fleet refreshes. It fails if the
+followed bus is ever missing from the drawn fleet, if the stops list moves by
+more than a pixel, or on any console error. With no bus anywhere in Tuscany
+running a trip the loaded timetable describes — which happens at night — it says
+so and exits 0.
+
 ## Checking a build
 
 ```bash
 npm run verify      # smoke checks against the live database
-npm test            # unit + integration tests
+npm test            # unit + integration tests, server and client
 npm run coverage    # same, with the 80% threshold enforced
 npm run typecheck
 npm run check       # Biome: lint + format + import order

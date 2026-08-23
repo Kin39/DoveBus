@@ -11,6 +11,7 @@ import {
 } from "./style.js";
 import { TripLayer } from "./trip.js";
 import { VEHICLE_LAYER_ID, VehicleLayer } from "./vehicles.js";
+import { type Bbox, FOLLOW_PAD_M, padViewport } from "./viewport.js";
 
 /**
  * How long a style gets to finish loading before it is treated as broken.
@@ -190,23 +191,23 @@ export class MapController {
    * The viewport as the API wants it.
    *
    * Padded outward by a margin so a bus just off the edge is already loaded when
-   * a small pan brings it into view, instead of popping in afterwards.
+   * a small pan brings it into view, instead of popping in afterwards — and
+   * never by less than `FOLLOW_PAD_M`, because past a certain zoom the margin
+   * stops covering the distance between where a bus last reported and where its
+   * marker is drawn. See `viewport.ts`.
    */
-  viewportBbox(margin = 0.15): {
-    minLon: number;
-    minLat: number;
-    maxLon: number;
-    maxLat: number;
-  } {
+  viewportBbox(margin = 0.15): Bbox {
     const bounds = this.map.getBounds();
-    const lonPad = (bounds.getEast() - bounds.getWest()) * margin;
-    const latPad = (bounds.getNorth() - bounds.getSouth()) * margin;
-    return {
-      minLon: bounds.getWest() - lonPad,
-      minLat: bounds.getSouth() - latPad,
-      maxLon: bounds.getEast() + lonPad,
-      maxLat: bounds.getNorth() + latPad,
-    };
+    return padViewport(
+      {
+        west: bounds.getWest(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        north: bounds.getNorth(),
+      },
+      margin,
+      FOLLOW_PAD_M,
+    );
   }
 
   /**
@@ -233,7 +234,7 @@ export class MapController {
     });
   }
 
-  fit(bounds: LngLatBoundsLike, extraPadding = 48): void {
+  fitBounds(bounds: LngLatBoundsLike, extraPadding = 48): void {
     this.map.fitBounds(bounds, {
       padding: extraPadding,
       duration: prefersReducedMotion() ? 0 : 800,

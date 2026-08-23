@@ -1,8 +1,9 @@
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import type { Vehicle } from "../api/types.js";
 import { ageFromTimestamp, bucketOf, MAX_VISIBLE_AGE_S } from "../ui/format.js";
-import { type Estimate, estimate, type Fix } from "./estimate.js";
+import { type Estimate, estimate } from "./estimate.js";
 import type { RouteGeometry } from "./route.js";
+import { type Tracked, trackSnapshot } from "./tracking.js";
 
 const SOURCE_ID = "vehicles";
 export const VEHICLE_LAYER_ID = "vehicles-dot";
@@ -17,13 +18,6 @@ const SELECTED_LAYER_ID = "vehicles-selected";
  * mean re-parsing a thousand-feature collection sixty times a second on a phone.
  */
 const TICK_MS = 200;
-
-interface Tracked {
-  vehicle: Vehicle;
-  /** The two most recent positions the bus reported, oldest first. */
-  previous: Fix | null;
-  latest: Fix;
-}
 
 /**
  * The live fleet, drawn as a GeoJSON layer.
@@ -42,7 +36,7 @@ interface Tracked {
  */
 export class VehicleLayer {
   readonly #map: MapLibreMap;
-  readonly #tracked = new Map<string, Tracked>();
+  #tracked: ReadonlyMap<string, Tracked> = new Map();
   #selectedKey: string | null = null;
   #selectedRoute: RouteGeometry | null = null;
   #timer: number | null = null;
@@ -110,38 +104,13 @@ export class VehicleLayer {
     });
   }
 
-  /** Takes a fresh snapshot, keeping each bus's previous fix to estimate from. */
+  /**
+   * Takes a fresh snapshot, keeping each bus's previous fix to estimate from —
+   * and keeping the followed bus whether or not the snapshot mentions it. The
+   * rules are in `tracking.ts`, where they can be tested without a map.
+   */
   update(vehicles: readonly Vehicle[]): void {
-    const next = new Map<string, Tracked>();
-
-    for (const vehicle of vehicles) {
-      const fix: Fix = {
-        lon: vehicle.lon,
-        lat: vehicle.lat,
-        // A bus with no clock of its own cannot be extrapolated, only placed.
-        at: vehicle.timestamp ?? 0,
-      };
-      const existing = this.#tracked.get(vehicle.key);
-      const moved = existing !== undefined && existing.latest.at !== fix.at;
-
-      // On first sight, take the earlier position the API sends rather than
-      // waiting to observe one. Without it a freshly opened map would sit
-      // motionless for a whole publisher cycle — about two minutes — before any
-      // bus had two fixes to measure a speed between.
-      const seeded: Fix | null =
-        vehicle.previous === null
-          ? null
-          : { lon: vehicle.previous.lon, lat: vehicle.previous.lat, at: vehicle.previous.at };
-
-      next.set(vehicle.key, {
-        vehicle,
-        previous: moved ? existing.latest : (existing?.previous ?? seeded),
-        latest: moved || existing === undefined ? fix : existing.latest,
-      });
-    }
-
-    this.#tracked.clear();
-    for (const [key, entry] of next) this.#tracked.set(key, entry);
+    this.#tracked = trackSnapshot(this.#tracked, vehicles, this.#selectedKey);
     this.#draw();
     this.#start();
   }
@@ -174,7 +143,7 @@ export class VehicleLayer {
   }
 
   clear(): void {
-    this.#tracked.clear();
+    this.#tracked = new Map();
     this.#draw();
   }
 

@@ -7,6 +7,23 @@ import { FreshnessMeter } from "../freshness.js";
 /** Below this the guess is smaller than GPS noise and not worth a sentence. */
 const ESTIMATE_VISIBLE_M = 40;
 
+/**
+ * How coarsely the advance is spoken: to the nearest 50 m below a kilometre and
+ * to a tenth of a kilometre above it. The figure is a guess with hundreds of
+ * metres of uncertainty printed beside it on the map — quoting it to the metre,
+ * five times a second, would claim a precision it does not have and rewrite the
+ * sentence continuously to do it.
+ */
+const ESTIMATE_STEP_M = 50;
+
+function estimateSentence(metres: number): string {
+  if (metres >= 1000) {
+    return `Posizione stimata: avanzata di ~${(metres / 1000).toFixed(1)} km dall'ultimo dato ricevuto.`;
+  }
+  const rounded = Math.round(metres / ESTIMATE_STEP_M) * ESTIMATE_STEP_M;
+  return `Posizione stimata: avanzata di ~${rounded} m dall'ultimo dato ricevuto.`;
+}
+
 export interface TripViewOptions {
   readonly onBack: () => void;
   /** Fired on every live payload so the map can move the bus and redraw the trail. */
@@ -57,15 +74,30 @@ export class TripView {
     this.#renderEstimate();
   }
 
+  /**
+   * The estimate line, written so that it cannot move the page under the reader.
+   *
+   * It is rewritten five times a second, and the stops list sits directly below
+   * it — so every character this sentence gains or loses is a jolt in the list a
+   * rider is reading. Three things keep it still: the distance is rounded, so
+   * the text changes on the scale the bus moves rather than on the scale the
+   * clock ticks; the node is emptied rather than hidden, and its box is reserved
+   * in `trip.css`, so crossing the "not worth saying" threshold costs nothing;
+   * and the figures are tabular, so `~1.1 km` and `~1.9 km` are the same width.
+   *
+   * That last one is what the bug actually was: measured on a 1280 px screen the
+   * sentence sits exactly on a line break, so a proportional `1` against a `9`
+   * was enough to reflow it from two lines to one and jump the stops list by
+   * 16.5 px, roughly every nine seconds.
+   */
   #renderEstimate(): void {
     const node = this.element.querySelector("#trip-estimate");
     if (!(node instanceof HTMLElement)) return;
+
     const metres = Math.round(this.#advanced);
-    node.hidden = metres < ESTIMATE_VISIBLE_M;
-    node.textContent =
-      metres >= 1000
-        ? `Posizione stimata: avanzata di ~${(metres / 1000).toFixed(1)} km dall'ultimo dato ricevuto.`
-        : `Posizione stimata: avanzata di ~${metres} m dall'ultimo dato ricevuto.`;
+    const text = metres < ESTIMATE_VISIBLE_M ? "" : estimateSentence(metres);
+    // Writing the same string again is a layout invalidation for nothing.
+    if (node.textContent !== text) node.textContent = text;
   }
 
   close(): void {
@@ -204,7 +236,7 @@ export class TripView {
     status.append(this.#meter.element, badges);
 
     status.append(
-      el("p", { class: "status__trail", id: "trip-estimate" }),
+      el("p", { class: "status__trail status__trail--estimate", id: "trip-estimate" }),
       el("p", {
         class: "status__trail",
         // The green line is a reconstruction and the dots are observations, and

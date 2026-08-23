@@ -14,19 +14,20 @@
     "build:client": "npm run build --workspace=client",
     "shots": "npm run shots --workspace=client --",
     "site-shots": "npm run site-shots --workspace=client --",
+    "follow-check": "npm run follow-check --workspace=client",
     "og": "npm run og --workspace=client",
     "import": "npm run import --workspace=server --",
     "refresh": "npm run refresh --workspace=server --",
     "verify": "npm run verify --workspace=server --",
     "poll": "npm run poll --workspace=server --",
     "serve": "npm run serve --workspace=server --",
-    "test": "npm run test --workspace=server",
-    "coverage": "npm run coverage --workspace=server",
-    "typecheck": "npm run typecheck --workspace=server",
-    "lint": "biome lint server client/src client/scripts client/*.ts",
-    "check": "biome check server client/src client/scripts client/*.ts",
-    "check:fix": "biome check --write server client/src client/scripts client/*.ts",
-    "format": "biome format --write server client/src client/scripts client/*.ts"
+    "test": "npm run test --workspace=server && npm run test --workspace=client",
+    "coverage": "npm run coverage --workspace=server && npm run coverage --workspace=client",
+    "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=client",
+    "lint": "biome lint server client/src client/scripts client/test client/*.ts",
+    "check": "biome check server client/src client/scripts client/test client/*.ts",
+    "check:fix": "biome check --write server client/src client/scripts client/test client/*.ts",
+    "format": "biome format --write server client/src client/scripts client/test client/*.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8"
