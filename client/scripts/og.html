@@ -1,8 +1,10 @@
 <!doctype html>
-<html lang="it">
+<!-- biome-ignore lint/a11y/useValidLang: substituted by `npm run og` — the
+     card is rendered once per language, and the rule cannot see a token. -->
+<html lang="%CARD_LANG%">
   <head>
     <meta charset="utf-8" />
-    <title>DoveBus — sorgente della card di condivisione</title>
+    <title>DoveBus — share-card source</title>
     <style>
       /*
        * The 1200×630 card, rendered to `public/og-image.png` by `npm run og`.
@@ -218,8 +220,8 @@
     </p>
 
     <div>
-      <p class="soft">Non a che ora doveva passare il bus.</p>
-      <p class="stamp">Dov'è adesso.</p>
+      <p class="soft">%CARD_LEAD%</p>
+      <p class="stamp">%CARD_ANSWER%</p>
     </div>
 
     <div>
@@ -231,13 +233,20 @@
         <div class="head"></div>
       </div>
       <div class="keys">
-        <span class="key key--live">In diretta</span>
-        <span class="key key--recent">Recente</span>
-        <span class="key key--delayed">Attenuato</span>
-        <span class="key key--gone">Silenzioso</span>
+        <!--
+          The four words come from `src/i18n/{it,en}.ts`, not from here. They
+          are the product's own vocabulary and they are printed beside every
+          bus on the map — a card that said «attenuato» after the app had
+          started saying something else would be the CC-BY drift problem again,
+          in the one asset nobody re-reads because it is a picture.
+        -->
+        <span class="key key--live">%CARD_LIVE%</span>
+        <span class="key key--recent">%CARD_RECENT%</span>
+        <span class="key key--delayed">%CARD_DELAYED%</span>
+        <span class="key key--gone">%CARD_STALE%</span>
       </div>
       <p class="foot">
-        <span>Ogni posizione ha un'età, ed è scritta accanto.</span>
+        <span>%CARD_FOOT%</span>
         <!--
           Substituted by `npm run og` from the one `SITE_URL` the head blocks
           use. Written as a token rather than as a literal domain because this

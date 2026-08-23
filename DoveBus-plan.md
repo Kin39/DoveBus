@@ -504,8 +504,9 @@ make every rebuild announce a policy revision that did not happen.
 that the three trust pages reached each other only through nav chrome, never from prose. Two
 contextual links added, `/come-funziona/` ↔ `/fonte-dati/`, plus `author` on the `TechArticle`.
 
-**Checklist items that do not apply here, recorded so they are not re-raised.** `hreflang` — one
-language. **Font preload for LCP** — `font-display: swap` is set, so the fallback paint *is* the LCP
+**Checklist items that do not apply here, recorded so they are not re-raised.** ~~`hreflang` — one
+language.~~ **Superseded 2026-08-23 by §11.5** — the site is two languages now, `hreflang` applies,
+and it is built; §11.9 audits it. **Font preload for LCP** — `font-display: swap` is set, so the fallback paint *is* the LCP
 paint and the webfont gates nothing; §10.5's «findings that cancel work» applies a third time.
 `BreadcrumbList` — four pages at one level. Image `alt` — the site has no `<img>` at all. Sitemap
 `<priority>` — Google ignores it; left alone because it costs nothing and misleads nobody.
@@ -780,3 +781,62 @@ keeping the two copies in step.
 **Two `console.warn` strings** in `map/map.ts` and `map/style.ts` are still Italian while every other
 developer-facing string in the repo is English. They are read by whoever opens the console, not by a
 rider.
+
+### 11.9 Technical SEO audit of the bilingual site — ✅ DONE 2026-08-24
+
+Second pass of the §10.8 grid, re-run against `client/dist` now that every page exists twice. **The
+bilingual work holds up**: ten pages, ten correct canonicals, and `hreflang` that is reciprocal and
+self-referencing on every one of them — checked by walking the graph, not by eye. `x-default` points
+at Italian throughout, the redirect table covers both trees with no chain, the sitemap lists all ten,
+the language switch is generated markup with `lang`, `hreflang` and an `aria-label` and needs no
+JavaScript, and the contextual links added in §10.8 were translated rather than dropped. The
+deliberate absence of an `Accept-Language` redirect on `/` is documented in `_redirects` and is the
+right call for the reason given there.
+
+Two things were wrong. Both are the same shape: **a translated label describing an untranslated
+thing.**
+
+**1. Every English page shared the Italian card.** `og:image` pointed at `og-image.png` on all ten
+pages while `og:image:alt` had been translated — so the markup described an English freshness scale
+that did not exist, and a reader who had navigated to `/en/` and shared the link got a picture
+reading «Non a che ora doveva passare il bus» with the legend «In diretta · Recente · Attenuato ·
+Silenzioso». The card is the most-seen asset of a shared link and the only one nobody proof-reads,
+because it is a picture.
+
+Fixed by rendering one card per language from the one template, which is why the card was a template
+in the first place. **The four freshness words are read from `src/i18n/{it,en}.ts`**, not retyped:
+they are the product's own vocabulary and are printed beside every bus on the map, so a card still
+saying «attenuato» after the app had moved on would be the CC-BY drift problem in the one asset a
+reader cannot correct. Only the two sentences that exist nowhere but the card are held in `og.ts` —
+putting those in `Strings` would ship build-time copy inside the 1.1 MB runtime bundle and widen a
+type whose stated job is «every word the interface says».
+
+*And the check was satisfied by the bug.* `auditHead` asserted `ogImage.endsWith("/og-image.png")`,
+which is exactly what all ten pages did — the assertion passed hardest at the moment it was most
+wrong. It now derives the expected card from the URL's language. Negative-tested: point the English
+pages back at the Italian card and 24 checks go red.
+
+**2. `Dataset.inLanguage` said `en-GB` on `/en/data-source/`.** On a `Dataset` that property is the
+language **of the data**, not of the page describing it — and this data is the Regione Toscana feed,
+whose stop names, line codes, headsigns and municipality names are Italian and, by the owner's
+standing rule, stay Italian in both editions. The English page was telling anyone reading the markup
+to decide whether the feed was usable in English the opposite of the truth. Now `it-IT` on both
+pages, with a comment saying why it looks wrong and is not.
+
+The two `Dataset` nodes also had **no `@id`**, so one real dataset appeared as two. They now share
+`%SITE_URL%/#gtfs-toscana`, matching how `#org`, `#app` and `#app-en` were already handled.
+
+**Reported, not fixed.** `Organization` carries the same `@id` on all four landing/map pages with a
+*different* `description` per language — strictly a contradiction under one identifier, practically
+the standard localisation pattern that Google resolves per page. Both repairs are worse than the
+problem: splitting the `@id` would claim two organisations exist, and dropping the localised
+description would make one language poorer. `FAQPage` has no `inLanguage` on either landing —
+absent, not wrong, and unused by search engines. Sitemap `xhtml:link` alternates are unnecessary
+because the HTML `hreflang` block is present, which is one of the three forms Google accepts.
+
+**The map's Italian names were checked, not assumed.** `italianLabelFor()` in `map/style.ts` rewrites
+every naming layer to `coalesce(name:it, name, name:latin)` **regardless of interface language**, and
+`i18n/strings.ts` already states in its own docstring that stop names, line codes and headsigns are
+out of scope because they come from the operator's feed. Nothing needed changing, and nothing in this
+audit proposes translating them: a bus stop is not translated, it is asked for by name.
+

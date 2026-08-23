@@ -34,13 +34,28 @@
       The dataset's own name and description stay in the language of this page,
       but the publisher keeps its own name: Regione Toscana is not translated.
     -->
+    <!--
+      `inLanguage` is **it-IT on the English page too**, and that is not an
+      oversight. On a `Dataset` the property describes the language *of the
+      data*, not of the page describing it — and this data is the Regione
+      Toscana feed, whose stop names, line codes, headsigns and municipality
+      names are Italian and stay Italian, in both versions of the site. A bus
+      stop is not translated, it is asked for by name. Saying `en-GB` here told
+      anyone reading the markup to decide whether the feed was usable in English
+      the opposite of the truth.
+
+      The `@id` is shared with `/fonte-dati/` for the same reason: there is one
+      dataset, described twice in two languages. Without it a consumer merging
+      the graph sees two.
+    -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Dataset",
+        "@id": "%SITE_URL%/#gtfs-toscana",
         "name": "Tuscan public transport timetables and real-time positions",
         "description": "Scheduled timetables (GTFS) and real-time positions, delays and alerts (GTFS-RT) for Regione Toscana's road public transport — the two feeds DoveBus is built on.",
-        "inLanguage": "en-GB",
+        "inLanguage": "it-IT",
         "url": "%SITE_URL%/en/data-source/",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,

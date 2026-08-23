@@ -223,7 +223,19 @@ async function auditHead(page: Page, path: string): Promise<readonly string[]> {
   if (!head.canonical.endsWith(path)) problems.push(`canonical does not end in ${path}`);
   if (!head.ogUrl.endsWith(path)) problems.push(`og:url does not end in ${path}`);
   if (!head.ogTitle) problems.push("no og:title");
-  if (!head.ogImage.endsWith("/og-image.png")) problems.push("no og:image");
+  // The card has to be in the page's own language, not merely present.
+  //
+  // The looser `endsWith("/og-image.png")` this replaces was **satisfied by the
+  // bug**: when the site became bilingual every English page kept pointing at
+  // the Italian card, and the check passed on all ten because that was the file
+  // it was written to look for. The `og:image:alt` beside it had been
+  // translated, so the markup described an English card that did not exist,
+  // and every link a reader shared to WhatsApp or Slack showed a picture in a
+  // language they had explicitly navigated away from. Nobody proof-reads a PNG.
+  const expectedCard = path.startsWith("/en/") ? "/og-image-en.png" : "/og-image.png";
+  if (!head.ogImage.endsWith(expectedCard)) {
+    problems.push(`og:image is "${head.ogImage.split("/").pop()}", expected ${expectedCard}`);
+  }
   if (head.h1.length !== 1) problems.push(`${head.h1.length} <h1> elements`);
   // The language a page declares has to be the language its URL promises: an
   // English page under `/en/` still carrying `lang="it"` would hand a screen

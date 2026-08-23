@@ -12,7 +12,14 @@
 <meta property="og:site_name" content="DoveBus" />
 <meta property="og:locale" content="en_GB" />
 <meta property="og:locale:alternate" content="it_IT" />
-<meta property="og:image" content="%SITE_URL%/og-image.png" />
+<!--
+  The English card, not the Italian one. `og:image:alt` below describes the
+  freshness scale in English, and until this pointed at `og-image-en.png` it was
+  describing a picture that did not exist: every link shared to WhatsApp, Slack
+  or LinkedIn showed a reader who had chosen English a card in Italian. Both are
+  rendered from one template by `npm run og`.
+-->
+<meta property="og:image" content="%SITE_URL%/og-image-en.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta

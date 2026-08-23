@@ -26,6 +26,11 @@
       from openpolis/ISTAT, and a `Dataset` whose `creator` is one publisher must
       not have a second publisher's data folded into its `description`.
 
+      Same `@id` as `/en/data-source/`: one dataset, described twice in two
+      languages. `inLanguage` is the language of the **data**, which is Italian
+      on both pages — the feed's stop names and line codes are Italian and stay
+      that way.
+
       `contentUrl` on both distributions, because a `DataDownload` without one
       claims a download exists and then declines to say where. These two URLs are
       the same ones the server polls; they are what «puoi usarli anche tu», three
@@ -35,6 +40,7 @@
       {
         "@context": "https://schema.org",
         "@type": "Dataset",
+        "@id": "%SITE_URL%/#gtfs-toscana",
         "name": "Orari e posizioni in tempo reale del trasporto pubblico toscano",
         "description": "Orari programmati (GTFS) e posizioni, ritardi e avvisi in tempo reale (GTFS-RT) del trasporto pubblico su gomma della Regione Toscana, i due feed su cui DoveBus è costruito.",
         "inLanguage": "it-IT",
