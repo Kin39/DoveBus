@@ -129,7 +129,184 @@
   font-stretch: 88%;
   font-weight: 600;
   letter-spacing: 0.01em;
-  padding-inline: var(--s2);
+  /* Room on the right for the picker button. */
+  padding: var(--s2) calc(var(--touch) - var(--s1)) var(--s2) var(--s2);
+}
+
+/*
+ * The button that opens the day and hour panels.
+ *
+ * It sits where the native control drew its own picker icon, because that is
+ * where a hand goes for it — and because the first version of these fields had
+ * no such affordance at all: on a phone, "type it or use the arrow keys" means
+ * "type it".
+ */
+.field__picker {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+}
+
+.field__picker svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.field__picker:hover {
+  color: var(--text);
+}
+
+/* ---- the day and hour panels ------------------------------------------- */
+
+.picker {
+  position: absolute;
+  top: calc(100% + var(--s1));
+  left: 0;
+  max-width: calc(100vw - var(--s6, 2rem));
+  z-index: 30;
+  padding: var(--s2);
+  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  background: var(--paper);
+  box-shadow: var(--shadow-float);
+}
+
+.picker[hidden] {
+  display: none;
+}
+
+/*
+ * The row's last field sits against the right edge of a 380 px column, so its
+ * panel hangs from that edge instead of running off it. Deterministic in CSS
+ * rather than measured at open time: the row has three fields and the last one
+ * is always the one with no room to its right.
+ */
+.when .field:last-child .picker {
+  left: auto;
+  right: 0;
+}
+
+.picker__cols {
+  display: flex;
+  gap: var(--s2);
+}
+
+.picker__col {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), 2.4rem);
+  gap: 2px;
+  align-content: start;
+  max-height: 11rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.picker__collabel {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  padding-bottom: 2px;
+  background: var(--paper);
+  font-size: var(--text-xs);
+  font-stretch: 88%;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.picker__cell {
+  min-height: 2.4rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.picker__cell:hover {
+  background: var(--paper-sunk);
+}
+
+.picker__cell[data-selected="true"] {
+  background: var(--text);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+/* ---- the month grid ----------------------------------------------------- */
+
+.picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+/* Full touch size: unlike the day cells, nothing about the layout stops these
+   two from being 44 px, so they are. */
+.picker__step {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--text-dim);
+}
+
+.picker__step:hover {
+  background: var(--paper-sunk);
+  color: var(--text);
+}
+
+.picker__month {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-stretch: 88%;
+  text-transform: capitalize;
+}
+
+/*
+ * Seven columns of whatever is left, rather than seven of a fixed size: at
+ * 320 px the sheet gives the panel 288 px, and a month grid has to fit in it.
+ * That is also why these cells are the one control on the site below the 44 px
+ * floor — 288 ÷ 7 is 41 px before any gap, so 44 is not available to a calendar
+ * on the narrowest phone this site supports. They clear the 24 px WCAG 2.2
+ * minimum with room, and `scripts/site-shots.ts` records the exemption.
+ */
+.picker__week,
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.picker__day {
+  min-width: 15rem;
+}
+
+.picker__week {
+  margin-top: var(--s2);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.picker__cell--day {
+  aspect-ratio: 1;
+  min-height: 2.2rem;
 }
 
 /* An empty required field says so by drawing attention to itself once. */

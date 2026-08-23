@@ -212,10 +212,20 @@ button {
     opacity 200ms ease;
 }
 
-.sheet[data-detent="full"] ~ .mapctl,
-body:has(.sheet[data-detent="full"]) .mapctl {
-  opacity: 0;
-  pointer-events: none;
+/*
+ * On a phone a full sheet leaves no map to frame, so the controls get out of the
+ * way. On a tablet or a desktop the sheet is a fixed column and the map is fully
+ * visible beside it, so they must not — and they were: the rule outranked the
+ * wide-screen override on specificity, so focusing a search field (which snaps
+ * the sheet open) made the language switch and the framing button vanish while
+ * the map sat there in full view.
+ */
+@media (max-width: 719px) {
+  .sheet[data-detent="full"] ~ .mapctl,
+  body:has(.sheet[data-detent="full"]) .mapctl {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .mapctl__button {

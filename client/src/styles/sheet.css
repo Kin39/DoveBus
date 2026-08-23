@@ -90,10 +90,9 @@
     max-height: calc(100vh - var(--s8));
   }
 
+  /* No opacity override needed: above this width the fade never applies. */
   .mapctl {
     bottom: var(--s4);
-    opacity: 1;
-    pointer-events: auto;
   }
 
   /* The sheet becomes a column pinned to the top-left, so the brand has to step

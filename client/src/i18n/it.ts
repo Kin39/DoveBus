@@ -65,6 +65,12 @@ export const it: Strings = {
     whenHint: (shape) =>
       `Formato ${shape}. Le frecce su e giù cambiano il valore, con shift a passi più grandi.`,
     whenReverted: (value) => `Non l'ho capito: resta ${value}.`,
+    pickDay: "Scegli il giorno",
+    pickClock: "Scegli l'ora",
+    previousMonth: "Mese precedente",
+    nextMonth: "Mese successivo",
+    hours: "Ore",
+    minutes: "Minuti",
     clockPlaceholder: "hh:mm",
     submit: "Cerca corse",
     noLine: "Nessuna linea con questo nome.",
@@ -145,6 +151,12 @@ export const it: Strings = {
       { href: "/fonte-dati/", text: "Fonte dati" },
       { href: "/privacy/", text: "Privacy" },
     ],
+    otherLanguage: {
+      href: "/en/map/",
+      name: "English",
+      label: "Read this page in English",
+      lang: "en",
+    },
   },
 
   errors: {

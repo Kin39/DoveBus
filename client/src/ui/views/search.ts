@@ -110,8 +110,12 @@ export class SearchPanel {
     this.#from = new WhenField({ input: query(this.element, "#input-from"), kind: "clock" });
     this.#to = new WhenField({ input: query(this.element, "#input-to"), kind: "clock" });
 
-    for (const input of this.element.querySelectorAll<HTMLInputElement>(".field__input")) {
-      input.addEventListener("focus", () => this.#options.onFieldFocus());
+    // The picker buttons ask for room too: on a phone the sheet has to be open
+    // before a panel drops out of a field, or it opens into the map.
+    for (const control of this.element.querySelectorAll<HTMLElement>(
+      ".field__input, .field__picker",
+    )) {
+      control.addEventListener("focus", () => this.#options.onFieldFocus());
     }
 
     query(this.element, "#swap").addEventListener("click", () => this.#swapComuni());

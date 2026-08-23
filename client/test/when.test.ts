@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { formatDay, parseClock, parseDay, stepClock, stepDay } from "../src/ui/when.js";
+import {
+  dayParts,
+  firstOfMonth,
+  formatDay,
+  monthGrid,
+  parseClock,
+  parseDay,
+  stepClock,
+  stepDay,
+} from "../src/ui/when.js";
 
 describe("parseClock", () => {
   test("reads the way a hour is actually typed", () => {
@@ -143,5 +152,40 @@ describe("stepDay", () => {
     expect(stepDay("20260831", 1)).toBe("20260901");
     expect(stepDay("20261231", 1)).toBe("20270101");
     expect(stepDay("20260301", -1)).toBe("20260228");
+  });
+});
+
+describe("monthGrid", () => {
+  test("starts the week on Monday and leaves the neighbours out", () => {
+    // 1 August 2026 is a Saturday: five blanks, then the 1st.
+    const august = monthGrid(2026, 8);
+    expect(august.slice(0, 5)).toEqual([null, null, null, null, null]);
+    expect(august[5]).toBe("20260801");
+    expect(august[6]).toBe("20260802");
+    expect(august[35]).toBe("20260831");
+    expect(august[36]).toBeNull();
+  });
+
+  test("is always six rows, so the popover never changes height", () => {
+    for (const month of [1, 2, 3, 11, 12]) expect(monthGrid(2026, month)).toHaveLength(42);
+    expect(monthGrid(2027, 2)).toHaveLength(42);
+  });
+
+  test("knows how long February is", () => {
+    expect(monthGrid(2026, 2).filter(Boolean)).toHaveLength(28);
+    expect(monthGrid(2028, 2).filter(Boolean)).toHaveLength(29);
+  });
+
+  test("a month starting on Monday has no blanks at all in its first row", () => {
+    // 1 June 2026 is a Monday.
+    expect(monthGrid(2026, 6)[0]).toBe("20260601");
+  });
+});
+
+describe("dayParts and firstOfMonth", () => {
+  test("read and write the same shape", () => {
+    expect(dayParts("20260823")).toEqual({ year: 2026, month: 8, day: 23 });
+    expect(firstOfMonth(2026, 8)).toBe("20260801");
+    expect(firstOfMonth(2026, 12)).toBe("20261201");
   });
 });

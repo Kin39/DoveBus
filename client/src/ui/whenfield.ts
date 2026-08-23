@@ -1,5 +1,7 @@
 import { t } from "../i18n/index.js";
 import { el } from "./dom.js";
+import { clockPicker, dayPicker } from "./pickers.js";
+import { Popover } from "./popover.js";
 import { formatDay, parseClock, parseDay, stepClock, stepDay } from "./when.js";
 
 export type WhenKind = "clock" | "day";
@@ -25,26 +27,42 @@ const PLACEHOLDER: Record<WhenKind, string> = {
   day: t.search.dayPlaceholder,
 };
 
+const PICKER_LABEL: Record<WhenKind, string> = {
+  clock: t.search.pickClock,
+  day: t.search.pickDay,
+};
+
+/** A clock face and a calendar leaf, drawn at the size the field can spare. */
+const PICKER_ICON: Record<WhenKind, string> = {
+  clock: '<circle cx="12" cy="12" r="8.4" /><path d="M12 7.4V12l3 1.8" />',
+  day: '<rect x="4" y="5.6" width="16" height="14" rx="2.2" /><path d="M4 10h16M8.6 3.8v3.4M15.4 3.8v3.4" />',
+};
+
 /**
- * A day or an hour, typed as text and always shown the same way round.
+ * A day or an hour: typed, stepped, or chosen from a panel — and always shown
+ * the same way round.
  *
  * It replaces `<input type="time">` and `<input type="date">`, whose format is
- * chosen by the browser's language rather than the page's — see `when.ts` for
- * what that cost. Everything those controls gave a keyboard is kept: arrows step
- * the value, shift steps it further, and what is typed is normalised when the
- * field is left, so `9`, `930` and `9.30` all settle into `09:30`.
+ * chosen by the browser's language rather than the page's; see `when.ts` for
+ * what that cost. Everything those controls gave is kept, and it took two goes
+ * to get there. The first version kept only what a *keyboard* had — normalising
+ * on blur and arrow-key stepping — which on a phone is nothing at all, and threw
+ * away the one thing the native control did better than a text field: the panel.
+ * The button beside the field opens ours, in this country's format and on a
+ * 24-hour clock whoever is reading.
  *
  * The field is never left holding something it cannot mean. An unreadable entry
- * is put back to the last value that worked and the border flinches once —
- * silently searching a time nobody asked for is the failure worth preventing,
- * and a validation message under a field in a scrolling sheet is a message
- * nobody sees.
+ * is put back to the last value that worked, the border flinches once, and a
+ * live region says what was kept — silently searching a time nobody asked for is
+ * the failure worth preventing, and a validation message under a field in a
+ * scrolling sheet is a message nobody sees.
  */
 export class WhenField {
   readonly #input: HTMLInputElement;
   readonly #kind: WhenKind;
   /** Where a rejected entry is announced. Silent until there is one. */
   readonly #status: HTMLElement;
+  readonly #popover: Popover;
   #value: string;
 
   constructor(options: WhenFieldOptions) {
@@ -79,6 +97,26 @@ export class WhenField {
     this.#input.setAttribute("aria-describedby", hint.id);
     this.#input.after(hint, this.#status);
 
+    const trigger = el("button", {
+      type: "button",
+      class: "field__picker",
+      "aria-label": PICKER_LABEL[this.#kind],
+    });
+    trigger.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${PICKER_ICON[this.#kind]}</svg>`;
+    this.#input.after(trigger);
+
+    this.#popover = new Popover({
+      trigger,
+      anchor: this.#input.parentElement ?? this.#input,
+      label: PICKER_LABEL[this.#kind],
+    });
+    // Built on opening rather than kept around, so the panel always opens on the
+    // value the field holds now — including one typed a second ago and one the
+    // arrows just moved.
+    trigger.addEventListener("click", () => {
+      if (this.#popover.isOpen) this.#fillPicker();
+    });
+
     this.#input.addEventListener("blur", () => this.commit());
     this.#input.addEventListener("keydown", (event) => this.#onKeydown(event));
   }
@@ -110,6 +148,19 @@ export class WhenField {
     }
     this.set(parsed);
     this.#status.textContent = "";
+  }
+
+  #fillPicker(): void {
+    const choose = (chosen: string): void => {
+      this.set(chosen);
+      this.#popover.close();
+    };
+    this.#popover.element.replaceChildren(
+      this.#kind === "clock" ? clockPicker(this.#value, choose) : dayPicker(this.#value, choose),
+    );
+    const selected = this.#popover.element.querySelector<HTMLElement>("[data-selected='true']");
+    selected?.focus();
+    selected?.scrollIntoView({ block: "center" });
   }
 
   #onKeydown(event: KeyboardEvent): void {

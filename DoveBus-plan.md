@@ -618,6 +618,36 @@ means (`24:00` and `31/02` are refused, the calendar is asked rather than a tabl
 Arrow-key stepping is kept, clamped at the ends of the day rather than wrapped — a window from 23:58
 to 00:03 selects nothing.
 
+### 11.3b The owner looked at it, and two things were wrong
+
+**The fields had a keyboard and nothing else.** Normalising on blur and arrow-key
+stepping are what a *keyboard* had; on a phone there are no arrow keys, so the
+replacement offered typing and nothing more — and it had thrown away the one
+thing the native control did better than a text field, the panel. There is a
+button in each field now, where the native picker icon used to be, opening a
+month grid and an hours/minutes pair of columns of our own: Monday first in both
+languages, 24-hour, `dd/mm/yyyy`, and a panel that always opens on the value the
+field holds at that moment.
+
+The day cells are the one control on the site below the 44 px floor, and the
+arithmetic is the reason: at 320 px the sheet gives the panel 288 px, so a
+seven-column month grid has 41 px per cell *before* a single gap. They are ~38,
+past the 24 px WCAG 2.2 asks for, and the exemption is written into the audit
+next to the number rather than left for someone to rediscover. The month arrows
+had no such excuse and are 44.
+
+**The language switch vanished exactly when it was used.** Focusing any search
+field snaps the sheet to full, and `.mapctl` faded out at that detent — a rule
+written for phones, where a full sheet leaves no map to frame, but it outranked
+the wide-screen override on specificity, so on a 1512 px desktop the switch and
+the framing button disappeared the moment a rider touched the form, with the map
+in full view beside them. Scoped to below 720 px. Measured before and after:
+opacity 0 → 1 on the desktop, still 0 on the phone.
+
+And on a phone the fade is *right*, which leaves the switch unreachable while the
+sheet is open — so the language is now also the last link in the credits block
+inside the panel, named in the language it leads to.
+
 ### 11.4 The crosshair promised a feature the product refuses to have
 
 The framing control wore the icon every map on earth uses for *find my location*, which this map

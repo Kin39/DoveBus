@@ -77,6 +77,13 @@ export interface Strings {
     readonly whenHint: (shape: string) => string;
     /** What was kept when an entry could not be read. The border flinch is not audible. */
     readonly whenReverted: (value: string) => string;
+    /** The buttons that open the two pickers, and what is inside them. */
+    readonly pickDay: string;
+    readonly pickClock: string;
+    readonly previousMonth: string;
+    readonly nextMonth: string;
+    readonly hours: string;
+    readonly minutes: string;
     readonly submit: string;
     readonly noLine: string;
     readonly noComune: string;
@@ -138,6 +145,21 @@ export interface Strings {
     readonly attributionHtml: string;
     readonly nav: string;
     readonly links: readonly { readonly href: string; readonly text: string }[];
+    /**
+     * The other language's map, for the credits block inside the sheet.
+     *
+     * The switch on the map itself is hidden on a phone with the sheet open —
+     * there is no map left under it to switch the language of — which is exactly
+     * when someone reading the panel and not understanding it needs the control.
+     * So it is in the panel too. `name` is the language in its own language,
+     * which is the one form every reader recognises.
+     */
+    readonly otherLanguage: {
+      readonly href: string;
+      readonly name: string;
+      readonly label: string;
+      readonly lang: string;
+    };
   };
 
   readonly errors: {

@@ -129,6 +129,42 @@ export function stepDay(serviceDate: string, deltaDays: number): string {
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
 }
 
+/** The parts of a service date, as numbers. */
+export function dayParts(serviceDate: string): { year: number; month: number; day: number } {
+  return {
+    year: Number(serviceDate.slice(0, 4)),
+    month: Number(serviceDate.slice(4, 6)),
+    day: Number(serviceDate.slice(6, 8)),
+  };
+}
+
+/** `2026`, `8` → `"20260801"`. The month is 1-based, as everywhere else here. */
+export function firstOfMonth(year: number, month: number): string {
+  return `${year}${pad(month)}01`;
+}
+
+/**
+ * One month as a calendar draws it: six rows of seven, Monday first, with the
+ * days of the neighbouring months left out rather than greyed in.
+ *
+ * Monday first because that is how a calendar is printed in Italy and in the
+ * UK alike — `Intl` would give Sunday for `en-US`, and this grid is read next
+ * to an Italian timetable in both languages.
+ *
+ * Always six rows, so the popover does not change height between March and
+ * August and shift whatever the reader was aiming at.
+ */
+export function monthGrid(year: number, month: number): (string | null)[] {
+  const first = new Date(year, month - 1, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const length = new Date(year, month, 0).getDate();
+
+  return Array.from({ length: 42 }, (_unused, index) => {
+    const day = index - lead + 1;
+    return day >= 1 && day <= length ? `${year}${pad(month)}${pad(day)}` : null;
+  });
+}
+
 /** The runs of digits in the text, or null if it holds anything else. */
 function splitNumbers(text: string): string[] | null {
   const trimmed = text.trim();

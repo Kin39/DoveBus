@@ -71,6 +71,12 @@ export const en: Strings = {
     whenHint: (shape) =>
       `Format ${shape}. The up and down arrows change the value, with shift for larger steps.`,
     whenReverted: (value) => `Not recognised: kept at ${value}.`,
+    pickDay: "Choose the day",
+    pickClock: "Choose the time",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    hours: "Hours",
+    minutes: "Minutes",
     clockPlaceholder: "hh:mm",
     submit: "Find departures",
     noLine: "No line by that name.",
@@ -149,6 +155,12 @@ export const en: Strings = {
       { href: "/en/data-source/", text: "Data source" },
       { href: "/en/privacy/", text: "Privacy" },
     ],
+    otherLanguage: {
+      href: "/mappa/",
+      name: "Italiano",
+      label: "Leggi questa pagina in italiano",
+      lang: "it",
+    },
   },
 
   errors: {
