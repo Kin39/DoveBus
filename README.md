@@ -195,8 +195,8 @@ exits non-zero if anything is found.
 
 The states it shoots — the empty map, the search sheet on both tabs, an
 autocomplete mid-type, a results list, a deliberately long-named one, an empty
-result, a live trip, a scheduled one, a tapped vehicle, the day panel open over
-a full sheet, and the offline case — are where the risk is. It runs against live data on purpose: Tuscan comune names
+result, a live trip, a scheduled one, a tapped vehicle, the day panel and the
+clock dial open over a full sheet, and the offline case — are where the risk is. It runs against live data on purpose: Tuscan comune names
 run long, a busy viewport is hundreds of buses, and fixtures would hide exactly
 the overflow the loop exists to catch.
 

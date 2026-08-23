@@ -629,12 +629,37 @@ month grid and an hours/minutes pair of columns of our own: Monday first in both
 languages, 24-hour, `dd/mm/yyyy`, and a panel that always opens on the value the
 field holds at that moment.
 
-The day cells are the one control on the site below the 44 px floor, and the
-arithmetic is the reason: at 320 px the sheet gives the panel 288 px, so a
-seven-column month grid has 41 px per cell *before* a single gap. They are ~38,
-past the 24 px WCAG 2.2 asks for, and the exemption is written into the audit
-next to the number rather than left for someone to rediscover. The month arrows
-had no such excuse and are 44.
+**And then the hour became a clock face.** The first panel offered two columns of
+numbers, which is honest and joyless: choosing 07:45 meant reading two lists,
+which is the thing a clock face exists to spare you. It is the Android dial now —
+twelve hours outside, the other twelve inside, midnight at the top, the minutes
+on their own ring after the hour is chosen — in the site's ink rather than
+Material's pink, and with no OK button, because every tap commits to the field
+and leaving early should leave a time that is true rather than one that was
+abandoned. No dragging of the hand: it is the one gesture of that dial a mouse
+learns second and a screen reader never learns at all, and every value it reaches
+is one tap away without it.
+
+The day cells and the dial's inner ring are the only controls on the site below
+the 44 px floor, and in both cases the arithmetic is the reason rather than the
+taste. At 320 px the sheet gives the panel 288 px, so a seven-column month grid
+has 41 px per cell *before* a single gap; and twelve numbers on the dial's inner
+ring sit 31 px apart centre to centre, so a 44 px target would overlap the two
+beside it. Both clear the 24 px WCAG 2.2 asks for, and the exemption is written
+into the audit next to the number rather than left for someone to rediscover.
+The month arrows and the readout had no such excuse — the round caught them at
+32 and at 44×35 — and are 44.
+
+**Two defects the dial turned up on its way in.** `el()` wrote booleans the HTML
+way: `aria-pressed: true` became `aria-pressed=""`, which is not a valid ARIA
+value and reads as *not* pressed, and `false` dropped the attribute altogether.
+Every decorative `aria-hidden` on the site was announcing itself and every
+selected cell was silent. Fixed where it was wrong — in the helper — so all of
+them came right at once. And on the desktop the day field clipped to
+`24/08/202`: three fields plus their 44 px buttons need 143 + 103 + 103 px and
+the 380 px column has 332 to give, so above 720 px the day goes back onto its own
+row exactly as it does under 380. Checked for clipping at six widths in both
+languages afterwards.
 
 **The language switch vanished exactly when it was used.** Focusing any search
 field snaps the sheet to full, and `.mapctl` faded out at that detent — a rule

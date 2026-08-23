@@ -1,6 +1,7 @@
 import { t } from "../i18n/index.js";
+import { clockDial } from "./clockdial.js";
 import { el } from "./dom.js";
-import { clockPicker, dayPicker } from "./pickers.js";
+import { dayPicker } from "./pickers.js";
 import { Popover } from "./popover.js";
 import { formatDay, parseClock, parseDay, stepClock, stepDay } from "./when.js";
 
@@ -156,7 +157,15 @@ export class WhenField {
       this.#popover.close();
     };
     this.#popover.element.replaceChildren(
-      this.#kind === "clock" ? clockPicker(this.#value, choose) : dayPicker(this.#value, choose),
+      this.#kind === "clock"
+        ? // The dial commits on every tap and closes when the minutes are chosen,
+          // so an hour picked and a panel left open is still an hour picked.
+          clockDial(
+            this.#value,
+            (clock) => this.set(clock),
+            () => this.#popover.close(),
+          )
+        : dayPicker(this.#value, choose),
     );
     const selected = this.#popover.element.querySelector<HTMLElement>("[data-selected='true']");
     selected?.focus();

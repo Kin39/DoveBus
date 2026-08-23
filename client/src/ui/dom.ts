@@ -9,10 +9,31 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(attributes)) {
-    if (value === undefined || value === false) continue;
-    if (key === "class") node.className = String(value);
-    else if (key === "text") node.textContent = String(value);
-    else node.setAttribute(key, value === true ? "" : String(value));
+    if (value === undefined) continue;
+    if (key === "class") {
+      node.className = String(value);
+      continue;
+    }
+    if (key === "text") {
+      node.textContent = String(value);
+      continue;
+    }
+    /*
+     * ARIA states are written out, and both halves of them are meaningful.
+     *
+     * A boolean here used to take the HTML route — `true` became `aria-pressed=""`
+     * and `false` dropped the attribute entirely. Neither is what those
+     * attributes mean: the empty string is not a valid ARIA value, so a screen
+     * reader read `aria-pressed=""` as *not* pressed, and every decorative
+     * `aria-hidden` on this site was announcing itself. Found on the clock dial,
+     * where the selected hour was marked in ink and silent.
+     */
+    if (key.startsWith("aria-")) {
+      node.setAttribute(key, String(value));
+      continue;
+    }
+    if (value === false) continue;
+    node.setAttribute(key, value === true ? "" : String(value));
   }
   for (const child of children) {
     node.append(typeof child === "string" ? document.createTextNode(child) : child);

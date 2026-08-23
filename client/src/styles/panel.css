@@ -196,51 +196,109 @@
   right: 0;
 }
 
-.picker__cols {
+/* ---- the clock dial ----------------------------------------------------- */
+
+.dial {
+  /* The whole face is sized from here: numbers, hand and rings are percentages
+     of it, so one value moves the control between a phone and a desktop. */
+  --dial: 15rem;
+  width: var(--dial);
+}
+
+.dial__head {
   display: flex;
-  gap: var(--s2);
+  align-items: baseline;
+  justify-content: center;
+  padding-bottom: var(--s2);
 }
 
-.picker__col {
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 2), 2.4rem);
-  gap: 2px;
-  align-content: start;
-  max-height: 11rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.picker__collabel {
-  grid-column: 1 / -1;
-  position: sticky;
-  top: 0;
-  padding-bottom: 2px;
-  background: var(--paper);
-  font-size: var(--text-xs);
+.dial__part {
+  min-height: var(--touch);
+  padding: 0 var(--s1);
+  border-radius: var(--radius-sm);
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
   font-stretch: 88%;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.1;
   color: var(--text-faint);
 }
 
-.picker__cell {
-  min-height: 2.4rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
+/* The half being chosen is the ink one; the other waits its turn. */
+.dial__part[aria-pressed="true"] {
   color: var(--text);
 }
 
-.picker__cell:hover {
+.dial__colon {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-faint);
+}
+
+.dial__face {
+  position: relative;
+  width: var(--dial);
+  height: var(--dial);
+  border-radius: 50%;
   background: var(--paper-sunk);
 }
 
-.picker__cell[data-selected="true"] {
+.dial__hand {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: var(--text);
+  stroke-width: 0.7;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+/*
+ * Each number sits at its own angle, placed by percentage and pulled back by
+ * half its size — which is what lets the face scale without recomputing
+ * anything in script.
+ */
+.dial__num {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  /* 40 px on the ring that has room for it. The face is 240 px, so a number
+     centred at 39% of it reaches 47% — inside the circle with a little to
+     spare. */
+  width: 2.5rem;
+  height: 2.5rem;
+  translate: -50% -50%;
+  border-radius: 50%;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/*
+ * The second twelve hours, set quieter so the ring a hand is on stays legible —
+ * and smaller because they have to be: twelve numbers on a ring of radius 60 px
+ * are 31 px apart centre to centre, so anything wider than that overlaps its
+ * neighbours. It is the same geometry that keeps the month grid under 44, and
+ * `scripts/shots.ts` records both.
+ */
+.dial__num--inner {
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+}
+
+.dial__num:hover {
+  background: var(--paper-raise);
+}
+
+.dial__num[data-selected="true"],
+.dial__num[data-selected="true"]:hover {
   background: var(--text);
   color: var(--paper);
-  font-weight: 700;
 }
 
 /* ---- the month grid ----------------------------------------------------- */
@@ -399,6 +457,27 @@
 
   .when .field:first-child {
     grid-column: auto;
+  }
+}
+
+/*
+ * Above 720 px the sheet stops growing with the window and becomes a 380 px
+ * column, which is *narrower* than the phone layout it came from — so the day
+ * goes back onto its own row exactly as it does under 380 px.
+ *
+ * Measured rather than judged: three fields plus their picker buttons need
+ * 143 + 103 + 103 px and the column has 332 to give, so the row that fits a
+ * 687 px sheet at tablet width clipped `24/08/2026` to `24/08/202` here. The
+ * buttons are 44 px because that is the floor for a target; the row is what
+ * gives way.
+ */
+@media (min-width: 720px) {
+  .when {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .when .field:first-child {
+    grid-column: 1 / -1;
   }
 }
 

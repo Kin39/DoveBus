@@ -277,6 +277,13 @@ const STATES: readonly State[] = [
     },
   },
   {
+    name: "15-clock-dial",
+    async enter(page: Page) {
+      await page.click("#input-from ~ .field__picker");
+      await page.waitForSelector(".dial__face");
+    },
+  },
+  {
     name: "14-day-picker",
     async enter(page: Page) {
       await page.click("#input-date ~ .field__picker");
@@ -427,13 +434,17 @@ async function audit(page: Page): Promise<Omit<Findings, "viewport" | "state" | 
     for (const node of interactive) {
       const box = node.getBoundingClientRect();
       if (box.width === 0 || box.height === 0) continue;
-      // The day and hour cells are the one deliberate exception, and the
-      // arithmetic is the reason: at 320 px the sheet gives the panel 288 px, so
-      // a seven-column month grid has 41 px per cell before a single gap. 44 is
-      // not available to a calendar on the narrowest phone this site supports.
-      // They are ~38 px, comfortably past the 24 px WCAG 2.2 asks for, and the
-      // alternative — a calendar that scrolls — is worse than a smaller day.
-      if (node.classList.contains("picker__cell")) continue;
+      // The two panels are the deliberate exception, and in both cases the
+      // arithmetic is the reason rather than the taste. A seven-column month
+      // grid has 41 px per cell before a single gap, because at 320 px the sheet
+      // gives the panel 288 px. And twelve numbers on the dial's inner ring sit
+      // 31 px apart centre to centre, so a 44 px target would overlap the two
+      // beside it. Both clear the 24 px WCAG 2.2 asks for; the alternatives — a
+      // calendar that scrolls, a clock face that cannot show 24 hours — are
+      // worse than a smaller number.
+      if (node.classList.contains("picker__cell") || node.classList.contains("dial__num")) {
+        continue;
+      }
       if (box.width < limit || box.height < limit) {
         const id = node.id ? `#${node.id}` : node.className || node.tagName.toLowerCase();
         smallTargets.push(`${id} ${Math.round(box.width)}×${Math.round(box.height)}`);
