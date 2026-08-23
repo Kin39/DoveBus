@@ -1,4 +1,5 @@
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
+import { t } from "../i18n/index.js";
 
 /** Tuscany, as the map opens. */
 export const TUSCANY_CENTER: [number, number] = [11.15, 43.55];
@@ -34,16 +35,9 @@ const BASEMAP_PAPER = "#f6f4ef";
 export type BasemapSource = "openfreemap" | "carto";
 
 /** Plain-text credits, per basemap, for the footer inside the sheet. */
-const BASEMAP_CREDIT: Record<BasemapSource, string> = {
-  openfreemap: "Mappa © OpenStreetMap, OpenMapTiles, OpenFreeMap",
-  carto: "Mappa © OpenStreetMap, CARTO",
-};
+const BASEMAP_CREDIT: Record<BasemapSource, string> = t.credits.basemap;
 
-export const ATTRIBUTION_HTML = [
-  'Dati: <a href="https://dati.toscana.it/" target="_blank" rel="noopener">Regione Toscana</a> (CC BY 4.0)',
-  '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-  "© CARTO",
-].join(" · ");
+export const ATTRIBUTION_HTML = t.credits.attributionHtml;
 
 /**
  * The colour table, applied over Positron by layer id.

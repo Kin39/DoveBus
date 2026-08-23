@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 import {
   ageFromTimestamp,
   ageLabel,
@@ -101,9 +102,6 @@ export class FreshnessMeter {
     const filled = age === null ? 1 : Math.min(1, age / FRESHNESS_FULL_S);
     this.#bar.style.transform = `scaleX(${filled.toFixed(4)})`;
 
-    this.element.setAttribute(
-      "aria-label",
-      `Posizione ${freshnessLabel(bucket)}, aggiornata ${ageLabel(age)}`,
-    );
+    this.element.setAttribute("aria-label", t.meter.label(freshnessLabel(bucket), ageLabel(age)));
   }
 }

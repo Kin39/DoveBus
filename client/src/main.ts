@@ -11,6 +11,7 @@ import "./styles/trip.css";
 
 import { ApiError, fetchTrip, fetchVehicles, searchLine, searchOd } from "./api/client.js";
 import type { LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";
+import { t } from "./i18n/index.js";
 import { MapController } from "./map/map.js";
 import { boundsOf } from "./map/trip.js";
 import { clear, el, query } from "./ui/dom.js";
@@ -169,16 +170,16 @@ class App {
    * print — so the links live in the fine print.
    */
   #swapFooter(): void {
-    const basemap = this.#map.basemapCredit ?? "Mappa © OpenStreetMap";
+    const basemap = this.#map.basemapCredit ?? t.credits.basemapUnknown;
     this.#scroll.append(
       el("footer", { class: "credits" }, [
-        el("p", { text: "Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)" }),
-        el("p", { text: `Confini comunali: openpolis / ISTAT · ${basemap}` }),
-        el("nav", { class: "credits__nav", "aria-label": "Pagine del sito" }, [
-          el("a", { href: "/come-funziona/", text: "Come funziona" }),
-          el("a", { href: "/fonte-dati/", text: "Fonte dati" }),
-          el("a", { href: "/privacy/", text: "Privacy" }),
-        ]),
+        el("p", { text: t.credits.data }),
+        el("p", { text: t.credits.boundaries(basemap) }),
+        el(
+          "nav",
+          { class: "credits__nav", "aria-label": t.credits.nav },
+          t.credits.links.map((link) => el("a", { href: link.href, text: link.text })),
+        ),
       ]),
     );
   }
@@ -423,13 +424,16 @@ class App {
  * wrong — the bus exists, we simply have no schedule to lay against it.
  */
 function messageFor(error: unknown): string {
-  if (!(error instanceof ApiError)) return "Qualcosa non ha funzionato. Riprova.";
-  if (error.offline) return "Sei offline. I dati sulla mappa restano, invecchiando.";
+  if (!(error instanceof ApiError)) return t.errors.generic;
+  if (error.offline) return t.errors.offline;
   if (error.code === "not_found" && error.message.includes("trip")) {
-    return "Questo bus non è in orario pubblicato: puoi seguirlo sulla mappa, ma non c'è una tabella di marcia.";
+    return t.errors.unscheduledTrip;
   }
-  if (error.code === "rate_limited") return "Troppe richieste. Riprova tra un minuto.";
-  return error.message;
+  if (error.code === "rate_limited") return t.errors.rateLimited;
+  // Anything else is the API's own wording, which is written for whoever is
+  // reading a log — English, and about parameters rather than about buses. It
+  // was being shown to riders; now only the messages this file writes are.
+  return t.errors.generic;
 }
 
 function todayServiceDate(): string {

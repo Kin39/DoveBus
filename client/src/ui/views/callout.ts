@@ -1,4 +1,5 @@
 import type { Vehicle } from "../../api/types.js";
+import { t } from "../../i18n/index.js";
 import { clear, el } from "../dom.js";
 import { delayView, titleCase } from "../format.js";
 import { FreshnessMeter } from "../freshness.js";
@@ -25,7 +26,7 @@ export class VehicleCallout {
     this.element = el("aside", {
       class: "callout",
       hidden: true,
-      "aria-label": "Bus selezionato",
+      "aria-label": t.callout.label,
     });
     document.body.append(this.element);
   }
@@ -37,7 +38,7 @@ export class VehicleCallout {
     const dismiss = el("button", {
       class: "callout__close",
       type: "button",
-      "aria-label": "Chiudi",
+      "aria-label": t.callout.close,
     });
     dismiss.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M6.5 6.5l11 11m0-11-11 11" /></svg>`;
@@ -52,8 +53,10 @@ export class VehicleCallout {
         // A bus with no trip is a real thing in this feed — deadheading, or a run
         // the timetable does not carry — and saying so is better than a blank.
         text: vehicle.tripId
-          ? titleCase(vehicle.vehicleLabel ? `Vettura ${vehicle.vehicleLabel}` : "In servizio")
-          : "Fuori servizio",
+          ? titleCase(
+              vehicle.vehicleLabel ? t.callout.vehicle(vehicle.vehicleLabel) : t.callout.inService,
+            )
+          : t.callout.outOfService,
       }),
       dismiss,
     ]);
@@ -82,7 +85,7 @@ export class VehicleCallout {
       const follow = el("button", {
         class: "cta cta--compact",
         type: "button",
-        text: "Segui questa corsa",
+        text: t.callout.follow,
       });
       const tripId = vehicle.tripId;
       follow.addEventListener("click", () => this.#options.onFollow(tripId));
@@ -96,17 +99,11 @@ export class VehicleCallout {
   }
 }
 
-/** GTFS-RT occupancy, in words a rider standing at the door would use. */
-const OCCUPANCY_LABEL: Record<string, string> = {
-  EMPTY: "vuoto",
-  MANY_SEATS_AVAILABLE: "molti posti",
-  FEW_SEATS_AVAILABLE: "pochi posti",
-  STANDING_ROOM_ONLY: "solo in piedi",
-  CRUSHED_STANDING_ROOM_ONLY: "molto pieno",
-  FULL: "pieno",
-  NOT_ACCEPTING_PASSENGERS: "non accetta passeggeri",
-};
-
+/**
+ * The feed's occupancy enum, in words a rider standing at the door would use.
+ * An unknown value is shown as it arrived rather than hidden: a new enum member
+ * is news, and "MOSTLY_FULL" tells a rider more than nothing does.
+ */
 function occupancyLabel(value: string): string {
-  return OCCUPANCY_LABEL[value] ?? value.toLocaleLowerCase("it-IT").replaceAll("_", " ");
+  return t.callout.occupancy[value] ?? value.toLocaleLowerCase(t.locale).replaceAll("_", " ");
 }

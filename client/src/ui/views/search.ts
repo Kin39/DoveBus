@@ -1,5 +1,6 @@
 import { fetchComuni, fetchRoutes } from "../../api/client.js";
 import type { Comune, RouteMatch } from "../../api/types.js";
+import { t } from "../../i18n/index.js";
 import { Autocomplete } from "../autocomplete.js";
 import { el, query } from "../dom.js";
 import { titleCase, toServiceDate } from "../format.js";
@@ -99,7 +100,7 @@ export class SearchPanel {
           ...(route.longName ? { secondary: titleCase(route.longName) } : {}),
         })),
       onChoose: () => undefined,
-      emptyMessage: "Nessuna linea con questo nome.",
+      emptyMessage: t.search.noLine,
     });
 
     this.#comuneA = this.#comuneField("#input-comune-a", "#list-comune-a");
@@ -131,7 +132,7 @@ export class SearchPanel {
           primary: comune.name,
         })),
       onChoose: () => undefined,
-      emptyMessage: "Nessun comune con questo nome.",
+      emptyMessage: t.search.noComune,
     });
   }
 
@@ -213,30 +214,32 @@ function clock(date: Date): string {
  */
 function template(): string {
   return `
-    <div class="tabs" role="tablist" aria-label="Modo di ricerca">
+    <div class="tabs" role="tablist" aria-label="${t.search.modes}">
       <button type="button" class="tabs__tab" role="tab" data-mode="od" aria-selected="true"
-              aria-controls="form-od">Tra comuni</button>
+              aria-controls="form-od">${t.search.tabOd}</button>
       <button type="button" class="tabs__tab" role="tab" data-mode="line" aria-selected="false"
-              aria-controls="form-line">Per linea</button>
+              aria-controls="form-line">${t.search.tabLine}</button>
     </div>
 
     <form id="search-form" class="form" novalidate>
       <div id="form-od" role="tabpanel" class="form__fields">
         <div class="od">
           <div class="field combo">
-            <label class="field__label" for="input-comune-a">Parto da</label>
-            <input class="field__input" id="input-comune-a" type="text" placeholder="Arezzo"
+            <label class="field__label" for="input-comune-a">${t.search.origin}</label>
+            <input class="field__input" id="input-comune-a" type="text"
+                   placeholder="${t.search.originPlaceholder}"
                    enterkeyhint="search" spellcheck="false" />
             <ul class="combo__list" id="list-comune-a" hidden></ul>
           </div>
-          <button type="button" class="od__swap" id="swap" aria-label="Inverti partenza e arrivo">
+          <button type="button" class="od__swap" id="swap" aria-label="${t.search.swap}">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M7.5 4.5v13m0 0 3-3m-3 3-3-3M16.5 19.5v-13m0 0 3 3m-3-3-3 3" />
             </svg>
           </button>
           <div class="field combo">
-            <label class="field__label" for="input-comune-b">Arrivo a</label>
-            <input class="field__input" id="input-comune-b" type="text" placeholder="Anghiari"
+            <label class="field__label" for="input-comune-b">${t.search.destination}</label>
+            <input class="field__input" id="input-comune-b" type="text"
+                   placeholder="${t.search.destinationPlaceholder}"
                    enterkeyhint="search" spellcheck="false" />
             <ul class="combo__list" id="list-comune-b" hidden></ul>
           </div>
@@ -245,9 +248,10 @@ function template(): string {
 
       <div id="form-line" role="tabpanel" class="form__fields" hidden>
         <div class="field combo">
-          <label class="field__label" for="input-line">Linea</label>
+          <label class="field__label" for="input-line">${t.search.line}</label>
           <input class="field__input field__input--code" id="input-line" type="text"
-                 placeholder="SI381, BAAS, 30…" enterkeyhint="search" spellcheck="false" />
+                 placeholder="${t.search.linePlaceholder}" enterkeyhint="search"
+                 spellcheck="false" />
           <ul class="combo__list" id="list-line" hidden></ul>
         </div>
       </div>
@@ -262,23 +266,23 @@ function template(): string {
       -->
       <div class="when">
         <div class="field">
-          <label class="field__label" for="input-date">Giorno</label>
+          <label class="field__label" for="input-date">${t.search.day}</label>
           <input class="field__input field__input--when" id="input-date" type="text"
                  enterkeyhint="search" />
         </div>
         <div class="field">
-          <label class="field__label" for="input-from">Dalle</label>
+          <label class="field__label" for="input-from">${t.search.from}</label>
           <input class="field__input field__input--when" id="input-from" type="text"
                  enterkeyhint="search" />
         </div>
         <div class="field">
-          <label class="field__label" for="input-to">Alle</label>
+          <label class="field__label" for="input-to">${t.search.to}</label>
           <input class="field__input field__input--when" id="input-to" type="text"
                  enterkeyhint="search" />
         </div>
       </div>
 
-      <button type="submit" class="cta">Cerca corse</button>
+      <button type="submit" class="cta">${t.search.submit}</button>
     </form>
   `;
 }

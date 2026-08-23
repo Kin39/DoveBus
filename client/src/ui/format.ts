@@ -1,4 +1,5 @@
 import type { FreshnessBucket } from "../api/types.js";
+import { t } from "../i18n/index.js";
 
 /**
  * Freshness thresholds, in seconds — the same numbers `server/src/config.ts`
@@ -36,23 +37,8 @@ export function bucketOf(ageSeconds: number | null): FreshnessBucket {
   return "stale";
 }
 
-/**
- * What each bucket is called on screen.
- *
- * "silenzioso" rather than a translation of "stale": the honest statement about
- * an old fix is that the bus has stopped reporting, not that its position is
- * wrong. The exact age in seconds is always printed next to this word, so the
- * label never has to carry precision it does not have.
- */
-const FRESHNESS_LABEL: Record<FreshnessBucket, string> = {
-  live: "in diretta",
-  recent: "recente",
-  delayed: "attenuato",
-  stale: "silenzioso",
-};
-
 export function freshnessLabel(bucket: FreshnessBucket): string {
-  return FRESHNESS_LABEL[bucket];
+  return t.freshness[bucket];
 }
 
 /**
@@ -61,12 +47,12 @@ export function freshnessLabel(bucket: FreshnessBucket): string {
  * can feel.
  */
 export function ageLabel(ageSeconds: number | null): string {
-  if (ageSeconds === null) return "orario sconosciuto";
-  if (ageSeconds < 0) return "adesso";
-  if (ageSeconds < 120) return `${ageSeconds} s fa`;
+  if (ageSeconds === null) return t.age.unknown;
+  if (ageSeconds < 0) return t.age.now;
+  if (ageSeconds < 120) return t.age.seconds(ageSeconds);
   const minutes = Math.floor(ageSeconds / 60);
-  if (minutes < 90) return `${minutes} min fa`;
-  return `${Math.floor(minutes / 60)} h fa`;
+  if (minutes < 90) return t.age.minutes(minutes);
+  return t.age.hours(Math.floor(minutes / 60));
 }
 
 /** Live age recomputed from the bus's own clock, never from a local stopwatch. */
@@ -89,14 +75,15 @@ const ON_TIME_TOLERANCE_S = 60;
 const HEAVY_DELAY_S = 15 * 60;
 
 export function delayView(delaySeconds: number | null, cancelled: boolean): DelayView | null {
-  if (cancelled) return { label: "soppressa", tone: "cancelled" };
+  if (cancelled) return { label: t.delay.cancelled, tone: "cancelled" };
   if (delaySeconds === null) return null;
-  if (Math.abs(delaySeconds) < ON_TIME_TOLERANCE_S) return { label: "in orario", tone: "ontime" };
+  if (Math.abs(delaySeconds) < ON_TIME_TOLERANCE_S)
+    return { label: t.delay.onTime, tone: "ontime" };
 
   const minutes = Math.round(Math.abs(delaySeconds) / 60);
-  if (delaySeconds < 0) return { label: `${minutes} min in anticipo`, tone: "early" };
+  if (delaySeconds < 0) return { label: t.delay.early(minutes), tone: "early" };
   return {
-    label: `+${minutes} min`,
+    label: t.delay.late(minutes),
     tone: delaySeconds >= HEAVY_DELAY_S ? "heavy" : "late",
   };
 }
@@ -122,13 +109,16 @@ export function durationLabel(fromSeconds: number | null, toSeconds: number | nu
   if (total <= 0) return null;
   const hours = Math.floor(total / 60);
   const minutes = total % 60;
-  return hours === 0 ? `${minutes} min` : `${hours} h ${String(minutes).padStart(2, "0")}`;
+  return hours === 0 ? t.duration.minutes(minutes) : t.duration.hoursMinutes(hours, minutes);
 }
 
 /**
  * GTFS stop names arrive in shouting caps ("AREZZO TERMINAL (INTERNO)").
  * Title case makes a list of them readable without hiding what they say; the
  * articles and prepositions that pepper Tuscan place names stay lowercase.
+ *
+ * Cased as Italian in every language, deliberately: these are the names written
+ * on the pole at the stop, and they are Italian whoever is reading the page.
  *
  * Deliberately excluded from that list: `val`, `il`, `la`, `lo`. They look like
  * articles but they are parts of names here — "Val di Cecina", "La Rotta" — and
@@ -182,7 +172,7 @@ export function toServiceDate(date: Date): string {
 }
 
 /**
- * `1115` → `1.115`, the Italian thousands separator.
+ * `1115` → `1.115` for an Italian reader, `1,115` for an English one.
  *
  * The two helpers that used to sit here translated a service date to and from
  * `YYYY-MM-DD`, which is the only form `<input type="date">` accepts. Nothing
@@ -190,5 +180,5 @@ export function toServiceDate(date: Date): string {
  * `ui/when.ts`, which is the point of it existing.
  */
 export function count(value: number): string {
-  return new Intl.NumberFormat("it-IT").format(value);
+  return new Intl.NumberFormat(t.locale).format(value);
 }

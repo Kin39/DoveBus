@@ -1,5 +1,6 @@
 import { streamUrl } from "../../api/client.js";
 import type { LiveTrip, TripDetail } from "../../api/types.js";
+import { t } from "../../i18n/index.js";
 import { clear, el } from "../dom.js";
 import { clockTime, delayView, titleCase } from "../format.js";
 import { FreshnessMeter } from "../freshness.js";
@@ -17,11 +18,8 @@ const ESTIMATE_VISIBLE_M = 40;
 const ESTIMATE_STEP_M = 50;
 
 function estimateSentence(metres: number): string {
-  if (metres >= 1000) {
-    return `Posizione stimata: avanzata di ~${(metres / 1000).toFixed(1)} km dall'ultimo dato ricevuto.`;
-  }
-  const rounded = Math.round(metres / ESTIMATE_STEP_M) * ESTIMATE_STEP_M;
-  return `Posizione stimata: avanzata di ~${rounded} m dall'ultimo dato ricevuto.`;
+  if (metres >= 1000) return t.trip.estimateKilometres((metres / 1000).toFixed(1));
+  return t.trip.estimateMetres(Math.round(metres / ESTIMATE_STEP_M) * ESTIMATE_STEP_M);
 }
 
 export interface TripViewOptions {
@@ -143,7 +141,7 @@ export class TripView {
     const head = el("div", { class: "viewhead" });
     const back = el("button", { class: "viewhead__back", type: "button" });
     back.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M14.5 5.5 8 12l6.5 6.5" /></svg><span>Corse</span>`;
+        <path d="M14.5 5.5 8 12l6.5 6.5" /></svg><span>${t.trip.back}</span>`;
     back.addEventListener("click", () => this.#options.onBack());
 
     head.append(
@@ -155,7 +153,7 @@ export class TripView {
           ]),
           el("span", {
             class: "viewhead__headsign",
-            text: titleCase(trip.headsign ?? trip.routeLongName ?? "Destinazione ignota"),
+            text: titleCase(trip.headsign ?? trip.routeLongName ?? t.trip.unknownDestination),
           }),
         ]),
       ]),
@@ -163,7 +161,7 @@ export class TripView {
 
     const status = el("div", { class: "status", id: "trip-status" });
     const stops = el("section", { class: "stops" }, [
-      el("h3", { class: "stops__title", text: "Fermate" }),
+      el("h3", { class: "stops__title", text: t.trip.stops }),
     ]);
     const list = el("ol", { class: "stops__list" });
 
@@ -190,12 +188,10 @@ export class TripView {
     if (!live) {
       status.append(
         el("div", { class: "status__none" }, [
-          el("p", { class: "status__nonetitle", text: "Nessun bus in viaggio su questa corsa." }),
+          el("p", { class: "status__nonetitle", text: t.trip.noBus }),
           el("p", {
             class: "status__nonehint",
-            text: this.#detail?.trip.runsOnDate
-              ? "La posizione compare quando il bus parte e inizia a trasmettere."
-              : "Questa corsa non è prevista nel giorno scelto.",
+            text: this.#detail?.trip.runsOnDate ? t.trip.noBusHint : t.trip.notRunningToday,
           }),
         ]),
       );
@@ -220,7 +216,7 @@ export class TripView {
         el("span", { class: "badge badge--quiet" }, [
           el("span", {
             class: "badge__value",
-            text: `fermata ${vehicle.stopSequence} di ${total}`,
+            text: t.trip.stopOf(vehicle.stopSequence, total),
           }),
         ]),
       );
@@ -228,7 +224,7 @@ export class TripView {
     if (!this.#connected) {
       badges.append(
         el("span", { class: "badge", "data-tone": "offline" }, [
-          el("span", { class: "badge__value", text: "riconnessione…" }),
+          el("span", { class: "badge__value", text: t.trip.reconnecting }),
         ]),
       );
     }
@@ -239,12 +235,7 @@ export class TripView {
       el("p", { class: "status__trail status__trail--estimate", id: "trip-estimate" }),
       el("p", {
         class: "status__trail",
-        // The green line is a reconstruction and the dots are observations, and
-        // the difference between those two is not something to leave implicit.
-        text:
-          live.trail.length > 1
-            ? `Percorso compiuto ricostruito sul tracciato della linea. I punti sono le ${live.trail.length} posizioni ricevute da quando DoveBus segue questa corsa.`
-            : "Percorso compiuto ricostruito sul tracciato della linea.",
+        text: live.trail.length > 1 ? t.trip.trailWithPoints(live.trail.length) : t.trip.trail,
       }),
     );
     this.#renderEstimate();

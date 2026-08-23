@@ -1,4 +1,5 @@
 import type { LineSearchResponse, OdSearchResponse } from "../../api/types.js";
+import { t } from "../../i18n/index.js";
 import { clear, el } from "../dom.js";
 import { clockTime, durationLabel, secondsToClock, titleCase, toServiceDate } from "../format.js";
 
@@ -44,7 +45,7 @@ export class ResultsView {
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M14.5 5.5 8 12l6.5 6.5" />
           </svg>
-          <span>Ricerca</span>
+          <span>${t.results.back}</span>
         </button>
         <div class="viewhead__text">
           <h2 class="viewhead__title" id="results-title"></h2>
@@ -67,6 +68,8 @@ export class ResultsView {
   }
 
   renderLine(response: LineSearchResponse, route: string, runningTrips: ReadonlySet<string>): void {
+    // The line code is Italian in both languages: it is what is written on the
+    // front of the bus.
     this.#title.textContent = route.toLocaleUpperCase("it-IT");
     this.#window = windowLabel(response);
     this.#render(
@@ -116,19 +119,17 @@ export class ResultsView {
       this.#subtitle.textContent = this.#window;
       this.#list.append(
         el("li", { class: "empty" }, [
-          el("p", { class: "empty__title", text: "Nessuna corsa in questa fascia oraria." }),
+          el("p", { class: "empty__title", text: t.results.emptyTitle }),
           el("p", {
             class: "empty__hint",
-            text: "Allarga l’orario o controlla il giorno: molte linee extraurbane non viaggiano la domenica.",
+            text: t.results.emptyHint,
           }),
         ]),
       );
       return;
     }
 
-    const count = truncated
-      ? `Prime ${total} corse`
-      : `${total} ${total === 1 ? "corsa" : "corse"}`;
+    const count = truncated ? t.results.firstCount(total) : t.results.count(total);
     this.#subtitle.textContent = `${count} · ${this.#window}`;
 
     for (const row of rows) this.#list.append(this.#row(row));
@@ -139,7 +140,7 @@ export class ResultsView {
     const button = el("button", {
       class: "trip__button",
       type: "button",
-      "aria-label": `Linea ${row.line}, partenza ${row.departure} da ${row.origin}, arrivo ${row.arrival} a ${row.destination}`,
+      "aria-label": t.results.rowLabel(row),
     });
 
     button.append(
@@ -160,9 +161,9 @@ export class ResultsView {
       ]),
       ...(row.running
         ? [
-            el("span", { class: "trip__live", title: "Un bus sta viaggiando su questa corsa" }, [
+            el("span", { class: "trip__live", title: t.results.runningTitle }, [
               el("span", { class: "trip__livedot", "aria-hidden": true }),
-              el("span", { text: "in viaggio" }),
+              el("span", { text: t.results.running }),
             ]),
           ]
         : []),
@@ -188,9 +189,13 @@ function windowLabel(response: {
 }): string {
   const when =
     response.date === toServiceDate(new Date())
-      ? "oggi"
-      : `${response.date.slice(6, 8)}/${response.date.slice(4, 6)}`;
-  return `${when} ${secondsToClock(response.fromSeconds)}–${secondsToClock(response.toSeconds)}`;
+      ? t.results.today
+      : t.results.shortDate(response.date.slice(6, 8), response.date.slice(4, 6));
+  return t.results.window(
+    when,
+    secondsToClock(response.fromSeconds),
+    secondsToClock(response.toSeconds),
+  );
 }
 
 function secondsOf(gtfsTime: string | null): number | null {

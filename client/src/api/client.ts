@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 import type {
   Comune,
   LineSearchResponse,
@@ -54,20 +55,20 @@ async function get<T>(path: string, options: RequestOptions = {}): Promise<T> {
   } catch (error) {
     // A caller-driven abort is a cancelled request, not a failure to report.
     if (options.signal?.aborted) throw error;
-    throw new ApiError("offline", "Nessuna connessione al servizio.", true);
+    throw new ApiError("offline", t.errors.unreachable, true);
   }
 
   let body: Envelope<T>;
   try {
     body = (await response.json()) as Envelope<T>;
   } catch {
-    throw new ApiError("bad_response", "Il servizio ha risposto in un formato imprevisto.");
+    throw new ApiError("bad_response", t.errors.badResponse);
   }
 
   if (!response.ok || !body.success || body.data === undefined) {
     throw new ApiError(
       body.error?.code ?? `http_${response.status}`,
-      body.error?.message ?? "Il servizio non ha risposto correttamente.",
+      body.error?.message ?? t.errors.badService,
     );
   }
   return body.data;

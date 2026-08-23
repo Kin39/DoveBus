@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.js";
 import { formatDay, parseClock, parseDay, stepClock, stepDay } from "./when.js";
 
 export type WhenKind = "clock" | "day";
@@ -13,9 +14,14 @@ const STEP = {
   day: { small: 1, large: 7 },
 } as const;
 
+/**
+ * The shape of the value, shown only when the field is empty — which is when it
+ * is the one thing a rider needs. Both languages write the day the Italian way
+ * round, because the timetable and the sign at the stop do; see `i18n/en.ts`.
+ */
 const PLACEHOLDER: Record<WhenKind, string> = {
-  clock: "hh:mm",
-  day: "gg/mm/aaaa",
+  clock: t.search.clockPlaceholder,
+  day: t.search.dayPlaceholder,
 };
 
 /**
