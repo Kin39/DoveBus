@@ -212,8 +212,10 @@
 }
 
 @media (min-width: 380px) {
-  /* The date needs the most room, but not at the cost of clipping a time: a
-     native time control spends ~20 px of its width on its own picker icon. */
+  /* The date needs the most room: `gg/mm/aaaa` is four characters longer than
+     `hh:mm`. It used to need it for a worse reason as well — a native time
+     control spent ~20 px of its width on a picker icon, and what it clipped to
+     pay for that was the value. */
   .when {
     grid-template-columns: 1.2fr 1fr 1fr;
   }

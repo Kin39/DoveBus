@@ -181,15 +181,14 @@ export function toServiceDate(date: Date): string {
   return `${year}${month}${day}`;
 }
 
-export function serviceDateToInput(serviceDate: string): string {
-  return `${serviceDate.slice(0, 4)}-${serviceDate.slice(4, 6)}-${serviceDate.slice(6, 8)}`;
-}
-
-export function inputToServiceDate(value: string): string {
-  return value.replaceAll("-", "");
-}
-
-/** `1115` → `1.115`, the Italian thousands separator. */
+/**
+ * `1115` → `1.115`, the Italian thousands separator.
+ *
+ * The two helpers that used to sit here translated a service date to and from
+ * `YYYY-MM-DD`, which is the only form `<input type="date">` accepts. Nothing
+ * speaks that form any more: the day is written and read as `gg/mm/aaaa` by
+ * `ui/when.ts`, which is the point of it existing.
+ */
 export function count(value: number): string {
   return new Intl.NumberFormat("it-IT").format(value);
 }

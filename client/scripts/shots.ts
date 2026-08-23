@@ -65,8 +65,13 @@ async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
 
-  // The Italian UI locale is what makes the native date and time controls render
-  // the way a Tuscan rider's phone renders them.
+  // Italian throughout — though not, as this comment used to claim, because it
+  // makes the native date and time controls render the way a Tuscan rider's
+  // phone does. It never did: Chromium drew `01:45 PM` and `08/23/2026` under
+  // `--lang=it-IT`, under `locale: "it-IT"`, and with `lang="it-IT"` on the
+  // element, and the rounds shot that for weeks without anyone reading it. The
+  // fields are ours now, for exactly that reason. The locale still decides the
+  // number and date formatting the page's own code asks `Intl` for.
   const browser = await chromium.launch({ args: ["--lang=it-IT"] });
   const findings: Findings[] = [];
 

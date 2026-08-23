@@ -2,7 +2,8 @@ import { fetchComuni, fetchRoutes } from "../../api/client.js";
 import type { Comune, RouteMatch } from "../../api/types.js";
 import { Autocomplete } from "../autocomplete.js";
 import { el, query } from "../dom.js";
-import { serviceDateToInput, titleCase, toServiceDate } from "../format.js";
+import { titleCase, toServiceDate } from "../format.js";
+import { WhenField } from "../whenfield.js";
 
 export type SearchMode = "line" | "od";
 
@@ -45,6 +46,9 @@ export class SearchPanel {
   #mode: SearchMode = "od";
   #comuneA!: Autocomplete<Comune>;
   #comuneB!: Autocomplete<Comune>;
+  #date!: WhenField;
+  #from!: WhenField;
+  #to!: WhenField;
 
   constructor(options: SearchPanelOptions) {
     this.#options = options;
@@ -101,6 +105,10 @@ export class SearchPanel {
     this.#comuneA = this.#comuneField("#input-comune-a", "#list-comune-a");
     this.#comuneB = this.#comuneField("#input-comune-b", "#list-comune-b");
 
+    this.#date = new WhenField({ input: query(this.element, "#input-date"), kind: "day" });
+    this.#from = new WhenField({ input: query(this.element, "#input-from"), kind: "clock" });
+    this.#to = new WhenField({ input: query(this.element, "#input-to"), kind: "clock" });
+
     for (const input of this.element.querySelectorAll<HTMLInputElement>(".field__input")) {
       input.addEventListener("focus", () => this.#options.onFieldFocus());
     }
@@ -139,21 +147,25 @@ export class SearchPanel {
 
   #applyDefaults(): void {
     const now = new Date();
-    query<HTMLInputElement>(this.element, "#input-date").value = serviceDateToInput(
-      toServiceDate(now),
-    );
-    query<HTMLInputElement>(this.element, "#input-from").value = clock(now);
+    this.#date.set(toServiceDate(now));
+    this.#from.set(clock(now));
     const until = new Date(now.getTime() + DEFAULT_WINDOW_HOURS * 3600_000);
     // Past midnight the window would wrap to 00:xx and select nothing, so a late
     // search simply runs to the end of the service day instead.
     const wraps = until.getDate() !== now.getDate();
-    query<HTMLInputElement>(this.element, "#input-to").value = wraps ? "23:59" : clock(until);
+    this.#to.set(wraps ? "23:59" : clock(until));
   }
 
   #submit(): void {
-    const date = query<HTMLInputElement>(this.element, "#input-date").value.replaceAll("-", "");
-    const from = query<HTMLInputElement>(this.element, "#input-from").value;
-    const to = query<HTMLInputElement>(this.element, "#input-to").value;
+    // A rider who types an hour and presses enter never leaves the field, so the
+    // three fields are read into their canonical form here rather than trusting
+    // the last blur to have happened.
+    this.#date.commit();
+    this.#from.commit();
+    this.#to.commit();
+    const date = this.#date.value;
+    const from = this.#from.value;
+    const to = this.#to.value;
 
     if (this.#mode === "line") {
       const route = query<HTMLInputElement>(this.element, "#input-line").value.trim();
@@ -240,18 +252,29 @@ function template(): string {
         </div>
       </div>
 
+      <!--
+        Text fields, not the native date and time ones. Those render in the
+        format of the *browser's* language rather than the page's, so an Italian
+        with an English-language browser was being asked for a Tuscan departure
+        in "03:13 PM" — clipped to "03:13 F" at 1280 px, because the meridiem did
+        not fit the width it forced. Nothing on the page can change that; see
+        ui/when.ts. WhenField gives back the keyboard stepping they had.
+      -->
       <div class="when">
         <div class="field">
           <label class="field__label" for="input-date">Giorno</label>
-          <input class="field__input field__input--when" id="input-date" type="date" />
+          <input class="field__input field__input--when" id="input-date" type="text"
+                 enterkeyhint="search" />
         </div>
         <div class="field">
           <label class="field__label" for="input-from">Dalle</label>
-          <input class="field__input field__input--when" id="input-from" type="time" />
+          <input class="field__input field__input--when" id="input-from" type="text"
+                 enterkeyhint="search" />
         </div>
         <div class="field">
           <label class="field__label" for="input-to">Alle</label>
-          <input class="field__input field__input--when" id="input-to" type="time" />
+          <input class="field__input field__input--when" id="input-to" type="text"
+                 enterkeyhint="search" />
         </div>
       </div>
 
