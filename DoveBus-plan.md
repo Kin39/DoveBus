@@ -223,14 +223,15 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 6. **`shapes` import + planned-route line** — mandatory: `/api/trip/:tripId` serves the trip's `shape` polyline; the frontend draws it as the route the bus will follow.
 7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**. Auditing the *result* of those nine items then found seven more things, none of which were in the plan — including two places §10.4 claimed more than the code did: **§10.8**.
 8. **Pre-deploy fixes:** §6.2 (a) `TRUST_PROXY` default, (c) production source maps, (d) deploy config + CSP — plus the §6.1 items. §6.2 (b), the SSE CORS bug, lands **with** the change that sets the real origin.
-9. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
+9. **Phase 6 — the owner's five findings ✅ COMPLETE (2026-08-23).** Two defects found by using the product (a followed bus vanishing at street zoom; the stops list jumping under the reader), one that had been visible in every committed screenshot for weeks (AM/PM and `08/22/2026` in the search form), and the English edition of the whole site with the language switch that reaches it. Measurements, decisions and what looking caught: **§11**.
+10. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
 ### Phase 2+
 - **Expose the timetable match rate as a metric**, not only as a health flag — it moved 3% → 21% → 0.3% across the 2026-08-15 republish and was the only thing that noticed.
 - `alerts` feed (service advisories/disruptions banner).
 - **Shape-based full travelled-path** reconstruction (beyond the RAM buffer window).
 - Persistent long-term position history.
-- Occupancy / vehicle label display; PWA/offline; i18n.
+- Occupancy / vehicle label display; PWA/offline. (**i18n shipped 2026-08-23 — see §11.**)
 
 ### Explicitly out of scope (per brief)
 - Multi-leg routing with transfers (Google-Maps style / OTP / MOTIS).
@@ -542,3 +543,185 @@ clause instead. Proved rather than asserted: the site was rebuilt from `HEAD` in
 and the rendered body text of all five pages diffed. **`/` is character-identical**; the only
 visible copy changes in the whole site are the two links in item 7 and the `<time>` wrapper in
 item 6.
+
+
+---
+
+## 11. The owner's five findings — planned and BUILT 2026-08-23
+
+Five items raised by the owner after using the deployed-shaped build. Two were defects, one was a
+defect nobody had read, and two were features. Everything below was measured against the live feed
+before it was touched, per §10's standing lesson.
+
+### 11.1 A followed bus left the map at street zoom — two causes, not one
+
+**Measured.** Following line 40 (trip `27145-19`) and zooming to 16: the viewport query became
+`11.2389,43.8033,11.2568,43.8113` — **1.45 km × 0.89 km** — and two consecutive `/api/vehicles`
+answers came back with `count: 0`, not containing the followed bus at all. The drawn collection went
+from 27 features to 0, and the bus did not come back for the 80 s the probe kept watching.
+
+**Cause A.** `VehicleLayer.update()` rebuilt its tracked map from the answer alone, so anything the
+answer did not mention was deleted — including the one bus the rider was watching. `select()`
+exempted that bus from the *age* cutoff and from nothing else.
+
+**Cause B.** The request is bounded by the viewport and the server answers from each bus's last
+**reported** position, while the marker is drawn at the position we have **extrapolated** to. The
+trip view was printing the size of that gap at the time: *«avanzata di ~1,5 km»*. At zoom 16 the
+visible strip is narrower than the gap, so the followed bus falls outside its own request — and so,
+intermittently, does every other bus on screen.
+
+**Cause C, why it did not heal.** The SSE stream pushes only when the poller ticks **and** the
+signature changes, so a bus that is stationary or silent never triggers the merge that would have
+put it back.
+
+**Fixed on both axes.** The followed bus is no longer dropped for being absent (`map/tracking.ts`,
+extracted so the rule can be tested without a WebGL context), and the request has a **2 km floor**
+per side (`map/viewport.ts`): a fraction of the viewport is the right margin while the viewport is
+large and useless once it is not — 15% of 1.4 km is 210 m. Cost measured at ~25 vehicles in a city
+viewport, a few kilobytes every thirty seconds.
+
+**Enforced, not remembered.** `npm run follow-check` opens a trip that is genuinely in service,
+zooms to street level and watches for eighty seconds across at least two fleet refreshes. Verified in
+both directions: green on the new code (79/79 samples with the bus drawn), red on the old code put
+back.
+
+### 11.2 The stops column moved while it was being read
+
+**Measured.** The `.stops` block jumped **16.5 px** (top 383.5 → 367) within one second, repeatedly,
+roughly every nine seconds. The cause was not the redraw: it was Instrument Sans's **proportional
+figures**. The estimate sentence sits exactly on a line break at 1280 px, so `~1.9 km` wrapped to two
+lines where `~1.1 km` fitted on one, and the list below moved every time the number changed.
+
+`tokens.css` already states this rule for the freshness readout — *«or the readout will jump as it
+ticks»* — it simply had never been applied to the sentence above the list. Now: tabular figures, the
+distance rounded (50 m below a kilometre, a tenth above) so the text changes at the scale the bus
+moves rather than the scale the clock ticks, a two-line box held whether or not there is a sentence
+in it, and no rewrite when the string is identical.
+
+### 11.3 The clock said `03:13 PM`, and the field cut it to `03:13 F`
+
+**Measured three ways before replacing anything.** `lang="it-IT"` on the element changes nothing;
+Chromium launched with `--lang=it-IT` still draws `01:45 PM` and `08/23/2026`; Playwright's
+`locale: "it-IT"` does not move it either. The format of `<input type="date">` and `<input
+type="time">` follows the **browser's** language, and no page can override it.
+
+It was in `client/shots/*--02-search-full.png` on every round for weeks — `03:13 F`, the value
+clipped to make room for a meridiem nobody here uses — and `scripts/shots.ts` carried a comment
+asserting the opposite ("the Italian UI locale is what makes the native controls render the way a
+Tuscan rider's phone renders them"). A screenshot loop only catches what someone looks at.
+
+The mild version of the problem is half-days. The sharp one is that `08/12` meant 8 December or 12
+August depending on a setting the page cannot read — and that field chooses which day of timetable is
+queried. Both controls are now ours (`ui/when.ts` for the reading, `ui/whenfield.ts` for the field),
+generous about how an hour is written (`9`, `930`, `9:30`, `9.30`, `09 30`) and strict about what it
+means (`24:00` and `31/02` are refused, the calendar is asked rather than a table of month lengths).
+Arrow-key stepping is kept, clamped at the ends of the day rather than wrapped — a window from 23:58
+to 00:03 selects nothing.
+
+### 11.4 The crosshair promised a feature the product refuses to have
+
+The framing control wore the icon every map on earth uses for *find my location*, which this map
+deliberately does not do and says so on `/privacy/`. It is four corner brackets now — frame the
+region, or frame the trip being followed — and the language switch sits above it in the same stack.
+
+### 11.5 The site in English — and the rule that kept it honest
+
+Five pages each, paired: `/` ↔ `/en/`, `/mappa/` ↔ `/en/map/`, `/come-funziona/` ↔
+`/en/how-it-works/`, `/fonte-dati/` ↔ `/en/data-source/`, `/privacy/` ↔ `/en/privacy/`. **English
+slugs**, decided by the owner: a bare prefix would have made the pairing trivial to compute and left
+every English URL carrying an Italian word.
+
+**One table, four consumers.** `PAGES` in `vite.config.ts` feeds the sitemap, the `hreflang` block,
+the language switch's destination, and the build-time assertion that a page's `canonical` names the
+URL it is served at. Four separate lists is how a bilingual site tells a crawler that two pages are
+translations and then links them elsewhere. Negative-tested both assertions: a mis-copied canonical
+and a missing `<!--@hreflang-->` each fail the build.
+
+**Partials are per language with no fallback.** A missing `partials/en/footer.html` fails the build
+rather than shipping an English page with an Italian licence line — the licence is the reason the
+partials exist at all (§10.4).
+
+**`x-default` is Italian and there is no Accept-Language redirect.** A root that serves two documents
+depending on a header makes `hreflang` a claim nobody can check and turns one URL into two things to
+cache.
+
+**The choice is not remembered, and that reverses the plan.** Storing it in `localStorage` would have
+made `/privacy/` false — it promises, in both languages, that the site writes nothing to the browser
+— in exchange for nothing: there is no redirect to influence, and every page a reader lands on
+afterwards carries links in the language they chose.
+
+**Not translated, deliberately.** Stop names, line codes and headsigns are Italian on the pole and on
+the front of the bus, so they are Italian in both editions; `titleCase` stays on `it-IT` for that
+reason. The map's labels already resolved through `name:it → name → name:latin` for every reader —
+work the code had done before the requirement existed. And the day is `dd/mm/yyyy` on a 24-hour clock
+in English too: this page is read next to an Italian timetable.
+
+**The words moved out of the code into a `Strings` *type*.** A dictionary that omits a sentence does
+not compile, there is no fallback to Italian — a fallback is how half a page ends up in the wrong
+language unnoticed — and every sentence containing a number is a function, because `${n} corse` and
+`${n} trips` stop being the same sentence at `n = 1`. What the compiler cannot check (the feed's
+occupancy enum, the link list) is checked by a parity test.
+
+**`messageFor` stopped forwarding `error.message` for unrecognised codes.** It was a direct channel
+from the server's English, parameter-shaped log messages to a rider's screen.
+
+### 11.6 What the existing checks caught, and what they missed
+
+The site loop found three real defects in the English pages within a minute of their existing: its
+own date-parity audit was hard-coded to Italian, its `lang` check demanded `it` on every page, and one
+FAQ answer was not a prefix of the text the page renders. The first two were faults in the auditor,
+which is the auditor working.
+
+What it missed, and a measurement caught: at 320 px the header's one action wrapped to two lines and
+lost its arrow once the switch was added. Not for want of room — 86 + 36 + 145 fits in 288 — but
+because flex was shrinking the one element that could not spare it.
+
+### 11.7 The review round, and what it changed
+
+Three reviewers ran against the finished work. Nine findings, seven fixed here, two recorded.
+
+**Accessibility — the replaced controls had lost two things the native ones gave for free.** An entry
+that could not be read was reverted silently: the border flinch is not audible, and `#submit()`
+commits before searching, so a mistyped hour became a search on the *previous* value with no signal
+at all to anyone not watching the field. And with a value in it — which is always, since the form
+fills itself — a text input announces its label and its contents and nothing else, where
+`<input type="date">` announces its day, month and year segments. Both are now `sr-only` nodes
+beside each field: a permanent description carrying the shape and the arrow keys, and a `role="status"`
+region that says what was kept. Verified in the browser: empty on load, `«Non l'ho capito: resta
+13:52.»` after `banana`, empty again after `7:15`. The language switch dropped its `title`, which
+duplicated the `aria-label` word for word and is read a second time by some screen reader and browser
+pairs.
+
+**TypeScript — four defects, all introduced by this round's own changes.**
+`titleCase` was being applied to the *sentence* rather than to the label inside it, and its rules are
+Italian: an English `"Vehicle A"` came back as `"Vehicle a"`, because `a` is an Italian particle and
+fleet labels are unconstrained text. `parseClock("-5")` returned `05:00` — a leading separator split
+off an empty token that the filter dropped, so the field committed a time nobody had typed, which is
+the exact failure `when.ts` exists to prevent. `stepDay("")` returned `18991201` through `Date`'s
+two-digit-year rollover, where `stepClock` had always defended itself. And `TripView` never reset its
+`#connected` flag when a new trip opened, so a run whose stream was fine could be painted carrying
+"riconnessione…" inherited from the previous one. Each has a test.
+
+**SEO — one asymmetry, on the one page that writes its own head.** `/mappa/` was the only page of
+ten without `og:locale:alternate`; the build now refuses a page that has a twin and does not say so
+to a social card, alongside the `hreflang` and `canonical` checks it already made.
+
+`Strings.prefix` was removed rather than kept: it was written expecting the switch to need it, and
+the switch resolves its destination from `PAGES` at build time. A field with no readers.
+
+### 11.8 Recorded, not done
+
+**`<lastmod>` in the sitemap is the build date**, on every URL, on every deploy — including deploys
+that changed nothing on that page. That is the opposite of what the field is for, and a sitemap whose
+`lastmod` is always today is one Google learns to ignore. It predates this round. The honest fix is
+probably to drop the field rather than to compute it: two pages have an `UPDATED` constant and three
+do not, and deriving the rest from git history at build time buys precision nobody asked for.
+
+**`FAQPage` no longer produces anything in Google Search** — the rich result was retired in May 2026,
+including for the last exempted categories. The markup on `/` and `/en/` is valid, matches the visible
+text in both languages, and is now inert. Nothing to fix; worth knowing before anyone spends effort
+keeping the two copies in step.
+
+**Two `console.warn` strings** in `map/map.ts` and `map/style.ts` are still Italian while every other
+developer-facing string in the repo is English. They are read by whoever opens the console, not by a
+rider.

@@ -19,7 +19,6 @@ import type { Strings } from "./strings.js";
  */
 export const en: Strings = {
   locale: "en-GB",
-  prefix: "/en",
 
   freshness: {
     live: "live",
@@ -69,6 +68,9 @@ export const en: Strings = {
     dayPlaceholder: "dd/mm/yyyy",
     from: "From",
     to: "To",
+    whenHint: (shape) =>
+      `Format ${shape}. The up and down arrows change the value, with shift for larger steps.`,
+    whenReverted: (value) => `Not recognised: kept at ${value}.`,
     clockPlaceholder: "hh:mm",
     submit: "Find departures",
     noLine: "No line by that name.",

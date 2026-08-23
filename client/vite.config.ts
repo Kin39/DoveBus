@@ -121,7 +121,9 @@ function hreflangFor(page: (typeof PAGES)[number]): string {
  *
  * The link is labelled in the language it leads to and carries `lang` to match,
  * so a screen reader pronounces "English" in English on an Italian page instead
- * of reading it as an Italian word. That is also why the visible label is the
+ * of reading it as an Italian word. The sentence is the accessible name and
+ * nothing else: a `title` carrying the same words is announced a second time as
+ * the description, by some screen reader and browser pairs. That is also why the visible label is the
  * two-letter code: it is the one form that is legible at 320 px, inside a 44 px
  * round button on the map, and to a reader who does not read the page they are
  * currently on.
@@ -150,7 +152,7 @@ function langswitchFor(page: (typeof PAGES)[number], language: Language, variant
   const className = variant === "map" ? "mapctl__button langswitch" : "langswitch";
   return (
     `<a class="${className}" href="${page[other]}" lang="${other}" hreflang="${other}"` +
-    ` title="${label}" aria-label="${label}">` +
+    ` aria-label="${label}">` +
     `<svg class="langswitch__globe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
     `<circle cx="12" cy="12" r="8.4" /><path d="M3.6 12h16.8M12 3.6c4.6 5 4.6 11.8 0 16.8` +
     `M12 3.6c-4.6 5-4.6 11.8 0 16.8" /></svg>` +
@@ -245,6 +247,13 @@ function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, h
   if (html.includes(HREFLANG_TOKEN)) throw new Error(`hreflang left unexpanded: ${path}`);
   if (!html.includes('rel="alternate" hreflang="en"')) {
     throw new Error(`page declares no hreflang pair: ${path} — add <!--@hreflang--> to its head`);
+  }
+  // Every page with a twin says so to a social card as well as to a crawler.
+  // This one was missed by hand on `/mappa/` alone — the one page that writes
+  // its own head instead of pulling in the shared partial — and nothing failed,
+  // which is the argument for checking it here rather than remembering it.
+  if (!/og:locale:alternate/.test(html)) {
+    throw new Error(`page declares no og:locale:alternate: ${path}`);
   }
   // A page a reader cannot leave in their own language is a page that has an
   // English twin and no way to reach it.

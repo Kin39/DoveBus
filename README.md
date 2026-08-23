@@ -184,6 +184,9 @@ npm run shots              # 13 states × 6 viewports, against the real API
 npm run shots -- 375x812   # just the primary target
 ```
 
+`SHOTS_URL=http://localhost:5280/en/map/ npm run shots -- 375x812` shoots the
+same states in English.
+
 It drives the real app with Playwright and writes PNGs plus a `REPORT.md` into
 `client/shots/` (gitignored). Alongside the pictures it asserts what a picture
 cannot show: no horizontal page scroll, no interactive target under 44 px, no
@@ -206,6 +209,15 @@ search, back, switch tab, search again, open a trip, back — and Playwright's
 refusal to click a dead button surfaces that class of bug as an unreachable
 state rather than as a picture nobody looks at closely.
 
+`npm run site-shots` is the same idea for the four content pages in each
+language — eight pages × six viewports — and it audits what a picture cannot
+show there either: title and description lengths, canonical and `og:url`
+agreeing with the page's own path, exactly one `<h1>`, the declared `lang`
+matching the language the URL promises, JSON-LD that parses and carries no
+unsubstituted `%TOKEN%`, every `FAQPage` answer findable in the page's text, and
+every date the markup declares spelled out somewhere a reader can see it — in
+the page's own language.
+
 ### The following check
 
 Two things a screenshot cannot catch happen between frames: the bus a rider is
@@ -224,6 +236,46 @@ more than a pixel, or on any console error. With no bus anywhere in Tuscany
 running a trip the loaded timetable describes — which happens at night — it says
 so and exits 0.
 
+## Two languages
+
+The site is published in Italian and in English, five pages each:
+
+| Italiano | English |
+| --- | --- |
+| `/` | `/en/` |
+| `/mappa/` | `/en/map/` |
+| `/come-funziona/` | `/en/how-it-works/` |
+| `/fonte-dati/` | `/en/data-source/` |
+| `/privacy/` | `/en/privacy/` |
+
+That table lives once, in `PAGES` in `client/vite.config.ts`, and feeds four
+things: the sitemap, the `hreflang` block on every page, the language switch —
+which therefore always lands on *this* page's twin rather than on the home page
+— and the build-time assertion that a page's own `canonical` names the URL it is
+served at. Four separate lists is how a bilingual site ends up telling a crawler
+that two pages are translations of each other and then linking them to something
+else. A page missing its `hreflang` pair or its switch fails the build.
+
+**Not translated, deliberately.** Stop names, line codes and headsigns come from
+the operator's feed and are Italian on the pole and on the front of the bus, so
+they are Italian on both sites; the map's own labels resolve through
+`name:it → name → name:latin` for every reader. And the day is written
+`dd/mm/yyyy` with a 24-hour clock in English too: this page is read next to
+Italian timetables, and `08/12` must not mean two different days.
+
+Italian is `x-default` and **there is no Accept-Language redirect**: a root that
+serves two documents depending on a header makes `hreflang` a claim nobody can
+check and turns one URL into two things to cache. The choice is not remembered
+either — the privacy page promises the site writes nothing to the browser, and
+with no redirect to influence there is nothing for a stored preference to do.
+
+The interface's own words live in `client/src/i18n/`, as a `Strings` **type**
+rather than a map of keys: a dictionary that omits a sentence does not compile,
+and there is no fallback to Italian, because a fallback is how half a page ends
+up in the wrong language without anyone noticing. Anything containing a number
+is a function, not a template — `${n} corse` and `${n} trips` stop being the
+same sentence at `n = 1`.
+
 ## Checking a build
 
 ```bash
@@ -239,6 +291,13 @@ npm run check:fix   # apply the safe fixes
 a non-empty active-service set for today, that stops resolved to comuni, that
 every trip has a drawable shape, and that the origin→destination search still
 returns the Arezzo→Anghiari runs the plan validated.
+
+The client's own unit tests cover the reasoning the interface does *before* it
+touches a node — which bus survives a snapshot, how far a viewport query has to
+reach, what a typed hour means, and that both dictionaries have the same shape
+down to the enum keys the compiler cannot check. Everything that has to be
+looked at is checked by the Playwright loops above instead, which is why the
+coverage threshold is scoped to those modules rather than spread over `src/**`.
 
 ---
 
@@ -419,11 +478,14 @@ Design points worth knowing before changing it:
 ```
 client/src
   ├─ api/          typed fetch of the envelope + the SSE url
+  ├─ i18n/         one `Strings` type, two dictionaries, no fallback
   ├─ map/          the only place MapLibre exists
   │    ├─ style    petrol-tinted raster basemap (no API key)
+  │    ├─ tracking which bus survives a snapshot that does not mention it
   │    ├─ vehicles one GeoJSON source, rAF interpolation on the source data
+  │    ├─ viewport how far a fleet request has to reach past the screen
   │    └─ trip     planned shape (dashed) · trail (gradient) · stop beads
-  ├─ ui/           bottom sheet, combobox, the freshness meter, views
+  ├─ ui/           bottom sheet, combobox, the freshness meter, when-fields, views
   └─ styles/       tokens → base → sheet → panel → trip
 ```
 

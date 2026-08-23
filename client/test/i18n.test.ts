@@ -50,10 +50,8 @@ describe("the dictionaries", () => {
   });
 
   test("say something at every one of those paths", () => {
-    // `it.prefix` is the one blank on purpose: Italian is served from the root,
-    // so its prefix is the empty string rather than a missing translation.
     const blanks = [...stringsIn(italian, "it"), ...stringsIn(english, "en")].filter(
-      ([path, value]) => value.trim() === "" && path !== "it.prefix",
+      ([, value]) => value.trim() === "",
     );
     expect(blanks).toEqual([]);
   });

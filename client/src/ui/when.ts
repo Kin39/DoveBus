@@ -110,8 +110,17 @@ export function formatDay(serviceDate: string): string {
   return `${serviceDate.slice(6, 8)}/${serviceDate.slice(4, 6)}/${serviceDate.slice(0, 4)}`;
 }
 
-/** Moves a service date by whole days, across months and years. */
+/**
+ * Moves a service date by whole days, across months and years.
+ *
+ * Given something that is not a service date it hands the string back rather
+ * than inventing a day: `new Date("", NaN, NaN)` resolves to December 1899
+ * through the two-digit-year rollover, and a field stepping from empty would
+ * have landed there silently. `stepClock` has always defended itself this way;
+ * this is the same defence, and the caller skips the step instead.
+ */
 export function stepDay(serviceDate: string, deltaDays: number): string {
+  if (!/^\d{8}$/.test(serviceDate)) return serviceDate;
   const date = new Date(
     Number(serviceDate.slice(0, 4)),
     Number(serviceDate.slice(4, 6)) - 1,
@@ -124,6 +133,11 @@ export function stepDay(serviceDate: string, deltaDays: number): string {
 function splitNumbers(text: string): string[] | null {
   const trimmed = text.trim();
   if (trimmed === "") return null;
+  // A separator at either end would otherwise split off an empty token that the
+  // filter below quietly drops, and `-5` would be accepted as five o'clock — the
+  // one outcome this module exists to prevent, since the field commits what it
+  // parsed rather than what was typed.
+  if (!/^\d/.test(trimmed) || !/\d$/.test(trimmed)) return null;
   const parts = trimmed.split(SEPARATORS).filter((part) => part !== "");
   if (parts.length === 0 || parts.length > 3) return null;
   return parts.every((part) => /^\d+$/.test(part)) ? parts : null;

@@ -24,9 +24,6 @@ import type { FreshnessBucket } from "../api/types.js";
 export interface Strings {
   /** BCP 47 tag for the document, `Intl`, and the `hreflang` this page is. */
   readonly locale: string;
-  /** The path prefix this language's pages live under: `""` for Italian. */
-  readonly prefix: string;
-
   readonly freshness: Readonly<Record<FreshnessBucket, string>>;
 
   readonly age: {
@@ -70,6 +67,16 @@ export interface Strings {
     readonly from: string;
     readonly to: string;
     readonly clockPlaceholder: string;
+    /**
+     * The shape of the value and the keys that change it, said only to a reader
+     * who cannot see the field. The native controls this replaced described
+     * themselves — a screen reader announced the day, month and year segments
+     * whether or not the field held a value — and a plain text input announces
+     * nothing but its label and its contents.
+     */
+    readonly whenHint: (shape: string) => string;
+    /** What was kept when an entry could not be read. The border flinch is not audible. */
+    readonly whenReverted: (value: string) => string;
     readonly submit: string;
     readonly noLine: string;
     readonly noComune: string;

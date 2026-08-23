@@ -52,10 +52,15 @@ export class VehicleCallout {
         class: "callout__title",
         // A bus with no trip is a real thing in this feed — deadheading, or a run
         // the timetable does not carry — and saying so is better than a blank.
+        // `titleCase` is applied to the label alone, never to the sentence that
+        // carries it: the sentence comes from the dictionary already cased, and
+        // the casing rules are Italian — a fleet label of "A" or "IN" would come
+        // back from an English "Vehicle A" as "Vehicle a", because those are
+        // Italian particles and this feed's labels are unconstrained text.
         text: vehicle.tripId
-          ? titleCase(
-              vehicle.vehicleLabel ? t.callout.vehicle(vehicle.vehicleLabel) : t.callout.inService,
-            )
+          ? vehicle.vehicleLabel
+            ? t.callout.vehicle(titleCase(vehicle.vehicleLabel))
+            : t.callout.inService
           : t.callout.outOfService,
       }),
       dismiss,

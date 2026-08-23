@@ -24,6 +24,16 @@ describe("parseClock", () => {
     expect(parseClock("00:00")).toBe("00:00");
   });
 
+  test("refuses a stray sign rather than reading past it", () => {
+    // These used to come back as 05:00: the separator split off an empty token
+    // and the filter dropped it, so the field committed a time nobody typed.
+    expect(parseClock("-5")).toBeNull();
+    expect(parseClock("/5")).toBeNull();
+    expect(parseClock("5-")).toBeNull();
+    expect(parseClock("--5")).toBeNull();
+    expect(parseClock(":30")).toBeNull();
+  });
+
   test("refuses what is not an hour of the day", () => {
     expect(parseClock("24:00")).toBeNull();
     expect(parseClock("23:60")).toBeNull();
@@ -93,6 +103,16 @@ describe("parseDay", () => {
   });
 });
 
+describe("parseDay, at the edges", () => {
+  const today = new Date(2026, 7, 23);
+
+  test("refuses a stray separator at either end", () => {
+    expect(parseDay("-23/08/2026", today)).toBeNull();
+    expect(parseDay("/23/08/2026", today)).toBeNull();
+    expect(parseDay("23/08/2026-", today)).toBeNull();
+  });
+});
+
 describe("formatDay", () => {
   test("shows the day the way it is read aloud here", () => {
     expect(formatDay("20260823")).toBe("23/08/2026");
@@ -109,6 +129,14 @@ describe("stepDay", () => {
   test("moves by whole days", () => {
     expect(stepDay("20260823", 1)).toBe("20260824");
     expect(stepDay("20260823", -1)).toBe("20260822");
+  });
+
+  test("hands back what is not a day instead of inventing one", () => {
+    // `new Date("", NaN, NaN)` lands in December 1899; a field stepping from an
+    // empty value would have gone there silently.
+    expect(stepDay("", 1)).toBe("");
+    expect(stepDay("nonsense", 1)).toBe("nonsense");
+    expect(stepDay("2026082", 1)).toBe("2026082");
   });
 
   test("crosses months and years", () => {

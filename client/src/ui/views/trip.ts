@@ -106,6 +106,10 @@ export class TripView {
 
   #connect(tripId: string, date: string): void {
     this.close();
+    // The previous trip's stream may have gone into reconnection before the
+    // rider left it, and this one has not: without the reset, a run that never
+    // dropped a frame is shown carrying "riconnessione…" from its first paint.
+    this.#connected = true;
     const source = new EventSource(streamUrl(tripId, date));
     this.#source = source;
 

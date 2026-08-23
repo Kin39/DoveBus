@@ -9,7 +9,6 @@ import type { Strings } from "./strings.js";
  */
 export const it: Strings = {
   locale: "it-IT",
-  prefix: "",
 
   /**
    * "silenzioso" rather than a translation of "stale": the honest statement
@@ -63,6 +62,9 @@ export const it: Strings = {
     dayPlaceholder: "gg/mm/aaaa",
     from: "Dalle",
     to: "Alle",
+    whenHint: (shape) =>
+      `Formato ${shape}. Le frecce su e giù cambiano il valore, con shift a passi più grandi.`,
+    whenReverted: (value) => `Non l'ho capito: resta ${value}.`,
     clockPlaceholder: "hh:mm",
     submit: "Cerca corse",
     noLine: "Nessuna linea con questo nome.",

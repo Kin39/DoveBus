@@ -1,4 +1,5 @@
 import { t } from "../i18n/index.js";
+import { el } from "./dom.js";
 import { formatDay, parseClock, parseDay, stepClock, stepDay } from "./when.js";
 
 export type WhenKind = "clock" | "day";
@@ -42,6 +43,8 @@ const PLACEHOLDER: Record<WhenKind, string> = {
 export class WhenField {
   readonly #input: HTMLInputElement;
   readonly #kind: WhenKind;
+  /** Where a rejected entry is announced. Silent until there is one. */
+  readonly #status: HTMLElement;
   #value: string;
 
   constructor(options: WhenFieldOptions) {
@@ -56,6 +59,25 @@ export class WhenField {
     this.#input.spellcheck = false;
     this.#input.inputMode = "numeric";
     this.#input.placeholder = PLACEHOLDER[this.#kind];
+
+    // Two things the native controls gave a reader who cannot see the field, and
+    // a text input does not. A `<input type="date">` announces its day, month
+    // and year segments whether or not it holds a value; this one would announce
+    // only its label and its contents, so the shape — and the arrow keys, which
+    // nothing else hints at — go in a description that is always there. The
+    // placeholder cannot do that job: it disappears the moment the field is
+    // filled, which is nearly always.
+    const hint = el("span", {
+      class: "sr-only",
+      id: `${this.#input.id}-hint`,
+      text: t.search.whenHint(PLACEHOLDER[this.#kind]),
+    });
+    // And a rejected entry has to say so. The border flinch is not audible, and
+    // the search that follows runs on the value that was put back — which is a
+    // silent, invisible substitution for anyone not watching the field.
+    this.#status = el("span", { class: "sr-only", id: `${this.#input.id}-status`, role: "status" });
+    this.#input.setAttribute("aria-describedby", hint.id);
+    this.#input.after(hint, this.#status);
 
     this.#input.addEventListener("blur", () => this.commit());
     this.#input.addEventListener("keydown", (event) => this.#onKeydown(event));
@@ -82,10 +104,12 @@ export class WhenField {
     const parsed = this.#parse(this.#input.value);
     if (parsed === null) {
       this.set(this.#value);
+      this.#status.textContent = t.search.whenReverted(this.#display(this.#value));
       this.#flinch();
       return;
     }
     this.set(parsed);
+    this.#status.textContent = "";
   }
 
   #onKeydown(event: KeyboardEvent): void {
@@ -95,6 +119,7 @@ export class WhenField {
     // Step from what is on screen if it can be read, so an arrow after a
     // half-finished edit moves from the edit rather than from the old value.
     const from = this.#parse(this.#input.value) ?? this.#value;
+    if (from === "") return;
     const step = event.shiftKey ? STEP[this.#kind].large : STEP[this.#kind].small;
     const delta = event.key === "ArrowUp" ? step : -step;
 
