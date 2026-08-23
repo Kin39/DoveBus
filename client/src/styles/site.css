@@ -205,6 +205,49 @@ a {
   text-underline-offset: 0.3em;
 }
 
+/*
+ * The language switch: a link, not a menu, because there are two languages and
+ * a dropdown for a binary choice is a script and a focus trap bought for
+ * nothing. It survives below 600 px where `.sitehead__link` does not — a reader
+ * who cannot read this page is exactly the reader who must not have to find the
+ * footer first.
+ */
+.langswitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34em;
+  min-height: var(--touch);
+  padding-inline: var(--s2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-stretch: 88%;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.langswitch:hover {
+  color: var(--text);
+}
+
+.langswitch__globe {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.5;
+}
+
+/* In the footer grid the switch sits between the links and the wordmark. */
+.sitefoot .langswitch {
+  color: var(--text-faint);
+}
+
+.sitefoot .langswitch:hover {
+  color: var(--text-dim);
+}
+
 .sitehead__link:hover {
   color: var(--text);
   text-decoration: underline;
@@ -283,6 +326,41 @@ a {
   /* The arrow leans into the destination on hover — the only hover flourish on
      these pages, and it is on the one element whose whole job is to be left. */
   transition: transform 160ms var(--ease-sheet);
+}
+
+/*
+ * Below 600 px the globe steps aside and the two letters carry the control on
+ * their own. Measured, not guessed: with the glyph in place the header's one
+ * action wrapped to two lines at 320 px and lost its arrow — the switch has to
+ * be there at that width, so what gives way is its decoration.
+ */
+@media (max-width: 599px) {
+  /* The row's gap is generous for three items and wasteful for two: at 320 px
+     it is what the switch is competing with, not the action's own width. */
+  .sitehead__row {
+    gap: var(--s2);
+  }
+
+  /* The action keeps its line. Flex was shrinking it below its own text — the
+     room was there (86 + 36 + 145 fits in 288 at 320 px), it was simply being
+     taken from the one element that could not spare it. */
+  .sitehead .button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .sitehead .langswitch {
+    /* Narrower than the 44 px the taller controls get, but never a hairline:
+       36 × 44 is still a thumb-sized target, and it is what the header's one
+       action can spare at 320 px. */
+    justify-content: center;
+    min-width: 2.25rem;
+    padding-inline: var(--s1);
+  }
+
+  .sitehead .langswitch__globe {
+    display: none;
+  }
 }
 
 .button:hover .button__arrow {

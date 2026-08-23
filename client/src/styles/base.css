@@ -198,6 +198,9 @@ button {
 
 .mapctl {
   position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
   right: var(--s3);
   /* Rides just above the sheet, but `min` keeps it from climbing into the top
      bar when the sheet is opened full — at which point there is no map left to
@@ -226,6 +229,27 @@ body:has(.sheet[data-detent="full"]) .mapctl {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--shadow-float);
+}
+
+/*
+ * The language switch, wearing the map's own control shell.
+ *
+ * Inside a 44 px round button the globe would leave no room for the code and
+ * the code is the part that is read, so here the glyph steps aside and the two
+ * letters take the button. The label the button announces is the full sentence,
+ * written in the language it leads to.
+ */
+.mapctl .langswitch {
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.mapctl .langswitch__globe {
+  display: none;
 }
 
 .mapctl__button svg {

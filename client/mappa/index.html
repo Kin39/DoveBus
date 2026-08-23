@@ -111,7 +111,19 @@
       </p>
     </header>
 
+    <!--
+      The two controls the map itself owns, stacked in the corner: the language
+      first, because it is the one a reader who cannot read this page needs, and
+      the framing below it.
+
+      The framing button used to wear a crosshair — the icon every map on earth
+      uses for "find my location", which this one deliberately does not do: it
+      never asks the browser where you are. An icon that promises a feature the
+      product refuses to have is worse than no icon, so it is four corner
+      brackets now: frame the region, or frame the trip being followed.
+    -->
     <div class="mapctl">
+      <!--@langswitch:map-->
       <button
         type="button"
         class="mapctl__button"
@@ -119,8 +131,7 @@
         aria-label="Inquadra tutta la Toscana"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="4.2" />
-          <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
+          <path d="M4 9V5.6a1.6 1.6 0 0 1 1.6-1.6H9M15 4h3.4A1.6 1.6 0 0 1 20 5.6V9M20 15v3.4a1.6 1.6 0 0 1-1.6 1.6H15M9 20H5.6A1.6 1.6 0 0 1 4 18.4V15" />
         </svg>
       </button>
     </div>

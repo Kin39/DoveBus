@@ -7,6 +7,10 @@
 
   Deliberately no hamburger: a drawer would be a script, a focus trap and an
   overlay bought to hide three links from a site that has four pages.
+
+  The language switch stays at every width, including 320 px where the two text
+  links do not: those pages are reachable from the footer, and a reader who
+  cannot read the page they are on has no footer to get to.
 -->
 <header class="sitehead">
   <div class="shell sitehead__row">
@@ -17,6 +21,7 @@
     <nav class="sitehead__nav" aria-label="Main">
       <a class="sitehead__link" href="/en/how-it-works/">How it works</a>
       <a class="sitehead__link" href="/en/data-source/">Data source</a>
+      <!--@langswitch:nav-->
       <a class="button button--compact" href="/en/map/">
         Open the map <span class="button__arrow" aria-hidden="true">→</span>
       </a>

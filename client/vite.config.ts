@@ -116,9 +116,52 @@ function hreflangFor(page: (typeof PAGES)[number]): string {
   ].join("\n    ");
 }
 
+/**
+ * How each language names the other one, and calls the act of switching.
+ *
+ * The link is labelled in the language it leads to and carries `lang` to match,
+ * so a screen reader pronounces "English" in English on an Italian page instead
+ * of reading it as an Italian word. That is also why the visible label is the
+ * two-letter code: it is the one form that is legible at 320 px, inside a 44 px
+ * round button on the map, and to a reader who does not read the page they are
+ * currently on.
+ */
+const LANGSWITCH = {
+  it: { code: "IT", label: "Leggi questa pagina in italiano" },
+  en: { code: "EN", label: "Read this page in English" },
+} as const;
+
+/**
+ * The link to the same page in the other language.
+ *
+ * The destination comes from `PAGES`, so it is always *this* page's twin and
+ * never the home page — being thrown back to the top of the site is the usual
+ * way a language switch loses the reader's place. Two languages means a toggle
+ * rather than a menu: no dropdown, no focus trap, no script.
+ *
+ * It is markup rather than behaviour on purpose. The four content pages ship no
+ * JavaScript at all, and the map page's switch has to work before its 1.1 MB
+ * bundle has finished loading — a language control that needs the app to be
+ * running is a control that is missing exactly when a lost reader reaches for it.
+ */
+function langswitchFor(page: (typeof PAGES)[number], language: Language, variant: string): string {
+  const other: Language = language === "it" ? "en" : "it";
+  const { code, label } = LANGSWITCH[other];
+  const className = variant === "map" ? "mapctl__button langswitch" : "langswitch";
+  return (
+    `<a class="${className}" href="${page[other]}" lang="${other}" hreflang="${other}"` +
+    ` title="${label}" aria-label="${label}">` +
+    `<svg class="langswitch__globe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
+    `<circle cx="12" cy="12" r="8.4" /><path d="M3.6 12h16.8M12 3.6c4.6 5 4.6 11.8 0 16.8` +
+    `M12 3.6c-4.6 5-4.6 11.8 0 16.8" /></svg>` +
+    `<span class="langswitch__code">${code}</span></a>`
+  );
+}
+
 const PARTIALS_DIR = resolve(import.meta.dirname, "partials");
 const PARTIAL_TOKEN = /<!--@partial:([a-z-]+)-->/g;
 const HREFLANG_TOKEN = "<!--@hreflang-->";
+const LANGSWITCH_TOKEN = /<!--@langswitch:(map|nav)-->/g;
 
 /**
  * Expands `<!--@partial:name-->` and substitutes the site constants.
@@ -167,7 +210,13 @@ function siteConstants(): Plugin {
           expanded = expanded.replaceAll(token, value);
         }
 
-        if (page) expanded = expanded.replaceAll(HREFLANG_TOKEN, hreflangFor(page));
+        if (page) {
+          expanded = expanded
+            .replaceAll(HREFLANG_TOKEN, hreflangFor(page))
+            .replaceAll(LANGSWITCH_TOKEN, (_match, variant: string) =>
+              langswitchFor(page, language, variant),
+            );
+        }
         assertPairing(path, page, expanded);
         return expanded;
       },
@@ -196,6 +245,11 @@ function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, h
   if (html.includes(HREFLANG_TOKEN)) throw new Error(`hreflang left unexpanded: ${path}`);
   if (!html.includes('rel="alternate" hreflang="en"')) {
     throw new Error(`page declares no hreflang pair: ${path} — add <!--@hreflang--> to its head`);
+  }
+  // A page a reader cannot leave in their own language is a page that has an
+  // English twin and no way to reach it.
+  if (!html.includes('langswitch"')) {
+    throw new Error(`page offers no language switch: ${path} — add <!--@langswitch:nav-->`);
   }
   const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
   if (canonical !== `${SITE_URL}${path}`) {
