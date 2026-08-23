@@ -35,11 +35,22 @@ const VIEWPORTS: readonly Viewport[] = [
   { name: "1280x800", width: 1280, height: 800 },
 ];
 
+/**
+ * Both languages, because the English pages are the same layout carrying
+ * different words — and different words are exactly what breaks a layout. An
+ * English heading is not the same length as its Italian original, and a round
+ * that shot only half the site would keep reporting clean while the other half
+ * overflowed at 320 px.
+ */
 const PAGES = [
   { name: "1-landing", path: "/" },
   { name: "2-come-funziona", path: "/come-funziona/" },
   { name: "3-fonte-dati", path: "/fonte-dati/" },
   { name: "4-privacy", path: "/privacy/" },
+  { name: "5-en-landing", path: "/en/" },
+  { name: "6-en-how-it-works", path: "/en/how-it-works/" },
+  { name: "7-en-data-source", path: "/en/data-source/" },
+  { name: "8-en-privacy", path: "/en/privacy/" },
 ] as const;
 
 interface Findings {
@@ -214,7 +225,19 @@ async function auditHead(page: Page, path: string): Promise<readonly string[]> {
   if (!head.ogTitle) problems.push("no og:title");
   if (!head.ogImage.endsWith("/og-image.png")) problems.push("no og:image");
   if (head.h1.length !== 1) problems.push(`${head.h1.length} <h1> elements`);
-  if (head.lang !== "it") problems.push(`lang="${head.lang}"`);
+  // The language a page declares has to be the language its URL promises: an
+  // English page under `/en/` still carrying `lang="it"` would hand a screen
+  // reader an Italian voice for English prose, and tell `hreflang` a lie.
+  //
+  // Compared on the primary subtag, because the region is doing a second job:
+  // the English pages declare `en-GB` so that the date the build spells out and
+  // the date this audit re-spells are formatted by the same rules. `en` alone
+  // resolves to US formatting in `Intl`, and the page would have been failed for
+  // a disagreement between two renderings of the same day.
+  const expectedLang = path.startsWith("/en/") ? "en" : "it";
+  if (!head.lang.startsWith(expectedLang)) {
+    problems.push(`lang="${head.lang}" on a page served at ${path}`);
+  }
   if (head.jsonLd.length === 0) problems.push("no JSON-LD");
   for (const block of head.jsonLd) {
     try {
@@ -311,8 +334,8 @@ async function auditFaqParity(page: Page): Promise<readonly string[]> {
  * constant inconvenient.
  *
  * Checks the reader's form, not the ISO one: `datetime="2026-08-22"` satisfies a
- * parser and nobody else, so the assertion is that «22 agosto 2026» is on the
- * page. A page declaring no date is fine and skipped — the rule is about not
+ * parser and nobody else, so the assertion is that «22 agosto 2026» — or «22
+ * August 2026», in the language the page is written in — is on the page. A page declaring no date is fine and skipped — the rule is about not
  * declaring one privately, not about always having one.
  */
 async function auditDateParity(page: Page): Promise<readonly string[]> {
@@ -335,10 +358,14 @@ async function auditDateParity(page: Page): Promise<readonly string[]> {
         for (const field of ["datePublished", "dateModified"]) {
           const iso = entity[field];
           if (typeof iso !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) continue;
-          const spelled = new Date(`${iso}T00:00:00Z`).toLocaleDateString("it-IT", {
-            dateStyle: "long",
-            timeZone: "UTC",
-          });
+          // Spelled out in the page's own language, not in Italian: the rule is
+          // that a reader can see the date the markup declares, and an English
+          // reader sees "22 August 2026". Hard-coding `it-IT` here made every
+          // English page fail an audit it was passing.
+          const spelled = new Date(`${iso}T00:00:00Z`).toLocaleDateString(
+            document.documentElement.lang || "it-IT",
+            { dateStyle: "long", timeZone: "UTC" },
+          );
           if (!pageText.includes(spelled)) {
             problems.push(`${field} ${iso} ("${spelled}") is declared but not shown on the page`);
           }

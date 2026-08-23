@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <!-- The theme is light paper; the browser chrome should match the map, not
+         the dark theme this replaced. -->
+    <meta name="theme-color" content="#ffffff" />
+
+    <!--
+      Deliberately *not* "Live map of buses in Tuscany": that is the landing
+      page's phrase, and two URLs on one head term is one URL too many — Google
+      picks a winner and the loser's equity goes nowhere. `/en/` keeps «where are
+      the buses in Tuscany» because it is the page that can actually rank on it
+      (prose, FAQ, entity markup). This page takes the intent `/en/` cannot
+      serve and does not compete for: *which* line, *which* connection.
+    -->
+    <title>Find your line or a connection — DoveBus</title>
+    <meta
+      name="description"
+      content="Search an Autolinee Toscane line, or a direct connection between two Tuscan towns, then follow the bus: position, delay, route and how old the data is."
+    />
+    <link rel="canonical" href="%SITE_URL%/en/map/" />
+
+    <!--@hreflang-->
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DoveBus" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:locale:alternate" content="it_IT" />
+    <meta property="og:title" content="Find your line or a connection — DoveBus" />
+    <meta
+      property="og:description"
+      content="Search a line or a connection between two Tuscan towns and follow the bus live, with its delay, its route and the age of its position."
+    />
+    <meta property="og:url" content="%SITE_URL%/en/map/" />
+    <meta property="og:image" content="%SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="DoveBus: the data-freshness scale, from “live” to “silent”."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!--
+      The basemap host, opened as early as the parser can manage: the style, the
+      glyphs and the first tiles are all behind this one TLS handshake, and it is
+      the only third party this page contacts. `dns-prefetch` covers the raster
+      fallback, which is only reached if OpenFreeMap does not answer — worth a
+      DNS lookup, not worth a connection that usually goes unused.
+
+      Neither belongs on the content pages: those talk to nobody.
+    -->
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+    <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
+    <link rel="dns-prefetch" href="https://b.basemaps.cartocdn.com" />
+    <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
+
+    <!--
+      The wordmark composes in HTML, but an icon cannot: these are exported at
+      their real size. The background is opaque #0d1825 in every cut, never
+      transparent — the green dot on a light browser bar measures 1.97:1 and
+      disappears. At 16 px the lettering stops being readable, so that cut is the
+      dot alone.
+    -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
+    <link rel="manifest" href="/site-en.webmanifest" />
+
+    <!--@partial:jsonld-app-->
+
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#sheet">Skip to search</a>
+
+    <!--
+      The page's heading, clipped rather than drawn. The design puts the wordmark
+      where an H1 would go, which is right for a full-bleed map and wrong for
+      anything reading the document: without this the served page has no heading
+      at all.
+    -->
+    <h1 class="sr-only">Find your Autolinee Toscane bus and follow it on the map</h1>
+
+    <div id="map" class="map" role="application" aria-label="Map of buses in Tuscany"></div>
+
+    <header class="topbar" id="topbar">
+      <!--
+        The wordmark is the way back to the landing page — and the only chrome
+        this page gains from having a site around it. Deliberately not a
+        hamburger: the map owns the screen and the sheet owns the thumb, and the
+        pages a rider might want from here are linked from the credits block at
+        the bottom of the sheet, where the attribution they belong with lives.
+      -->
+      <a class="brand" href="/en/" aria-label="DoveBus — go to the home page">
+        <span class="brand__dove">Dove</span><span class="brand__bus">Bus</span
+        ><span class="brand__dot" aria-hidden="true"></span>
+      </a>
+      <p class="fleet" id="fleet" aria-live="polite">
+        <span class="fleet__count" id="fleet-count">—</span>
+        <span class="fleet__unit">buses in view</span>
+      </p>
+    </header>
+
+    <div class="mapctl">
+      <button type="button" class="mapctl__button" id="recenter" aria-label="Frame all of Tuscany">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2" />
+        </svg>
+      </button>
+    </div>
+
+    <section class="sheet" id="sheet" aria-label="Trip search">
+      <button
+        type="button"
+        class="sheet__handle"
+        id="sheet-handle"
+        aria-label="Drag to resize the panel"
+      >
+        <span class="sheet__grip" aria-hidden="true"></span>
+      </button>
+      <!--
+        What the sheet holds before the app fills it — and everything a reader
+        without JavaScript gets. `#showSearch()` runs in the constructor and
+        `clear()`s this node, so it is gone by first paint and cannot duplicate
+        the footer the app renders.
+
+        It exists because the CC-BY line and the three site links would otherwise
+        be produced by a script on this page alone. A licence obligation
+        discharged only for clients that execute JavaScript is not discharged.
+        The basemap is credited generically here, as the app does until its style
+        settles — naming CARTO for tiles OpenFreeMap served would be a false
+        statement in the one place the licence asks for an exact one.
+      -->
+      <div class="sheet__scroll" id="sheet-scroll">
+        <footer class="credits">
+          <p>Data: Regione Toscana — dati.toscana.it (CC BY 4.0)</p>
+          <p>Municipal boundaries: openpolis / ISTAT · Map © OpenStreetMap</p>
+          <nav class="credits__nav" aria-label="Site pages">
+            <a href="/en/how-it-works/">How it works</a>
+            <a href="/en/data-source/">Data source</a>
+            <a href="/en/privacy/">Privacy</a>
+          </nav>
+        </footer>
+      </div>
+    </section>
+
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+  </body>
+</html>

@@ -1,0 +1,72 @@
+<!--
+  The site's two persistent entities: who publishes DoveBus, and what DoveBus is.
+
+  Shared by `/en/` and `/en/map/` because both pages need them for different
+  reasons. The landing needs `Organization` — it is the page a crawler treats as
+  the site's identity. `/en/map/` needs `WebApplication`: the node's own `url` is
+  `/en/map/`, so declaring it only on the landing described a page from a
+  different page and left the described one with no markup at all.
+
+  Same `@id` in both places on purpose — one entity, asserted twice, not two. It
+  is a *different* id from the Italian app node, tied to it with
+  `translationOfWork`: two URLs in two languages are two documents, and giving
+  them one id would have asserted two `url`s for one thing.
+  Kept as a partial rather than copied so the `featureList` cannot claim one set
+  of features on the landing and another on the app.
+
+  **No `WebSite` + `SearchAction`** until the app's state is addressable by URL
+  (`/mappa/?linea=381`): that markup declares a search endpoint a crawler can
+  send a query to, and there is nothing here to send it to yet.
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "%SITE_URL%/#org",
+      "name": "DoveBus",
+      "url": "%SITE_URL%/",
+      "logo": "%SITE_URL%/icon-512.png",
+      "email": "%CONTACT_EMAIL%",
+      "description": "An independent project that puts Regione Toscana's open public-transport data on a map."
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "%SITE_URL%/#app-en",
+      "name": "DoveBus",
+      "url": "%SITE_URL%/en/map/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Any web browser",
+      "inLanguage": "en-GB",
+      "translationOfWork": {
+        "@id": "%SITE_URL%/#app"
+      },
+      "browserRequirements": "Requires JavaScript.",
+      "publisher": {
+        "@id": "%SITE_URL%/#org"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Real-time position of Autolinee Toscane services",
+        "Search by line, for a chosen day and time window",
+        "Search for direct connections between two Tuscan towns",
+        "Delays and cancelled trips",
+        "The stated age of every position"
+      ],
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Toscana",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "IT"
+        }
+      }
+    }
+  ]
+}
+</script>

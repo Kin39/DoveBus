@@ -14,6 +14,12 @@
 /fonte-dati      /fonte-dati/      301!
 /privacy         /privacy/         301!
 
+/en              /en/              301!
+/en/map          /en/map/          301!
+/en/how-it-works /en/how-it-works/ 301!
+/en/data-source  /en/data-source/  301!
+/en/privacy      /en/privacy/      301!
+
 # The app used to be the whole site. Anything that bookmarked or linked the old
 # single-page entry points should land on the map, not on the pitch.
 #
@@ -28,3 +34,16 @@
 /come-funziona/index.html  /come-funziona/   301!
 /fonte-dati/index.html     /fonte-dati/      301!
 /privacy/index.html        /privacy/         301!
+
+/en/index.html               /en/                301!
+/en/map/index.html           /en/map/            301!
+/en/how-it-works/index.html  /en/how-it-works/   301!
+/en/data-source/index.html   /en/data-source/    301!
+/en/privacy/index.html       /en/privacy/        301!
+
+# Deliberately no language redirect on `/`. The Italian page stays the page at
+# the root for everyone, including the crawler that sends no Accept-Language and
+# the reader who was handed the link: a root that serves two documents depending
+# on a header makes `hreflang` a statement about something nobody can check, and
+# turns one URL into two things to cache. `x-default` points here, and the switch
+# in the header is how a reader chooses.

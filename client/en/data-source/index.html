@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>Data source and licences — DoveBus</title>
+    <meta
+      name="description"
+      content="Timetables and live positions from Regione Toscana (CC BY 4.0), boundaries from openpolis/ISTAT, cartography from OpenStreetMap: every source with its licence."
+    />
+    <link rel="canonical" href="%SITE_URL%/en/data-source/" />
+
+    <!--@hreflang-->
+
+    <meta property="og:title" content="Data source and licences — DoveBus" />
+    <meta
+      property="og:description"
+      content="Timetables and positions from Regione Toscana (CC BY 4.0), boundaries from openpolis/ISTAT, cartography from OpenStreetMap. Every source with its licence and its link."
+    />
+    <meta property="og:url" content="%SITE_URL%/en/data-source/" />
+
+    <!--
+      One `Dataset` describing what this page is about, narrowed to the thing it
+      can honestly describe: the Regione Toscana transport feeds. The municipal
+      boundaries are named in the prose but are **not** in this node — they come
+      from openpolis/ISTAT, and a `Dataset` whose `creator` is one publisher must
+      not have a second publisher's data folded into its `description`.
+
+      `contentUrl` on both distributions, because a `DataDownload` without one
+      claims a download exists and then declines to say where. These two URLs are
+      the same ones the server polls; they are what “you can use them too”, three
+      sections down, is an invitation to.
+
+      The dataset's own name and description stay in the language of this page,
+      but the publisher keeps its own name: Regione Toscana is not translated.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Tuscan public transport timetables and real-time positions",
+        "description": "Scheduled timetables (GTFS) and real-time positions, delays and alerts (GTFS-RT) for Regione Toscana's road public transport — the two feeds DoveBus is built on.",
+        "inLanguage": "en-GB",
+        "url": "%SITE_URL%/en/data-source/",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "isAccessibleForFree": true,
+        "creator": { "@type": "GovernmentOrganization", "name": "Regione Toscana" },
+        "publisher": { "@type": "GovernmentOrganization", "name": "Regione Toscana" },
+        "spatialCoverage": { "@type": "AdministrativeArea", "name": "Toscana" },
+        "keywords": ["GTFS", "GTFS-RT", "public transport", "bus", "Tuscany"],
+        "distribution": [
+          {
+            "@type": "DataDownload",
+            "name": "GTFS timetables for road public transport",
+            "encodingFormat": "application/zip",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs"
+          },
+          {
+            "@type": "DataDownload",
+            "name": "Real-time vehicle positions (GTFS-RT)",
+            "encodingFormat": "application/octet-stream",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs-rt/vehicle-positions"
+          },
+          {
+            "@type": "DataDownload",
+            "name": "Real-time delays and cancellations (GTFS-RT)",
+            "encodingFormat": "application/octet-stream",
+            "contentUrl": "https://regionetoscana.smartregion.toscana.it/mobility/artifacts/gtfs-rt/trip-updates"
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <!--@partial:header-->
+
+    <main id="content">
+      <div class="page shell">
+        <p class="eyebrow">Data source</p>
+        <h1 class="page__title">Where all of it comes from</h1>
+        <p class="page__standfirst">
+          DoveBus produces no data of its own. It reads open data published by others, cross-refers
+          it and draws it. This page says which data, whose it is and under what licence — because
+          that is a condition of those licences before it is a courtesy.
+        </p>
+
+        <nav class="subnav" aria-label="Information pages">
+          <a href="/en/how-it-works/">How it works</a>
+          <a href="/en/data-source/" aria-current="page">Data source and licences</a>
+          <a href="/en/privacy/">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="sources-title">
+        <div class="section__head">
+          <h2 class="section__title" id="sources-title">The sources, one by one.</h2>
+        </div>
+
+        <div class="sources">
+          <article class="source">
+            <h3 class="source__name">Timetables and scheduled trips</h3>
+            <p class="source__meta">
+              <span>Regione Toscana</span>
+              <span>GTFS format</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              The official timetable for road public transport: lines, trips, stops, service days
+              and the shape every trip has to follow. It is what lets DoveBus say which line a
+              vehicle is, where it is heading and which road it will take. Published on the
+              <a href="https://dati.toscana.it/">dati.toscana.it</a> portal.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Real-time positions, delays and cancellations</h3>
+            <p class="source__meta">
+              <span>Regione Toscana</span>
+              <span>GTFS-RT format</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              The stream that makes the map live: where each vehicle is, when it said so, how late
+              it is running and which trips have been cancelled. It is republished in full roughly
+              every two minutes. It is the same data that feeds the official channels, read straight
+              from the source — <a href="/en/how-it-works/">the route it takes to reach the map</a>
+              is told in full elsewhere.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Boundaries of the Tuscan municipalities</h3>
+            <p class="source__meta">
+              <span>openpolis / ISTAT</span>
+              <span>GeoJSON format</span>
+              <span class="source__licence">CC BY 4.0</span>
+            </p>
+            <p class="source__body">
+              This is what makes the town-to-town search possible: every stop in the timetable is
+              assigned to the municipality it geometrically falls in, so that “Siena → Poggibonsi”
+              becomes a question you can ask. The administrative boundaries are ISTAT's and are
+              redistributed by
+              <a href="https://github.com/openpolis/geojson-italy">openpolis</a> under the same
+              licence.
+            </p>
+          </article>
+
+          <article class="source">
+            <h3 class="source__name">Background cartography</h3>
+            <p class="source__meta">
+              <span>OpenStreetMap</span>
+              <span>OpenMapTiles · OpenFreeMap</span>
+              <span class="source__licence">ODbL</span>
+            </p>
+            <p class="source__body">
+              The roads, towns and coastline under the vehicles come from
+              <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, in the
+              OpenMapTiles schema, served by OpenFreeMap without access keys. If that service does
+              not answer, the map falls back to CARTO's cartography, still on OpenStreetMap data:
+              the tile provider changes, the data underneath does not.
+            </p>
+          </article>
+        </div>
+
+        <p class="attribution">Data: Regione Toscana — dati.toscana.it (CC BY 4.0)</p>
+      </section>
+
+      <section class="section shell" aria-labelledby="adds-title">
+        <div class="section__head">
+          <h2 class="section__title" id="adds-title">What DoveBus adds.</h2>
+          <p class="section__intro">
+            Nothing measured. All the work is in putting together sources that are born separate.
+          </p>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">The join between real time and timetable</dt>
+            <dd class="deflist__desc">
+              A vehicle in the real-time stream is an identifier, not a line. Linking it to its trip
+              in the timetable is what gives it a number, a destination and a route.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">The search between two towns</dt>
+            <dd class="deflist__desc">
+              It does not exist in the source data: it comes from assigning every stop to its
+              municipality and looking for the trips that touch two of them in the right order.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">The age of every position</dt>
+            <dd class="deflist__desc">
+              The data carries the time it was recorded. Turning that into a number that climbs
+              while you watch the screen is a product decision, not something the source says.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">The trail along the road</dt>
+            <dd class="deflist__desc">
+              The positions received are laid onto the trip's published shape, to reconstruct the
+              stretch already covered along the real bends of the road.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="section shell" aria-labelledby="you-title">
+        <div class="section__head">
+          <h2 class="section__title" id="you-title">You can use them too.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            The CC BY 4.0 licences expressly allow this data to be reused, including to make a
+            derived product like this one, on one condition: cite the source. DoveBus cites it at
+            the foot of every page, inside the application and above, in the exact form Regione
+            Toscana asks for.
+          </p>
+          <p>
+            If you want to start from the same data, the entry point is Regione Toscana's open data
+            portal: <a href="https://dati.toscana.it/">dati.toscana.it</a>. GTFS and GTFS-RT are
+            open, documented standards, not a local invention.
+          </p>
+
+          <div class="note">
+            <p>
+              DoveBus is an independent, unofficial project. It is not affiliated with Autolinee
+              Toscane or with Regione Toscana, does not represent them and does not speak for them.
+              For official information about timetables, tickets and disruptions, the service
+              operator remains the place to go.
+            </p>
+          </div>
+
+          <p>
+            A mistake on this page is a licensing problem, not only a content one: if something is
+            attributed wrongly, <a href="mailto:%CONTACT_EMAIL%">say so</a> and it gets corrected.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>

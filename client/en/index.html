@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>DoveBus — where the buses in Tuscany are, right now</title>
+    <meta
+      name="description"
+      content="Live map of Autolinee Toscane services: vehicle positions, delays and routes, with the age of every data point always stated. No app, no account."
+    />
+    <link rel="canonical" href="%SITE_URL%/en/" />
+
+    <!--@hreflang-->
+
+    <meta property="og:title" content="DoveBus — where the buses in Tuscany are, right now" />
+    <meta
+      property="og:description"
+      content="Live map of Autolinee Toscane services, with the age of every position always stated. Free, no app and no sign-up."
+    />
+    <meta property="og:url" content="%SITE_URL%/en/" />
+
+    <!--@partial:jsonld-app-->
+
+    <!--
+      The FAQ, as its own script rather than a third node in the graph above:
+      the graph is shared with `/en/map/`, and these eight answers are only on
+      this page. Markup that claims content the page does not show is the one
+      thing `FAQPage` must never do — which is also why each answer here is the
+      same sentence the page below renders, in the same language.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "@id": "%SITE_URL%/en/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is DoveBus?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "An independent web map that shows where the buses in Tuscany are, using the open data published by Regione Toscana."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which lines does it cover?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The Autolinee Toscane lines present in the regional feed: around 610 town and intercity lines, touching 267 Tuscan municipalities and almost 29,000 stops."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I have to install an app or sign up?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. DoveBus works from the browser of a phone, a tablet or a computer. There is no account, no email address to leave and nothing to install"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How up to date are the positions?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Regione Toscana's feed regenerates about every 120 seconds and DoveBus re-reads it every 30 seconds, so a position arrives already about two minutes old. That is why the age of the data is always written next to the vehicle instead of being hidden behind the word “live”."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why is a bus missing from the map?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Three possible reasons: it is not in service at that moment, it is not transmitting its position, or its last position is more than five minutes old. In that last case DoveBus removes it from the map on purpose: a vehicle drawn where it was five minutes ago is wrong information dressed up as information."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I follow a person who is on the bus?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. DoveBus sees vehicles, not people: it does not know who is on board, it has no way of knowing, and it never asks for the position of whoever is using it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is DoveBus an official Autolinee Toscane service?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. It is an independent, unofficial project, not affiliated with Autolinee Toscane or with Regione Toscana. All it does is read the open data that is published and draw it on a map, as the CC BY 4.0 licence expressly allows."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does it cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nothing. There are no subscriptions, no advertising, no profiling cookies and no tracking of any kind."
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <!--@partial:header-->
+
+    <main id="content">
+      <!-- ---- hero ------------------------------------------------------ -->
+
+      <section class="hero shell">
+        <p class="eyebrow">Tuscany · open data · unofficial service</p>
+
+        <h1 class="headline">
+          <span class="headline__soft">Not what time the bus was due.</span>
+          <span class="headline__stamp">Where it is now.</span>
+        </h1>
+
+        <p class="hero__lead">
+          DoveBus shows on a map where <strong>Autolinee Toscane</strong> services actually are,
+          across the whole of Tuscany, by reading the open data the Region publishes. No app to
+          install, no sign-up, no cost.
+        </p>
+
+        <div class="hero__actions">
+          <a class="button" href="/en/map/">
+            Open the map <span class="button__arrow" aria-hidden="true">→</span>
+          </a>
+          <p class="hero__note">It opens in the browser, on a phone too.</p>
+        </div>
+
+        <!--
+          Four measured facts, not four claims. The line and municipality counts
+          come from the timetable currently loaded; the fleet figure is what the
+          live feed carries on an ordinary weekday.
+        -->
+        <dl class="counts">
+          <div>
+            <dt class="counts__label">Lines covered</dt>
+            <dd class="counts__value">610</dd>
+          </div>
+          <div>
+            <dt class="counts__label">Tuscan towns</dt>
+            <dd class="counts__value">267</dd>
+          </div>
+          <div>
+            <dt class="counts__label">Vehicles transmitting</dt>
+            <dd class="counts__value counts__value--approx">~1,000</dd>
+          </div>
+          <div>
+            <dt class="counts__label">How often we re-read</dt>
+            <dd class="counts__value">30 s</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ---- the ageing band: the signature ---------------------------- -->
+
+      <section class="section shell" id="age" aria-labelledby="age-title">
+        <div class="section__head">
+          <p class="eyebrow">Data freshness</p>
+          <h2 class="section__title" id="age-title">
+            Every dot on the map has an age, and it is written next to it.
+          </h2>
+          <p class="section__intro">
+            A position is not “now” just because it has only just appeared on screen. DoveBus counts
+            the seconds since the last data received from each vehicle and always shows them. This
+            is the real scale the product uses, not an illustration.
+          </p>
+        </div>
+
+        <figure class="band">
+          <!--
+            0–300 s occupies 86% of the track, to scale. The last 14% is the
+            unbounded tail past the cutoff, which is not a scale and is not drawn
+            as one — it is where a vehicle leaves the map.
+          -->
+          <div class="band__track">
+            <div class="band__seg" data-bucket="live" style="--w: 25.8%"></div>
+            <div class="band__seg" data-bucket="recent" style="--w: 25.8%"></div>
+            <div class="band__seg" data-bucket="delayed" style="--w: 34.4%"></div>
+            <div class="band__seg" data-bucket="gone" style="--w: 14%">
+              <span class="band__tail">off the map</span>
+            </div>
+            <!--
+              The head marks the age of a real fix while you look at it: it enters
+              at 116 s, because that is how old a position already is when it
+              reaches us, and climbs for the ~120 s until the next snapshot lands.
+            -->
+            <div class="band__head" aria-hidden="true"></div>
+          </div>
+
+          <div class="band__ticks" aria-hidden="true">
+            <span class="band__tick" style="--w: 25.8%">0 s</span>
+            <span class="band__tick" style="--w: 25.8%">90 s</span>
+            <span class="band__tick" style="--w: 34.4%">180 s</span>
+            <span class="band__tick">300 s</span>
+          </div>
+
+          <div class="band__keys">
+            <div class="band__key" data-bucket="live">
+              <span class="band__word">Live</span>
+              <span class="band__gloss">
+                0–90 s. It never lights up today: the regional feed is not that fast, and we do not
+                pretend otherwise.
+              </span>
+            </div>
+            <div class="band__key" data-bucket="recent">
+              <span class="band__word">Recent</span>
+              <span class="band__gloss">91–180 s. This is where nearly the whole fleet sits.</span>
+            </div>
+            <div class="band__key" data-bucket="delayed">
+              <span class="band__word">Fading</span>
+              <span class="band__gloss">
+                181–300 s. The vehicle is taking its time to report and the colour dims.
+              </span>
+            </div>
+            <div class="band__key" data-bucket="gone">
+              <span class="band__word">Silent</span>
+              <span class="band__gloss">
+                Past 5 minutes: it leaves the map, rather than sitting there as if it were current.
+              </span>
+            </div>
+          </div>
+
+          <figcaption class="band__caption">
+            The black mark is the age of a real data point. Regione Toscana's feed regenerates about
+            every 120 seconds, so a position arrives already about two minutes old and keeps ageing
+            until the next one. We would rather say so than hide it:
+            <a href="/en/how-it-works/">the full path of the data is here</a>.
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ---- the two questions a rider actually asks -------------------- -->
+
+      <section class="section shell" aria-labelledby="search-title">
+        <div class="section__head">
+          <p class="eyebrow">Two ways to ask</p>
+          <h2 class="section__title" id="search-title">
+            Either you know the line number, or you only know where you are.
+          </h2>
+          <p class="section__intro">
+            Both questions lead to the same place: the list of trips, and from there the live trip.
+            Neither of them requires knowing the other.
+          </p>
+        </div>
+
+        <div class="pair">
+          <article class="card">
+            <span class="plate">SI381</span>
+            <h3 class="card__title">I am looking for a line</h3>
+            <p class="card__body">
+              Type the number as it is written on the bus, choose the day and the time window, and
+              see every trip on that line. The ones with a bus on the road right now are marked.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="od">
+              Siena <span class="od__arrow" aria-hidden="true">→</span> Poggibonsi
+            </span>
+            <h3 class="card__title">I am looking for a connection</h3>
+            <p class="card__body">
+              Type the town you are leaving from and the one you are going to. DoveBus looks for
+              direct trips between the two, with no changes, in the time window you give. All 273
+              Tuscan municipalities are in the list.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ---- the live view --------------------------------------------- -->
+
+      <section class="section shell" aria-labelledby="live-title">
+        <div class="section__head">
+          <p class="eyebrow">The live trip</p>
+          <h2 class="section__title" id="live-title">
+            When you follow a trip, you see everything that can be known.
+          </h2>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">The whole route</dt>
+            <dd class="deflist__desc">
+              The road the vehicle has to take, terminus to terminus, as it stands in the official
+              timetable — not a straight line between two points.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">The stretch already travelled</dt>
+            <dd class="deflist__desc">
+              Reconstructed along the real road. The GPS positions received fall on the published
+              route within a few metres, so the trail follows the bends instead of cutting through
+              the hills.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Late, early, cancelled</dt>
+            <dd class="deflist__desc">
+              On time, <em>+7 min</em>, or <span class="chip-alarm">cancelled</span> when the
+              operator says the trip is not running. Roughly nine trips under way out of ten carry
+              this figure.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">How full it is</dt>
+            <dd class="deflist__desc">
+              From “empty” to “standing only”, when the vehicle declares it. Many do not, and in
+              that case nothing is written.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">How much we are guessing</dt>
+            <dd class="deflist__desc">
+              Between one GPS fix and the next the vehicle is advanced along its route, so that it
+              is not left standing for two minutes. A circle shows how far off that estimate could
+              be, and the positions genuinely received stay drawn separately: the reconstruction is
+              never confused with the observation.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ---- the limits ------------------------------------------------ -->
+
+      <section class="section shell" aria-labelledby="limits-title">
+        <div class="section__head">
+          <p class="eyebrow">Said before you find out on your own</p>
+          <h2 class="section__title" id="limits-title">What DoveBus is not.</h2>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">It is not an official service</p>
+            <p class="limits__body">
+              DoveBus is an independent project. It is neither run nor endorsed by Autolinee Toscane
+              or Regione Toscana: it reads the open data that is published, and that is all. For
+              official information about tickets, timetables and disruptions, the operator remains
+              the place to go.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">It does not see people</p>
+            <p class="limits__body">
+              It sees vehicles. It does not know who is on board, it locates nobody and it never
+              asks where you are: DoveBus does not use the browser's geolocation.
+              <a href="/en/privacy/">The privacy page explains it in full</a>.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">It does not know about trips added at the last minute</p>
+            <p class="limits__body">
+              About 3% of the trips on the road do not exist in the day's official timetable: they
+              are services the operator added. They still appear on the map, but with fewer details
+              — the planned route may be missing.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">It does not invent a position it does not have</p>
+            <p class="limits__body">
+              If a vehicle has not reported for more than five minutes it disappears from the map,
+              and the estimate of where it would have got to stops being extended. A stationary dot
+              that looks current is worse than no dot.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">It does not plan your journey</p>
+            <p class="limits__body">
+              It does not work out itineraries with changes, does not compare alternatives and does
+              not sell tickets. It does one thing: it says where the vehicles are, now.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- FAQ ------------------------------------------------------- -->
+
+      <section class="section shell" aria-labelledby="faq-title">
+        <div class="section__head">
+          <p class="eyebrow">Frequently asked</p>
+          <h2 class="section__title" id="faq-title">The things worth knowing.</h2>
+        </div>
+
+        <div class="faq">
+          <details class="faq__item">
+            <summary class="faq__q">
+              What is DoveBus? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                An independent web map that shows where the buses in Tuscany are, using the open
+                data published by Regione Toscana. It opens in a browser, it is not an app and it
+                has no account.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Which lines does it cover? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                The Autolinee Toscane lines present in the regional feed: around 610 town and
+                intercity lines, touching 267 Tuscan municipalities and almost 29,000 stops.
+                Florence and Siena alone account for about a hundred each; smaller towns often have
+                one or two.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Do I have to install an app or sign up?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. DoveBus works from the browser of a phone, a tablet or a computer. There is no
+                account, no email address to leave and nothing to install — though a phone will let
+                you add it to the home screen, if you want.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              How up to date are the positions? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Regione Toscana's feed regenerates about every 120 seconds and DoveBus re-reads it
+                every 30 seconds, so a position arrives already about two minutes old. That is why
+                the age of the data is always written next to the vehicle instead of being hidden
+                behind the word “live”.
+                <a href="/en/how-it-works/">The full path of the data is here</a>.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Why is a bus missing from the map? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Three possible reasons: it is not in service at that moment, it is not transmitting
+                its position, or its last position is more than five minutes old. In that last case
+                DoveBus removes it from the map on purpose: a vehicle drawn where it was five
+                minutes ago is wrong information dressed up as information.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Can I follow a person who is on the bus?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. DoveBus sees vehicles, not people: it does not know who is on board, it has no
+                way of knowing, and it never asks for the position of whoever is using it.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              Is DoveBus an official Autolinee Toscane service?
+              <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                No. It is an independent, unofficial project, not affiliated with Autolinee Toscane
+                or with Regione Toscana. All it does is read the open data that is published and
+                draw it on a map, as the CC BY 4.0 licence expressly allows.
+                <a href="/en/data-source/">Every source and licence is listed here</a>.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q">
+              How much does it cost? <span class="faq__sign" aria-hidden="true"></span>
+            </summary>
+            <div class="faq__a">
+              <p>
+                Nothing. There are no subscriptions, no advertising, no profiling cookies and no
+                tracking of any kind.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ---- closer ---------------------------------------------------- -->
+
+      <section class="closer shell">
+        <h2 class="closer__title">Open the map.</h2>
+        <p class="closer__body">
+          No account, no cookies, no app. It opens and tells you where the vehicles are.
+        </p>
+        <a class="button" href="/en/map/">
+          Go to the map <span class="button__arrow" aria-hidden="true">→</span>
+        </a>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>Privacy — DoveBus asks you for nothing</title>
+    <meta
+      name="description"
+      content="No account, no cookies, no tracking, no geolocation. What actually leaves your browser when you use DoveBus, who sees it and for how long."
+    />
+    <link rel="canonical" href="%SITE_URL%/en/privacy/" />
+
+    <!--@hreflang-->
+
+    <meta property="og:title" content="Privacy — DoveBus asks you for nothing" />
+    <meta
+      property="og:description"
+      content="No account, no cookies, no tracking, no geolocation. And the honest list of what leaves your browser anyway."
+    />
+    <meta property="og:url" content="%SITE_URL%/en/privacy/" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "DoveBus privacy",
+        "description": "Privacy notice: no account, no cookies, no tracking, no geolocation.",
+        "inLanguage": "en-GB",
+        "url": "%SITE_URL%/en/privacy/",
+        "dateModified": "%PRIVACY_UPDATED%",
+        "publisher": { "@type": "Organization", "name": "DoveBus", "url": "%SITE_URL%/" }
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <!--@partial:header-->
+
+    <main id="content">
+      <div class="page shell">
+        <p class="eyebrow">Privacy</p>
+        <h1 class="page__title">We ask you for nothing</h1>
+        <p class="page__standfirst">
+          DoveBus has no account to create, sets no cookies, uses no analytics and never asks where
+          you are. This page does not stop at saying so: it also lists what leaves your browser
+          anyway when you use the site, because something always does.
+        </p>
+
+        <nav class="subnav" aria-label="Information pages">
+          <a href="/en/how-it-works/">How it works</a>
+          <a href="/en/data-source/">Data source and licences</a>
+          <a href="/en/privacy/" aria-current="page">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="short-title">
+        <div class="section__head">
+          <h2 class="section__title" id="short-title">In short.</h2>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">No account</dt>
+            <dd class="deflist__desc">
+              There is no sign-up, no login and no email address to leave. There is no profile of
+              you anywhere, because there is no such thing here as a user.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">No cookies</dt>
+            <dd class="deflist__desc">
+              DoveBus writes no cookies, neither technical nor advertising ones, which is why there
+              is no banner to dismiss. It does not use the browser's local storage either: close the
+              tab and nothing is left behind.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">No tracking</dt>
+            <dd class="deflist__desc">
+              No Google Analytics or anything like it, no pixels, no advertising, no embedded social
+              networks. Even the typefaces are served from here, so opening a page does not contact
+              a font provider.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">No geolocation</dt>
+            <dd class="deflist__desc">
+              DoveBus never asks the browser for your position. You will not see the permission
+              prompt, because the feature is simply not used: the map opens on Tuscany and you are
+              the one who moves it.
+            </dd>
+          </div>
+        </dl>
+
+        <div class="prose">
+          <div class="note">
+            <p>
+              DoveBus shows where the vehicles are, not where people are. It does not know who is on
+              board a bus, it has no way of knowing, and it cannot be used to follow anyone.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="leaves-title">
+        <div class="section__head">
+          <h2 class="section__title" id="leaves-title">What leaves your browser anyway.</h2>
+          <p class="section__intro">
+            A web page does not load out of nothing. These are all the connections your browser
+            opens while you use DoveBus, and what the other end sees.
+          </p>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">The requests to the DoveBus server</p>
+            <p class="limits__body">
+              When you search for a line or a connection, the server receives what you asked for:
+              the line number or the two towns, the day and the time window. When you move the map
+              it receives the rectangle of Tuscany you are looking at, so that it does not have to
+              send you the vehicles of the whole region. It also receives, as any server does, your
+              IP address: it is the address it has to reply to.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">What the server keeps of all that</p>
+            <p class="limits__body">
+              It keeps no log of ordinary requests: a search that worked leaves no trace. It does
+              count how many requests arrive from each IP address within a minute, to stop anyone
+              hammering it, and that count lives in memory and disappears with the minute. If a
+              request causes a server error, the error is written to the technical logs with the
+              address of the request — which contains the search terms, not the IP.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">The map tiles</p>
+            <p class="limits__body">
+              The cartographic background is served by OpenFreeMap (with CARTO as a fallback), which
+              are outside providers. To deliver the images they see your IP address and which tiles
+              you ask for — indirectly, which part of Tuscany you are looking at. It is the only
+              third-party connection the site opens, and it happens only on the map: the text pages
+              you are reading now do not.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Who hosts the pages</p>
+            <p class="limits__body">
+              The static pages are served by a hosting provider, which to deliver them handles your
+              IP address and browser type and records them in its own technical logs, under its own
+              policies. It is the bare minimum for a page to reach its destination, and it is true
+              of any website.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="rights-title">
+        <div class="section__head">
+          <h2 class="section__title" id="rights-title">Your data, and your rights.</h2>
+        </div>
+        <div class="prose">
+          <p>
+            An IP address is personal data, so we do not say that DoveBus “processes no personal
+            data”: that would be convenient and untrue. We say something more precise and more
+            useful.
+            <strong
+              >We keep nothing that would allow anyone to reconstruct what you searched for or where
+              you have been.</strong
+            >
+            There is no archive to query, no profile to export and nothing to delete, because none
+            of it is created in the first place.
+          </p>
+          <p>
+            No data is sold, handed on or used for profiling, and there is none to sell. The
+            third-party connections are only the technical ones listed above.
+          </p>
+          <p>
+            If you have a question about this page, if you think something described here does not
+            match what the site actually does, or if you want to exercise one of the rights the
+            European data protection regulation gives you, write to
+            <a href="mailto:%CONTACT_EMAIL%">%CONTACT_EMAIL%</a>.
+          </p>
+
+          <h2>If this page changes</h2>
+          <p>
+            If DoveBus ever starts doing something this page says it does not, this page changes
+            <em>first</em>, not afterwards. The date below is the date of the last change.
+          </p>
+          <p>
+            <strong>
+              Last updated:
+              <time datetime="%PRIVACY_UPDATED%">%PRIVACY_UPDATED_TEXT%</time>.
+            </strong>
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>

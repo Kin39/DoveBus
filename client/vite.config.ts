@@ -36,41 +36,89 @@ const UPDATED = {
   COME_FUNZIONA: "2026-08-22",
 } as const;
 
-/** The same day in the prose's own register: `2026-08-22` → "22 agosto 2026". */
-function inItalian(iso: string): string {
-  return new Intl.DateTimeFormat("it-IT", { dateStyle: "long", timeZone: "UTC" }).format(
+/** The same day in the reader's own register: `2026-08-22` → "22 agosto 2026". */
+function spelledOut(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "UTC" }).format(
     new Date(`${iso}T00:00:00Z`),
   );
 }
 
 /**
  * `%PRIVACY_UPDATED%` → the ISO day for `datetime` and `dateModified`;
- * `%PRIVACY_UPDATED_IT%` → the same day spelled out for the reader.
+ * `%PRIVACY_UPDATED_TEXT%` → the same day spelled out, in the page's language.
+ *
+ * The spelled-out form is per language and the ISO form is not, which is the
+ * whole reason this is built per page rather than once: a date is the same fact
+ * in both documents and two different sentences.
  */
-const UPDATED_TOKENS: readonly (readonly [string, string])[] = Object.entries(UPDATED).flatMap(
-  ([name, iso]) => [
-    [`%${name}_UPDATED_IT%`, inItalian(iso)],
+function updatedTokens(locale: string): readonly (readonly [string, string])[] {
+  return Object.entries(UPDATED).flatMap(([name, iso]) => [
+    [`%${name}_UPDATED_TEXT%`, spelledOut(iso, locale)],
     [`%${name}_UPDATED%`, iso],
-  ],
-);
+  ]);
+}
+
+/** The two languages the site is published in, and how each writes a date. */
+const LOCALE = { it: "it-IT", en: "en-GB" } as const;
+type Language = keyof typeof LOCALE;
 
 /**
- * Every indexable URL, in canonical form.
+ * Every indexable URL, as the pair of pages that say the same thing.
  *
  * Trailing slash throughout, including `/mappa/`: the pages are directories on
  * disk, so this is the form the host serves without a redirect, and it is the
  * form that stays true if the site ever moves off Netlify.
+ *
+ * One table, four consumers: the sitemap, the `hreflang` block on every page,
+ * the assertion that a page's own `canonical` names the URL it is served at, and
+ * the language switcher's "stay on this page" link. Those four disagreeing is
+ * the classic way a bilingual site tells a crawler that two pages are
+ * translations of each other and then links them to something else — so they are
+ * not four lists.
+ *
+ * **English slugs are English**, not `/en/mappa/`. A prefix alone would have made
+ * the pairing trivial to compute and left every English URL carrying an Italian
+ * word to a reader who came looking for an English one.
  */
 const PAGES = [
-  { path: "/", priority: "1.0" },
-  { path: "/mappa/", priority: "0.9" },
-  { path: "/come-funziona/", priority: "0.7" },
-  { path: "/fonte-dati/", priority: "0.6" },
-  { path: "/privacy/", priority: "0.4" },
+  { it: "/", en: "/en/", priority: "1.0" },
+  { it: "/mappa/", en: "/en/map/", priority: "0.9" },
+  { it: "/come-funziona/", en: "/en/how-it-works/", priority: "0.7" },
+  { it: "/fonte-dati/", en: "/en/data-source/", priority: "0.6" },
+  { it: "/privacy/", en: "/en/privacy/", priority: "0.4" },
 ] as const;
+
+const CLIENT_ROOT = import.meta.dirname;
+
+/** The URL path a source file is served at: `.../en/map/index.html` → `/en/map/`. */
+function pagePathOf(filename: string): string {
+  const relative = filename.slice(CLIENT_ROOT.length).replaceAll("\\", "/");
+  return relative.replace(/index\.html$/, "").replace(/^\/?/, "/");
+}
+
+function languageOf(path: string): Language {
+  return path.startsWith("/en/") ? "en" : "it";
+}
+
+/**
+ * The reciprocal `hreflang` block for one page, plus `x-default`.
+ *
+ * `x-default` is the Italian page, and that is a statement rather than a
+ * default: this is a map of Tuscan buses, the reader with no stated preference
+ * is far more likely to be in Tuscany than not, and the English pages exist for
+ * the visitor who chooses them.
+ */
+function hreflangFor(page: (typeof PAGES)[number]): string {
+  return [
+    `<link rel="alternate" hreflang="it" href="${SITE_URL}${page.it}" />`,
+    `<link rel="alternate" hreflang="en" href="${SITE_URL}${page.en}" />`,
+    `<link rel="alternate" hreflang="x-default" href="${SITE_URL}${page.it}" />`,
+  ].join("\n    ");
+}
 
 const PARTIALS_DIR = resolve(import.meta.dirname, "partials");
 const PARTIAL_TOKEN = /<!--@partial:([a-z-]+)-->/g;
+const HREFLANG_TOKEN = "<!--@hreflang-->";
 
 /**
  * Expands `<!--@partial:name-->` and substitutes the site constants.
@@ -92,24 +140,35 @@ function siteConstants(): Plugin {
     name: "dovebus:site-constants",
     transformIndexHtml: {
       order: "pre",
-      handler(html) {
+      handler(html, ctx) {
+        const path = pagePathOf(ctx.filename);
+        const language = languageOf(path);
+        const page = PAGES.find((candidate) => candidate[language] === path);
+
         let expanded = html
           .replaceAll(PARTIAL_TOKEN, (_match, name: string) => {
-            const file = resolve(PARTIALS_DIR, `${name}.html`);
+            // Each language has its own partials, and there is no falling back
+            // to the other one: a missing English footer would otherwise ship an
+            // English page carrying Italian chrome and an Italian licence line,
+            // which is the failure this whole mechanism exists to prevent.
+            const file = resolve(PARTIALS_DIR, language, `${name}.html`);
             if (!file.startsWith(PARTIALS_DIR)) throw new Error(`partial escapes dir: ${name}`);
             try {
               return readFileSync(file, "utf8").trim();
             } catch {
-              // Silently leaving the comment in place would ship a page with no
-              // footer and no attribution, which is the thing this exists to
-              // prevent — so a missing partial fails the build instead.
-              throw new Error(`missing partial: partials/${name}.html`);
+              throw new Error(`missing partial: partials/${language}/${name}.html`);
             }
           })
           .replaceAll("%SITE_URL%", SITE_URL)
           .replaceAll("%CONTACT_EMAIL%", CONTACT_EMAIL);
-        // `_IT%` before `%`, so the longer token is never eaten by the shorter.
-        for (const [token, value] of UPDATED_TOKENS) expanded = expanded.replaceAll(token, value);
+
+        // `_TEXT%` before `%`, so the longer token is never eaten by the shorter.
+        for (const [token, value] of updatedTokens(LOCALE[language])) {
+          expanded = expanded.replaceAll(token, value);
+        }
+
+        if (page) expanded = expanded.replaceAll(HREFLANG_TOKEN, hreflangFor(page));
+        assertPairing(path, page, expanded);
         return expanded;
       },
     },
@@ -120,6 +179,28 @@ function siteConstants(): Plugin {
       return [];
     },
   };
+}
+
+/**
+ * Three things a bilingual page must get right, checked rather than remembered.
+ *
+ * A page in `PAGES` has to declare the `hreflang` pair — a translated page that
+ * does not point at its twin is invisible as a translation — and its `canonical`
+ * has to name the URL it is actually served at. Both are one careless copy away
+ * from being wrong, and neither is visible on the rendered page: this is exactly
+ * the class of fault that ships and sits there. A page *not* in `PAGES` (none
+ * today) is left alone rather than guessed at.
+ */
+function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, html: string): void {
+  if (!page) return;
+  if (html.includes(HREFLANG_TOKEN)) throw new Error(`hreflang left unexpanded: ${path}`);
+  if (!html.includes('rel="alternate" hreflang="en"')) {
+    throw new Error(`page declares no hreflang pair: ${path} — add <!--@hreflang--> to its head`);
+  }
+  const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+  if (canonical !== `${SITE_URL}${path}`) {
+    throw new Error(`canonical is ${canonical ?? "missing"}, page is served at ${path}`);
+  }
 }
 
 /**
@@ -144,10 +225,15 @@ function crawlerFiles(): Plugin {
       });
 
       const today = new Date().toISOString().slice(0, 10);
-      const urls = PAGES.map(
-        ({ path, priority }) =>
-          `  <url>\n    <loc>${SITE_URL}${path}</loc>\n` +
-          `    <lastmod>${today}</lastmod>\n    <priority>${priority}</priority>\n  </url>`,
+      // Both languages, each as its own URL: an alternate is a page in its own
+      // right, and a sitemap listing only one half of every pair asks a crawler
+      // to find the other half by luck.
+      const urls = PAGES.flatMap((page) =>
+        (["it", "en"] as const).map(
+          (language) =>
+            `  <url>\n    <loc>${SITE_URL}${page[language]}</loc>\n` +
+            `    <lastmod>${today}</lastmod>\n    <priority>${page.priority}</priority>\n  </url>`,
+        ),
       ).join("\n");
 
       this.emitFile({
@@ -183,11 +269,16 @@ export default defineConfig({
        * rather than assuming it: only the `mappa` chunk may be large.
        */
       input: {
-        landing: resolve(import.meta.dirname, "index.html"),
-        mappa: resolve(import.meta.dirname, "mappa/index.html"),
-        comeFunziona: resolve(import.meta.dirname, "come-funziona/index.html"),
-        fonteDati: resolve(import.meta.dirname, "fonte-dati/index.html"),
-        privacy: resolve(import.meta.dirname, "privacy/index.html"),
+        landing: resolve(CLIENT_ROOT, "index.html"),
+        mappa: resolve(CLIENT_ROOT, "mappa/index.html"),
+        comeFunziona: resolve(CLIENT_ROOT, "come-funziona/index.html"),
+        fonteDati: resolve(CLIENT_ROOT, "fonte-dati/index.html"),
+        privacy: resolve(CLIENT_ROOT, "privacy/index.html"),
+        enLanding: resolve(CLIENT_ROOT, "en/index.html"),
+        enMap: resolve(CLIENT_ROOT, "en/map/index.html"),
+        enHowItWorks: resolve(CLIENT_ROOT, "en/how-it-works/index.html"),
+        enDataSource: resolve(CLIENT_ROOT, "en/data-source/index.html"),
+        enPrivacy: resolve(CLIENT_ROOT, "en/privacy/index.html"),
       },
     },
   },

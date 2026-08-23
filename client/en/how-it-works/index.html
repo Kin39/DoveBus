@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <!--@partial:head-common-->
+
+    <title>How DoveBus works — from the bus's GPS to the dot on the map</title>
+    <meta
+      name="description"
+      content="Regione Toscana's GTFS-RT feed regenerates every 120 seconds, DoveBus re-reads it every 30 and always states how old a position is. With the limits, in full."
+    />
+    <link rel="canonical" href="%SITE_URL%/en/how-it-works/" />
+
+    <!--@hreflang-->
+
+    <meta property="og:title" content="How DoveBus works — from the bus's GPS to the map" />
+    <meta
+      property="og:description"
+      content="Four steps from the vehicle's transmitter to the dot on your screen, what is measured, what is estimated, and the limits told in full."
+    />
+    <meta property="og:url" content="%SITE_URL%/en/how-it-works/" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How DoveBus works",
+        "description": "The path the data takes from the vehicle's transmission to the map, what is measured, what is estimated and what the known limits are.",
+        "inLanguage": "en-GB",
+        "datePublished": "%COME_FUNZIONA_UPDATED%",
+        "dateModified": "%COME_FUNZIONA_UPDATED%",
+        "url": "%SITE_URL%/en/how-it-works/",
+        "mainEntityOfPage": "%SITE_URL%/en/how-it-works/",
+        "author": { "@type": "Organization", "name": "DoveBus", "url": "%SITE_URL%/" },
+        "publisher": { "@type": "Organization", "name": "DoveBus", "url": "%SITE_URL%/" }
+      }
+    </script>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <!--@partial:header-->
+
+    <main id="content">
+      <div class="page shell">
+        <p class="eyebrow">How it works</p>
+        <h1 class="page__title">From the vehicle to the map</h1>
+        <p class="page__standfirst">
+          A dot on DoveBus is not a camera pointed at a bus. It is the last thing that bus
+          transmitted, passed through three sets of hands before it reached your screen. Here is
+          whose, how long it takes, and what is lost along the way.
+        </p>
+
+        <nav class="subnav" aria-label="Information pages">
+          <a href="/en/how-it-works/" aria-current="page">How it works</a>
+          <a href="/en/data-source/">Data source and licences</a>
+          <a href="/en/privacy/">Privacy</a>
+        </nav>
+      </div>
+
+      <section class="section shell" aria-labelledby="path-title">
+        <div class="section__head">
+          <h2 class="section__title" id="path-title">The journey of one position.</h2>
+          <p class="section__intro">
+            Four steps, and each one adds delay. The timings below are measured against the real
+            feed, not estimated.
+          </p>
+        </div>
+
+        <!--
+          Numbered — and this is the only numbered list on the site. The path a
+          position takes has a real order, and the numbers are what a reader
+          counts back through when they ask why a dot is two minutes old.
+        -->
+        <ol class="steps">
+          <li class="steps__item">
+            <p class="steps__title">The vehicle transmits its position</p>
+            <p class="steps__body">
+              The on-board equipment tells the operator where it is, which trip it is running and
+              how far along the route it has got. We do not see this step: it begins and ends inside
+              Autolinee Toscane's own systems.
+            </p>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">Regione Toscana publishes the open feed</p>
+            <p class="steps__body">
+              The positions end up in a public file in GTFS-RT format, together with delays and
+              cancelled trips. Every publication is a complete photograph of the fleet, not a
+              partial update — and it is retaken roughly every two minutes. It is open data:
+              <a href="/en/data-source/">the feed's address and its licence are here</a>.
+            </p>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">DoveBus re-reads it and joins it to the timetable</p>
+            <p class="steps__body">
+              A single process downloads the feed every 30 seconds — any more often and it would be
+              re-downloading identical positions — and links each vehicle to its trip in the
+              official timetable, to know which line it is, where it is meant to go and which road
+              it should take. The join succeeds for 96.6% of the trips under way.
+            </p>
+            <span class="steps__meta">Every 30 s · no request ever goes upstream from here</span>
+          </li>
+          <li class="steps__item">
+            <p class="steps__title">The browser draws it and states its age</p>
+            <p class="steps__body">
+              The map asks only for the vehicles in the part of Tuscany you are looking at, draws
+              them, and next to each one keeps count of the seconds since its last data. The count
+              does not stop: if the feed stalls, you can see on screen that it has stalled.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section shell" aria-labelledby="measured-title">
+        <div class="section__head">
+          <h2 class="section__title" id="measured-title">What is measured and what is estimated.</h2>
+          <p class="section__intro">
+            The difference is the point of the whole project, and on screen the two are never
+            confused.
+          </p>
+        </div>
+
+        <dl class="deflist">
+          <div class="deflist__row">
+            <dt class="deflist__term">Measured</dt>
+            <dd class="deflist__desc">
+              The GPS position the vehicle transmitted, the exact time it transmitted it, the delay
+              the operator reported, the cancellation of a trip, the occupancy declared. The
+              positions genuinely received stay drawn on the map as distinct marks.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Estimated</dt>
+            <dd class="deflist__desc">
+              Everything between one data point and the next. The vehicle is advanced along its
+              published route at the speed it was travelling, so that it does not sit still for two
+              minutes and then jump. The estimate is declared: the live trip view says how far the
+              dot has been moved, and a circle shows how far off it could be.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Reconstructed</dt>
+            <dd class="deflist__desc">
+              The stretch already travelled. The positions received are laid onto the trip's
+              official shape — they fall on the published road within a few metres — and the trail
+              follows the road instead of cutting a straight line between one data point and the
+              next, which on a Tuscan back road can mean going through a hill.
+            </dd>
+          </div>
+          <div class="deflist__row">
+            <dt class="deflist__term">Never invented</dt>
+            <dd class="deflist__desc">
+              If a vehicle has been silent for more than five minutes, the estimate stops being
+              extended and the vehicle leaves the map. The age keeps being stated honestly beyond
+              that point too; what stops is the guessing.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="section shell" aria-labelledby="limits-title">
+        <div class="section__head">
+          <h2 class="section__title" id="limits-title">The limits, told in full.</h2>
+          <p class="section__intro">
+            None of these is a fault. They are properties of the data the project works with, and
+            knowing they exist changes how the map should be read.
+          </p>
+        </div>
+
+        <div class="limits">
+          <div class="limits__item">
+            <p class="limits__title">A position arrives already about two minutes old</p>
+            <p class="limits__body">
+              The regional feed regenerates every ~120 seconds, so even the freshest data we can
+              have is already that old. In practice a position lives between 2 and 5 minutes before
+              it is replaced. The “live” band (0–90 seconds) exists in the code and never lights up
+              today: it stays there for the day publication becomes faster.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">About 3% of the trips under way are not in the timetable</p>
+            <p class="limits__body">
+              These are services the operator puts on the road without them appearing in the day's
+              official timetable. DoveBus shows them anyway — hiding them would be worse — but for
+              those trips it may not know the planned route or the list of stops.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Not every trip has a delay figure</p>
+            <p class="limits__body">
+              Roughly nine trips under way out of ten carry one. For the others we do not write “on
+              time” to fill the space: we write nothing.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">The official timetable changes without warning</p>
+            <p class="limits__body">
+              The timetable file is replaced upstream, often well before the expiry date it
+              declares. DoveBus notices from the contents of the file rather than from the date
+              written inside it, and reloads when it genuinely changes — and also when it notices
+              that the loaded timetable no longer describes the fleet it can see on the road.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">A stationary vehicle may be stopped, or silent</p>
+            <p class="limits__body">
+              The data cannot tell a bus in a queue from a bus that has stopped transmitting. That
+              is why the age next to a vehicle matters more than its position: a dot carrying 4
+              minutes is saying something different from one carrying 2.
+            </p>
+          </div>
+        </div>
+
+        <!--
+          The date is here, next to the numbers, rather than in a footer nobody
+          reads. Everything above is measured against the live feed — ~120 s,
+          96.6%, ~3%, nine in ten — and a measurement with no date beside it does
+          not tell a reader whether they are looking at yesterday or at two years
+          ago. The JSON-LD repeats this same day from the same constant, so the
+          markup can never claim a freshness the page does not show.
+        -->
+        <p class="stamp">
+          The numbers on this page are measured against the real feed, not estimated, and they
+          change when the feed changes. Last updated:
+          <time datetime="%COME_FUNZIONA_UPDATED%">%COME_FUNZIONA_UPDATED_TEXT%</time>.
+        </p>
+      </section>
+
+      <section class="closer shell">
+        <h2 class="closer__title">Watch it at work.</h2>
+        <p class="closer__body">
+          Everything written here is visible on the map while you use it: the age, the estimate, the
+          uncertainty.
+        </p>
+        <a class="button" href="/en/map/">
+          Open the map <span class="button__arrow" aria-hidden="true">→</span>
+        </a>
+      </section>
+    </main>
+
+    <!--@partial:footer-->
+  </body>
+</html>
