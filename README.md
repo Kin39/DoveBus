@@ -4,7 +4,7 @@ Real-time map of Autolinee Toscane buses in Tuscany, with two search modes
 (line + time window, comune → comune + time) and the path already travelled.
 
 Plan: [`DoveBus-plan.md`](DoveBus-plan.md) · Data-source validation:
-[`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md)
+[`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) · Deploy runbook: [`DEPLOY.md`](DEPLOY.md)
 
 **Status:** ready to deploy. Static import + comune enrichment + refresh job
 (Phase 1), the realtime pollers holding live positions, delays, trails and
@@ -54,22 +54,8 @@ live database is left untouched. Warns when the loaded timetable is past its
 `feed_end_date` — the operator publishes ~20-day timetables, so a database that
 outlives its window keeps answering searches with schedules that no longer apply.
 
-Run it daily under systemd:
-
-```ini
-# /etc/systemd/system/dovebus-refresh.service
-[Service]
-Type=oneshot
-WorkingDirectory=/srv/dovebus/server
-ExecStart=/usr/bin/npm run refresh
-
-# /etc/systemd/system/dovebus-refresh.timer
-[Timer]
-OnCalendar=*-*-* 04:30:00
-Persistent=true
-[Install]
-WantedBy=timers.target
-```
+Run it daily under a systemd timer — the unit files, and everything else the
+deployed machine needs, are in [`DEPLOY.md`](DEPLOY.md).
 
 ## Watching the buses (realtime)
 
@@ -151,25 +137,11 @@ curl 'http://127.0.0.1:3200/api/search/od?comuneA=Arezzo&comuneB=Anghiari&from=0
   process. Prefer that to `true`, which trusts the whole chain including the part
   the caller wrote.
 
-Deploy it alongside the refresh timer:
-
-```ini
-# /etc/systemd/system/dovebus-api.service
-[Service]
-WorkingDirectory=/srv/dovebus/server
-ExecStart=/usr/bin/npm run serve
-Restart=always
-Environment=DOVEBUS_HOST=127.0.0.1 DOVEBUS_PORT=3200
-Environment=DOVEBUS_TRUST_PROXY=1
-Environment=DOVEBUS_CORS_ORIGIN=https://dovebus.it
-
-[Install]
-WantedBy=multi-user.target
-```
-
 The production install is `npm ci --omit=dev`: the server runs its TypeScript
 through `tsx`, which is a runtime dependency rather than a build-time one, so the
-box needs no build step and no compiled output.
+box needs no build step and no compiled output. The unit file that runs it, the
+Caddy configuration in front of it and the order to do it all in are in
+[`DEPLOY.md`](DEPLOY.md).
 
 ## Running the frontend
 

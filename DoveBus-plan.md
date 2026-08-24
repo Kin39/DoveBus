@@ -164,10 +164,24 @@ Must-haves proven in the brief's tests: **DISTINCT + calendar filter** (raw join
 
 ## 6. Hosting / deploy / cost
 
-- **Backend:** Hetzner CX22 (~€3.99/mo) — Node under systemd, Caddy for automatic TLS. SQLite on local SSD. (ARM CAX11 ~€3.79 if the stack is ARM-clean; Railway ~$5–9/mo if you prefer PaaS over a VPS.)
+- **Backend:** a small always-on VPS — Node under systemd, Caddy for automatic TLS, SQLite on local SSD.
 - **Frontend:** Netlify free (matches your existing workflow).
-- **Rejected:** Render free (sleeps), Cloudflare Workers (1-min cron + Durable Objects overhead for the trail) — reconsider only as a later optimization.
-- **Est. run cost:** ~€4/mo. Domain extra.
+- **Rejected:** Render free (sleeps), Cloudflare Workers (1-min cron + Durable Objects overhead for the trail) — reconsider only as a later optimization. Serverless of any kind is out for four separate reasons: a 1.2 GB database on a persistent disk, pollers whose value *is* the state they accumulate in RAM, long-lived SSE connections, and the one-process design that keeps every client off the regional feed.
+- **~~Hetzner CX22 (~€3.99/mo)~~ — the price this plan quoted no longer exists.** Checked in the console on 2026-08-24: the CX/CAX line now sits under "Cost-Optimized" and is **not available**, and what can actually be bought starts at **€14.02/mo** (CPX12, 1 vCPU / 2 GB / 40 GB) and **€23.78/mo** (CPX22), VAT included. Six times the note this plan carried. A cost figure that is wrong is worse than none, hence this correction.
+
+### 6.0 What the machine actually has to do — measured 2026-08-24
+
+Sizing this by reading the code was how the €3.99 got written down. These are the numbers instead:
+
+| | Measured |
+|---|---|
+| API process, steady state | **133 MB RSS** — the database is read through the OS page cache, not the heap |
+| Import, peak of the whole process tree | **774 MB RSS** (`/usr/bin/time -v`, full download + rebuild) |
+| Import, wall clock | **3m 13s** end to end, 83 s of CPU — a 138 MB download and 7.5 M `stop_times` rows |
+| Database on disk | **1.19 GB**; peak during a refresh ~2.6 GB with the staging copy and the zip |
+| `/api/vehicles`, whole region | 406 KB in 5.8 ms |
+
+So the floor is **2 GB of RAM and ~20 GB of disk**: the import peak plus the API plus the OS lands near 1.1 GB, which a 2 GB box carries with room and a 1 GB box does not. Anything above that is headroom, not requirement — and the €4–7/mo band buys 2–4 GB comfortably from several providers (Aruba's Italian datacentre, OVH, netcup), which is where this deploy goes instead.
 
 ### 6.1 Blockers found before deploying — verified on the running stack 2026-08-19 — ✅ ALL CLOSED 2026-08-24 (§12)
 
