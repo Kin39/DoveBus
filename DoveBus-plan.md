@@ -413,7 +413,8 @@ Neither blocks a build; both make the deployed site wrong if left as they are.
    `client/site-url.ts`, and feeds `canonical`, every `og:url`, the JSON-LD `@id`s, `robots.txt`,
    `sitemap.xml` **and the domain printed inside `og-image.png`** — so if the real domain differs,
    **every one of those points at the wrong host** until it is changed. Overridable at build time
-   with `SITE_URL=…`, same for `CONTACT_EMAIL` (currently `ciao@dovebus.it`), which appears in the
+   with `SITE_URL=…`, same for `CONTACT_EMAIL` (`dovebusapp@gmail.com` since the deploy — the
+   `ciao@dovebus.it` this section was written with was a placeholder with no mailbox behind it), which appears in the
    footer, the privacy page and the `Organization` markup.
 
    **The card was the exception until 2026-08-22, and it was the worst place for one.** `scripts/`

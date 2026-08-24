@@ -177,7 +177,7 @@ Two variables decide what a built site says and where it calls, and both are
 |---|---|---|
 | `SITE_URL` | `https://dovebus.it` | `canonical`, `og:url`, JSON-LD `@id`s, `robots.txt`, `sitemap.xml`, and the domain **rasterised into** the share cards (`npm run og`) |
 | `VITE_API_BASE` | `http://localhost:3200` | every API call, and the `connect-src` of the generated CSP |
-| `CONTACT_EMAIL` | `ciao@dovebus.it` | footer, privacy page, `Organization` markup |
+| `CONTACT_EMAIL` | `dovebusapp@gmail.com` | footer, privacy page, `Organization` markup |
 
 ### The headers the site is served with
 

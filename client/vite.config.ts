@@ -11,8 +11,16 @@ import { deployHeadersFile } from "./deploy-headers";
 // resolved in one module so they cannot disagree — see `site-url.ts`.
 import { SITE_URL } from "./site-url";
 
-/** Where an abuse or privacy request should land. Same reasoning as `SITE_URL`. */
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "ciao@dovebus.it";
+/**
+ * Where an abuse or privacy request should land. Same reasoning as `SITE_URL`.
+ *
+ * The default is the address that actually receives mail, not a plausible one on
+ * the site's own domain: `ciao@dovebus.it` was a placeholder and no mailbox was
+ * ever created for it, so a build without the environment variable would have
+ * published — in the footer, the privacy page and the `Organization` markup — an
+ * address that silently swallows anything sent to it.
+ */
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "dovebusapp@gmail.com";
 
 /** The API base the client falls back to, mirrored from `src/api/client.ts`. */
 const DEFAULT_API_BASE = "http://localhost:3200";
