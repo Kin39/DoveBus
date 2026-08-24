@@ -25,7 +25,12 @@ export interface ApiFixture {
  * fake is the HTTP fetch — so the tests exercise decoding, live state and the
  * query layer exactly as production does.
  */
-export async function createApiFixture(): Promise<ApiFixture> {
+export interface ApiFixtureOptions {
+  /** `*` unless a test is checking what a whitelist does. */
+  readonly corsOrigin?: string;
+}
+
+export async function createApiFixture(options: ApiFixtureOptions = {}): Promise<ApiFixture> {
   const fixtureDb = await createFixtureDb();
   const bodies: Record<string, Uint8Array> = {
     [VP_URL]: encodeVehiclePositions([
@@ -65,7 +70,13 @@ export async function createApiFixture(): Promise<ApiFixture> {
 
   const dbHandle = openDbHandle(fixtureDb.path);
   // Two streams per caller keeps the cap test quick; production allows ten.
-  const app = buildApi({ dbHandle, realtime, rateLimit: false, maxStreamsPerIp: 2 });
+  const app = buildApi({
+    dbHandle,
+    realtime,
+    rateLimit: false,
+    maxStreamsPerIp: 2,
+    ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
+  });
 
   return {
     app,

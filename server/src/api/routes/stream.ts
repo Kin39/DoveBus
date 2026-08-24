@@ -8,6 +8,7 @@ import {
 import { logger } from "../../logger.js";
 import { tripExists } from "../../query/trip.js";
 import type { ApiContext } from "../context.js";
+import { type AllowedOrigins, allowOriginFor, parseAllowedOrigins } from "../cors.js";
 import { HttpError } from "../errors.js";
 import { parseDate, readQuery } from "../params.js";
 import type { LiveTripJson } from "../serialize.js";
@@ -34,7 +35,10 @@ export function registerStreamRoutes(
   options: StreamOptions = {},
 ): void {
   const settings = {
-    corsOrigin: options.corsOrigin ?? API_CORS_ORIGIN,
+    // Parsed once, then answered per request: this route writes its own headers,
+    // so it has to reflect the caller's origin the way @fastify/cors does for
+    // every other route rather than echo the configured list. See `cors.ts`.
+    allowedOrigins: parseAllowedOrigins(options.corsOrigin ?? API_CORS_ORIGIN),
     maxClients: options.maxClients ?? MAX_SSE_CLIENTS,
     maxClientsPerIp: options.maxClientsPerIp ?? MAX_SSE_CLIENTS_PER_IP,
     heartbeatMs: options.heartbeatMs ?? SSE_HEARTBEAT_MS,
@@ -61,7 +65,7 @@ interface StreamContext {
   readonly request: FastifyRequest;
   readonly reply: FastifyReply;
   readonly release: () => void;
-  readonly corsOrigin: string;
+  readonly allowedOrigins: AllowedOrigins;
   readonly heartbeatMs: number;
 }
 
@@ -77,7 +81,7 @@ function stream(ctx: ApiContext, connection: StreamContext): void {
     // Nginx and friends buffer by default, which turns a live stream into a
     // batch delivered when the connection ends.
     "x-accel-buffering": "no",
-    "access-control-allow-origin": connection.corsOrigin,
+    ...corsHeaders(connection.allowedOrigins, request.headers.origin),
   });
 
   let lastSignature: string | null = null;
@@ -161,6 +165,22 @@ class StreamCounter {
       else this.#byIp.set(ip, remaining);
     };
   }
+}
+
+/**
+ * The CORS headers for one stream, or none when the origin is not allowed.
+ *
+ * `vary` is present whenever the answer depends on who asked, so a cache in
+ * front of this cannot hand one origin's response to another.
+ */
+function corsHeaders(
+  allowed: AllowedOrigins,
+  requestOrigin: string | undefined,
+): Record<string, string> {
+  const headers: Record<string, string> = allowed === "*" ? {} : { vary: "origin" };
+  const value = allowOriginFor(allowed, requestOrigin);
+  if (value !== null) headers["access-control-allow-origin"] = value;
+  return headers;
 }
 
 /** Cheap "has anything a viewer would notice changed?" test. */

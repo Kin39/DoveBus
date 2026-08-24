@@ -195,3 +195,41 @@ describe("GET /api/stream/trip/:tripId", () => {
     await expect(fixture.realtime.pollOnce()).resolves.toBeUndefined();
   });
 });
+
+describe("live stream CORS", () => {
+  let fixture: ApiFixture;
+  let baseUrl: string;
+
+  beforeEach(async () => {
+    fixture = await createApiFixture({ corsOrigin: "https://a.example,https://b.example" });
+    await fixture.realtime.pollOnce();
+    await fixture.app.listen({ port: 0, host: "127.0.0.1" });
+    const address = fixture.app.server.address();
+    if (address === null || typeof address === "string") throw new Error("no port");
+    baseUrl = `http://127.0.0.1:${address.port}`;
+  });
+
+  afterEach(async () => {
+    await fixture.dispose();
+  });
+
+  const open = (origin: string): Promise<Response> =>
+    fetch(`${baseUrl}/api/stream/trip/T1?date=${DATE}`, { headers: { origin } });
+
+  test("names the caller's own origin, not the whole configured list", async () => {
+    // The route writes its own headers, and it used to write the configured
+    // string verbatim: a two-origin whitelist became `https://a,https://b`,
+    // which no browser accepts — so the stream broke for every allowed origin
+    // at the exact deploy that stopped allowing all of them.
+    const response = await open("https://b.example");
+    expect(response.headers.get("access-control-allow-origin")).toBe("https://b.example");
+    expect(response.headers.get("vary")).toBe("origin");
+    await response.body?.cancel();
+  });
+
+  test("sends no allow-origin at all to an origin that is not on the list", async () => {
+    const response = await open("https://evil.example");
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+    await response.body?.cancel();
+  });
+});

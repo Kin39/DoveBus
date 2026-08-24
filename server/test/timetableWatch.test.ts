@@ -21,6 +21,7 @@ async function watchFor(
     db: () => db,
     liveTripIds,
     refresh,
+    feedSha1: () => "feed-sha1-unchanged",
     // Long enough that only the explicit `check()` calls in these tests fire.
     checkIntervalMs: HOUR,
     cooldownMs: HOUR,
@@ -65,10 +66,12 @@ describe("createTimetableWatch", () => {
   });
 
   /**
-   * Each trigger is a 125 MB download. If a refresh did not fix the match rate
-   * the cause is upstream, and running it again in five minutes will not help.
+   * Each trigger is a 125 MB download and a ~2.5 GB rebuild. If a refresh did not
+   * fix the match rate the cause is upstream — measured: the operator broadcasts
+   * live trip ids its own static feed does not contain — and no number of
+   * retries reconciles two feeds that disagree.
    */
-  test("holds the cooldown even while the ratio still looks bad", async () => {
+  test("stops asking once a refresh has failed to fix the ratio", async () => {
     let calls = 0;
     const watch = await watchFor(
       () => STALE_FLEET,
@@ -78,11 +81,62 @@ describe("createTimetableWatch", () => {
     );
 
     await watch.check(NOW);
-    await watch.check(NOW + 5 * 60_000);
-    await watch.check(NOW + 30 * 60_000);
     expect(calls).toBe(1);
 
+    await watch.check(NOW + 5 * 60_000);
+    await watch.check(NOW + 30 * 60_000);
+    // Long past the cooldown, which on its own would have downloaded 125 MB
+    // every hour for ever without ever changing the answer.
     await watch.check(NOW + HOUR + 1);
+    await watch.check(NOW + 24 * HOUR);
+    expect(calls).toBe(1);
+    expect(watch.disarmedForSha1).toBe("feed-sha1-unchanged");
+    watch.stop();
+  });
+
+  test("tries again as soon as the operator publishes a different feed", async () => {
+    let calls = 0;
+    let sha1 = "feed-sha1-first";
+    const watch = await watchFor(
+      () => STALE_FLEET,
+      async () => {
+        calls++;
+      },
+      { feedSha1: () => sha1 },
+    );
+
+    await watch.check(NOW);
+    await watch.check(NOW + 2 * HOUR);
+    expect(calls).toBe(1);
+
+    // What the daily timer eventually brings in — a new feed is a new question.
+    sha1 = "feed-sha1-second";
+    expect(await watch.check(NOW + 3 * HOUR)).toBe(true);
+    expect(calls).toBe(2);
+    watch.stop();
+  });
+
+  test("keeps the cooldown for a refresh that stays hopeful", async () => {
+    // A refresh that *does* restore the match must leave the watch armed, or one
+    // good outcome would silence it until the next publication.
+    let calls = 0;
+    let fleet: readonly string[] = STALE_FLEET;
+    const watch = await watchFor(
+      () => fleet,
+      async () => {
+        calls++;
+        fleet = ["T1", "T2"]; // Both in the fixture timetable: nothing unmatched.
+      },
+      { minSample: 2 },
+    );
+
+    expect(await watch.check(NOW)).toBe(true);
+    expect(watch.disarmedForSha1).toBeNull();
+
+    fleet = STALE_FLEET;
+    await watch.check(NOW + 5 * 60_000);
+    expect(calls).toBe(1); // Held by the cooldown, not by having given up.
+    expect(await watch.check(NOW + HOUR + 1)).toBe(true);
     expect(calls).toBe(2);
     watch.stop();
   });

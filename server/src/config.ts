@@ -98,6 +98,18 @@ export const API_CORS_ORIGIN = process.env.DOVEBUS_CORS_ORIGIN ?? "*";
 export const RATE_LIMIT_PER_MINUTE = Number(process.env.DOVEBUS_RATE_LIMIT ?? 300);
 
 /**
+ * The same, for `/api/vehicles` alone — the one endpoint whose cost is measured
+ * in megabytes rather than milliseconds.
+ *
+ * A viewport request is small, but the whole region is **448 KB in 4.5 ms**, and
+ * at the general limit one caller could pull ~134 MB a minute: not a
+ * vulnerability, a bill. The map refreshes every 30 s and again 400 ms after a
+ * pan settles, so sixty a minute is far more than a person panning hard will
+ * ever need and a fifth of what a scraper was being handed.
+ */
+export const VEHICLES_RATE_LIMIT_PER_MINUTE = Number(process.env.DOVEBUS_VEHICLES_RATE_LIMIT ?? 60);
+
+/**
  * When the share of live trips missing from the timetable means it is stale.
  *
  * The expiry check alone is not enough: this operator republishes *inside* the
@@ -142,6 +154,12 @@ export const TIMETABLE_REFRESH_COOLDOWN_MS = 60 * 60_000;
  * the buses on the road for up to a day, which is what happened on 2026-08-15.
  * Off for anyone who would rather the scheduled job be the only thing that
  * downloads 125 MB.
+ *
+ * The default is only defensible because the watch now **gives up**: a refresh
+ * that fails to restore the match disarms it until the operator publishes a
+ * different feed. Without that, a live fleet running trip ids the static feed
+ * has never contained — which is the standing state of this source — meant one
+ * rebuild per cooldown, for ever. See `feed/watch.ts`.
  */
 export const AUTO_REFRESH = process.env.DOVEBUS_AUTO_REFRESH !== "false";
 
@@ -173,13 +191,34 @@ export const MAX_SSE_CLIENTS = Number(process.env.DOVEBUS_MAX_STREAMS ?? 500);
 export const MAX_SSE_CLIENTS_PER_IP = Number(process.env.DOVEBUS_MAX_STREAMS_PER_IP ?? 10);
 
 /**
- * Whether to believe `X-Forwarded-For`. True in the intended deployment (Caddy in
- * front), where without it every client shares the proxy's address and the rate
- * limiter throttles the whole region as one caller — but it must be off when the
- * process is exposed directly, since the header is then caller-controlled and
- * makes the per-IP limits trivially evadable.
+ * Whether to believe `X-Forwarded-For` — and if so, for how many hops.
+ *
+ * **Off unless a deploy says otherwise.** It used to be on unless disabled, and
+ * that default was measured doing exactly what it looks like: 30 concurrent SSE
+ * connections from one machine were all accepted when each carried a different
+ * invented `X-Forwarded-For`, against 20 × `503` without it, and the rate
+ * limiter's remaining count reset for every made-up address. The header is
+ * written by the caller, so trusting it by default means the per-IP limits are
+ * evadable by default; a deployment that needs the real client address is a
+ * deliberate act and can say so.
+ *
+ * `DOVEBUS_TRUST_PROXY=1` is the form to prefer over `true`: `true` trusts the
+ * *whole* chain, and Caddy and nginx **append** to `X-Forwarded-For` rather than
+ * overwriting it, so a forged leftmost value is still what `proxy-addr` walks
+ * back to. A hop count trusts only the proxies actually in front of this
+ * process — one, in the intended deployment.
  */
-export const TRUST_PROXY = process.env.DOVEBUS_TRUST_PROXY !== "false";
+export const TRUST_PROXY = parseTrustProxy(process.env.DOVEBUS_TRUST_PROXY);
+
+function parseTrustProxy(raw: string | undefined): boolean | number {
+  if (raw === undefined || raw === "" || raw === "false") return false;
+  if (raw === "true") return true;
+  const hops = Number(raw);
+  if (Number.isInteger(hops) && hops > 0) return hops;
+  throw new Error(
+    `DOVEBUS_TRUST_PROXY must be "false", "true" or a positive hop count — got "${raw}"`,
+  );
+}
 
 /** Where the built database and download scratch live. Override for tests/deploys. */
 export const DATA_DIR = process.env.DOVEBUS_DATA_DIR ?? resolve(REPO_ROOT, "data");

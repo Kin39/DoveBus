@@ -10,7 +10,9 @@ describe("API server behaviour", () => {
   let dbHandle: ReturnType<typeof openDbHandle>;
   let app: FastifyInstance;
 
-  const build = (options: { rateLimit?: boolean; rateLimitMax?: number } = {}): FastifyInstance => {
+  const build = (
+    options: { rateLimit?: boolean; rateLimitMax?: number; trustProxy?: boolean | number } = {},
+  ): FastifyInstance => {
     app = buildApi({
       dbHandle,
       realtime: createRealtimeService({ fetchFeed: async () => Promise.reject(new Error("no")) }),
@@ -64,6 +66,58 @@ describe("API server behaviour", () => {
     const blocked = await instance.inject({ method: "GET", url: "/api/comuni" });
     expect(blocked.statusCode).toBe(429);
     expect(blocked.json()).toMatchObject({ success: false, error: { code: "rate_limited" } });
+  });
+
+  test("counts a forged X-Forwarded-For as the caller it really is", async () => {
+    // Measured on the running API before this was fixed: 30 SSE connections from
+    // one machine were all accepted, and the rate limiter's remaining count
+    // reset, when each request invented a different X-Forwarded-For. The header
+    // is caller-written, so trusting it by default made every per-IP limit
+    // decorative. Default build: no trustProxy option, as production has none.
+    const instance = build({ rateLimit: true, rateLimitMax: 2 });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const allowed = await instance.inject({
+        method: "GET",
+        url: "/api/comuni",
+        headers: { "x-forwarded-for": `10.0.0.${attempt}` },
+      });
+      expect(allowed.statusCode).toBe(200);
+    }
+
+    const blocked = await instance.inject({
+      method: "GET",
+      url: "/api/comuni",
+      headers: { "x-forwarded-for": "10.0.0.99" },
+    });
+    expect(blocked.statusCode).toBe(429);
+  });
+
+  test("still reads the real client address when a deploy asks it to", async () => {
+    // The knob has to keep working: behind Caddy, without it every request
+    // shares the proxy's address and the limiter throttles the region as one.
+    const instance = build({ rateLimit: true, rateLimitMax: 1, trustProxy: 1 });
+    const first = await instance.inject({
+      method: "GET",
+      url: "/api/comuni",
+      headers: { "x-forwarded-for": "10.0.0.1" },
+    });
+    const otherCaller = await instance.inject({
+      method: "GET",
+      url: "/api/comuni",
+      headers: { "x-forwarded-for": "10.0.0.2" },
+    });
+    expect([first.statusCode, otherCaller.statusCode]).toEqual([200, 200]);
+  });
+
+  test("gives the megabyte endpoint a tighter budget than the rest", async () => {
+    // /api/vehicles is 448 KB for the whole region against a few for everything
+    // else, so the general limit priced one caller at ~134 MB a minute.
+    const instance = build({ rateLimit: true, rateLimitMax: 300 });
+    const vehicles = await instance.inject({ method: "GET", url: "/api/vehicles" });
+    const comuni = await instance.inject({ method: "GET", url: "/api/comuni" });
+
+    expect(vehicles.headers["x-ratelimit-limit"]).toBe("60");
+    expect(comuni.headers["x-ratelimit-limit"]).toBe("300");
   });
 
   test("answers even when the realtime feeds are down — the timetable is still true", async () => {

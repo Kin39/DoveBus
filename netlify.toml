@@ -1,0 +1,32 @@
+# How Netlify builds and serves the static site.
+#
+# The site is the `client` workspace only: the API is a separate process on its
+# own host (see the README's deploy section), and nothing here runs server-side.
+#
+# **Headers and redirects are deliberately not in this file.** `_redirects` is
+# committed in `client/public/`, and `_headers` is *generated* by the build —
+# its Content-Security-Policy has to name the API's origin, which is a build
+# input (`VITE_API_BASE`), so a copy written here would be correct only until the
+# API moved. Both land in the publish directory, which is where Netlify reads
+# them from. `npm run preview:headers` + `npm run headers-check` verify the
+# generated file against every page before a deploy.
+
+[build]
+  command = "npm run build:client"
+  publish = "client/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Two variables decide what the built site says and where it calls. Both are set
+# in the Netlify UI rather than committed, because both are deploy facts:
+#
+#   SITE_URL        the public origin — canonical, og:url, JSON-LD @ids,
+#                   robots.txt, sitemap.xml. Changing it also means re-running
+#                   `npm run og`: the domain is *rasterised into* the share
+#                   cards, where no canonical tag can correct it afterwards.
+#   VITE_API_BASE   where the frontend calls. Baked into the bundle at build
+#                   time — changing it needs a rebuild, not a restart — and the
+#                   CSP's connect-src is generated from the same value.
+#   CONTACT_EMAIL   shown in the footer, the privacy page and the Organization
+#                   markup.

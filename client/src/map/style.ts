@@ -268,7 +268,7 @@ export async function loadBasemap(): Promise<Basemap> {
       credit: BASEMAP_CREDIT.openfreemap,
     };
   } catch (error) {
-    console.warn("Basemap vettoriale non disponibile, uso i tile raster CARTO.", error);
+    console.warn("Vector basemap unavailable — using CARTO raster tiles.", error);
     return cartoBasemap();
   }
 }

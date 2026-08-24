@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "preview:headers": "tsx scripts/serve-dist.ts",
+    "headers-check": "tsx scripts/headers-check.ts",
     "typecheck": "tsc --noEmit",
     "shots": "tsx scripts/shots.ts",
     "site-shots": "tsx scripts/site-shots.ts",

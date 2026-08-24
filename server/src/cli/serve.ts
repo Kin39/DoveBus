@@ -88,6 +88,10 @@ const watch = AUTO_REFRESH
           .map((vehicle) => vehicle.tripId)
           .filter((tripId): tripId is string => tripId !== null),
       refresh: spawnRefresh,
+      // Read per check rather than captured: the refresh this watch triggers
+      // swaps the database underneath it, and the new file's SHA-1 is the whole
+      // signal for whether trying again could ever help.
+      feedSha1: () => readFeedMeta(dbHandle.db())?.sourceSha1 ?? null,
       checkIntervalMs: TIMETABLE_CHECK_MS,
       cooldownMs: TIMETABLE_REFRESH_COOLDOWN_MS,
       maxUnmatchedRatio: MAX_UNMATCHED_TRIP_RATIO,

@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "npm run dev --workspace=client",
     "build:client": "npm run build --workspace=client",
+    "preview:headers": "npm run preview:headers --workspace=client",
+    "headers-check": "npm run headers-check --workspace=client",
     "shots": "npm run shots --workspace=client --",
     "site-shots": "npm run site-shots --workspace=client --",
     "follow-check": "npm run follow-check --workspace=client",

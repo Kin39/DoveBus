@@ -118,7 +118,7 @@ export class MapController {
     if (await this.#applyStyle(basemap.style)) return;
     if (basemap.source === "carto") return;
 
-    console.warn("La basemap vettoriale non si è caricata, passo ai tile raster CARTO.");
+    console.warn("Vector basemap did not load — falling back to CARTO raster tiles.");
     const raster = cartoBasemap();
     this.#basemapCredit = raster.credit;
     await this.#applyStyle(raster.style);

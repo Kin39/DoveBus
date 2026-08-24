@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -25,6 +25,18 @@ describe("downloadTo", () => {
           etag: 'W/"abc"',
           "last-modified": "Wed, 12 Aug 2026 03:22:00 GMT",
         });
+        response.end(PAYLOAD);
+        return;
+      }
+      if (request.url === "/huge.zip") {
+        // No content-length: the body just keeps coming, which is the case a
+        // declared size cannot protect against.
+        response.writeHead(200, { "content-type": "application/zip" });
+        response.end(Buffer.alloc(64 * 1024));
+        return;
+      }
+      if (request.url === "/lying.zip") {
+        response.writeHead(200, { "content-length": String(1024 * 1024 * 1024) });
         response.end(PAYLOAD);
         return;
       }
@@ -55,5 +67,24 @@ describe("downloadTo", () => {
     await expect(downloadTo(`${baseUrl}/missing`, join(dir, "missing.zip"))).rejects.toThrow(
       /responded 404/,
     );
+  });
+
+  test("stops a body that keeps arriving, and leaves no half-feed behind", async () => {
+    // Defence in depth: these URLs are hardcoded constants no client can reach,
+    // so this guards against a compromised upstream filling the disk that also
+    // holds the live database — not against a caller.
+    const destination = join(dir, "huge.zip");
+    await expect(
+      downloadTo(`${baseUrl}/huge.zip`, destination, { maxBytes: 8 * 1024 }),
+    ).rejects.toThrow(/exceeded the 8192 byte cap/);
+    expect(existsSync(destination)).toBe(false);
+  });
+
+  test("refuses a download that announces more than the cap before sending it", async () => {
+    const destination = join(dir, "lying.zip");
+    await expect(
+      downloadTo(`${baseUrl}/lying.zip`, destination, { maxBytes: 8 * 1024 }),
+    ).rejects.toThrow(/announced 1073741824 bytes/);
+    expect(existsSync(destination)).toBe(false);
   });
 });

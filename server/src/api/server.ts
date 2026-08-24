@@ -6,6 +6,7 @@ import type { DbHandle } from "../db/handle.js";
 import { logger } from "../logger.js";
 import type { RealtimeService } from "../rt/service.js";
 import { createApiContext } from "./context.js";
+import { parseAllowedOrigins } from "./cors.js";
 import { fail } from "./envelope.js";
 import { HttpError } from "./errors.js";
 import { registerCatalogRoutes } from "./routes/catalog.js";
@@ -24,7 +25,7 @@ export interface ApiOptions {
   readonly rateLimit?: boolean;
   readonly rateLimitMax?: number;
   /** Off when the process is exposed without a reverse proxy in front of it. */
-  readonly trustProxy?: boolean;
+  readonly trustProxy?: boolean | number;
   readonly maxStreamsPerIp?: number;
   readonly startedAtMs?: number;
 }
@@ -43,12 +44,15 @@ export function buildApi(options: ApiOptions): FastifyInstance {
     trustProxy: options.trustProxy ?? TRUST_PROXY,
   });
   const ctx = createApiContext(options.dbHandle, options.realtime, options.startedAtMs);
-  const corsOrigin = options.corsOrigin ?? API_CORS_ORIGIN;
+  // Parsed here and in the SSE route from the same module, because the stream
+  // writes its own headers and the two answers must be the same one.
+  const allowedOrigins = parseAllowedOrigins(options.corsOrigin ?? API_CORS_ORIGIN);
 
   app.register(cors, {
     // A literal `*` rather than reflecting the caller's origin: the response is
     // identical for everyone, so it stays cacheable by any proxy in front of us.
-    origin: corsOrigin === "*" ? "*" : corsOrigin.split(",").map((origin) => origin.trim()),
+    // A whitelist is reflected per request instead, which the plugin does itself.
+    origin: allowedOrigins === "*" ? "*" : [...allowedOrigins],
     methods: ["GET"],
   });
 
@@ -94,7 +98,7 @@ export function buildApi(options: ApiOptions): FastifyInstance {
       registerVehicleRoutes(api, ctx);
       registerTripRoutes(api, ctx);
       registerStreamRoutes(api, ctx, {
-        corsOrigin,
+        corsOrigin: options.corsOrigin ?? API_CORS_ORIGIN,
         ...(options.maxStreamsPerIp === undefined
           ? {}
           : { maxClientsPerIp: options.maxStreamsPerIp }),

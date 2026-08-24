@@ -169,7 +169,7 @@ Must-haves proven in the brief's tests: **DISTINCT + calendar filter** (raw join
 - **Rejected:** Render free (sleeps), Cloudflare Workers (1-min cron + Durable Objects overhead for the trail) — reconsider only as a later optimization.
 - **Est. run cost:** ~€4/mo. Domain extra.
 
-### 6.1 Blockers found before deploying — verified on the running stack 2026-08-19
+### 6.1 Blockers found before deploying — verified on the running stack 2026-08-19 — ✅ ALL CLOSED 2026-08-24 (§12)
 
 Measured against the real servers, not read off the code. Netlify is not implicated in any of them: it serves `client/dist` and the only couplings are `VITE_API_BASE`, which Vite **bakes into the bundle at build time** (changing the API address needs a rebuild, not an env var), and CORS.
 
@@ -177,7 +177,7 @@ Measured against the real servers, not read off the code. Netlify is not implica
 
 **b. The refresh spawn does work — verified, not assumed.** `serve.ts` spawns `node [...process.execArgv] refresh.ts`, i.e. it hands Node a TypeScript file, which only survives if the tsx loader is in `execArgv`. Tested under `npm run serve`'s own invocation: `execArgv` carries `--require tsx/preflight.cjs --import tsx/loader.mjs`, and the child ran a `.ts` file to exit 0. No change needed.
 
-**c. `AUTO_REFRESH` will re-download 142 MB every hour, forever, without ever fixing what it is reacting to.** On 2026-08-19 a manual refresh moved the unmatched-trip ratio only 0.204 → 0.169, against a 0.10 threshold — not the 0.3% the 2026-08-15 incident settled at. The cause is not a stale timetable: **trip ids `78000–79999` are wholly absent from the static feed** (0 rows, against 27,345 in `70000–77999`) while the realtime feed broadcasts 26 live buses on them. Both feeds are the operator's; they disagree. No refresh can reconcile that, so `timetableMatch` stays `stale`, `/healthz` stays `degraded`, and the watch fires on every cooldown — 24 rebuilds/day, ~2.5 GB written each, ~60 GB/day of SSD writes plus minutes of a shared vCPU at 100%. `watch.ts` anticipated the shape of this ("if a refresh did not fix it, running it again immediately will not either") but the cooldown only slows the loop, it does not break it. **Deploy with `DOVEBUS_AUTO_REFRESH=false` and the daily timer alone until the watch can give up**: the durable fix is to stop retrying when a refresh fails to improve the ratio, and only rearm when the static feed's SHA1 changes. Excluding the chronically unresolvable ids from the sample would also make the ratio measure staleness again rather than this.
+**c. `AUTO_REFRESH` will re-download 142 MB every hour, forever, without ever fixing what it is reacting to.** On 2026-08-19 a manual refresh moved the unmatched-trip ratio only 0.204 → 0.169, against a 0.10 threshold — not the 0.3% the 2026-08-15 incident settled at. The cause is not a stale timetable: **trip ids `78000–79999` are wholly absent from the static feed** (0 rows, against 27,345 in `70000–77999`) while the realtime feed broadcasts 26 live buses on them. Both feeds are the operator's; they disagree. No refresh can reconcile that, so `timetableMatch` stays `stale`, `/healthz` stays `degraded`, and the watch fires on every cooldown — 24 rebuilds/day, ~2.5 GB written each, ~60 GB/day of SSD writes plus minutes of a shared vCPU at 100%. `watch.ts` anticipated the shape of this ("if a refresh did not fix it, running it again immediately will not either") but the cooldown only slows the loop, it does not break it. ~~**Deploy with `DOVEBUS_AUTO_REFRESH=false` and the daily timer alone until the watch can give up**~~ — **the watch gives up now (§12.4), so this deploy note is retired**: the durable fix is to stop retrying when a refresh fails to improve the ratio, and only rearm when the static feed's SHA1 changes. Excluding the chronically unresolvable ids from the sample would also make the ratio measure staleness again rather than this.
 
 **d. Nothing locks the two refresh paths against each other.** The README installs a `Type=oneshot` timer at 04:30 *and* the API runs the reactive watch. The watch's `running` guard is in-process only and knows nothing about the systemd unit, so both can build `gtfs.new.db` at once and `rename` over each other. No `flock`, lockfile or `O_EXCL` anywhere in `refresh.ts`, `swap.ts` or the import.
 
@@ -185,7 +185,7 @@ Measured against the real servers, not read off the code. Netlify is not implica
 
 **f. Disk is not a constraint.** Peak during a refresh is the live database plus the staging copy — 1.24 GB each — plus the extraction, and `data/tmp/` is cleaned afterwards. Comfortable on the CX22's 40 GB.
 
-### 6.2 Security review — findings 2026-08-21, verified against the running API
+### 6.2 Security review — findings 2026-08-21, verified against the running API — ✅ ALL CLOSED 2026-08-24 (§12)
 
 Static review plus probes against a live server. No CRITICAL, and the codebase held up well under adversarial input (see "sound" below). Three items to fix, ordered.
 
@@ -222,7 +222,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
    **Phase 4 — original build notes:** Vite + TypeScript + MapLibre on port 5280 (`strictPort`), built with the `frontend-design` skill and mobile-first at 375×812. Full-screen petrol-tinted raster basemap (no API key), a three-detent draggable bottom sheet holding both search modes, comune/line autocomplete as an ARIA combobox, a trip list led by the line's own code plate, and a live view with the planned shape, the GPS trail, the delay badge and the freshness meter. Vehicles are a GeoJSON circle layer with `requestAnimationFrame` interpolation on the source data — never DOM markers. Above 720 px the sheet becomes a left column and the map's padding follows it. **Verified by the screenshot loop** (`npm run shots`, committed): 12 states × 6 viewports = 72 shots against the live API, two consecutive clean rounds — no horizontal scroll, no interactive target under 44 px, no unexpected console errors, every state reachable. **One design change against the plan:** freshness is recomputed on the client every frame from the bus's own `timestamp` rather than trusted from the payload — the server's bucket is correct on delivery and wrong a minute later, and a colour frozen at send time would keep claiming "recente" for a bus that had gone silent. **One observation for the owner:** with the Phase-2 bands (90/180/300 s) and the measured 116→240 s age cycle, the whole fleet still swings green→amber together on the publisher's ~120 s rhythm — the bands describe the bus better than the old ones did, but "attenuato" is still reached by healthy buses for roughly half of every cycle. See "colour cycling" below.
 6. **`shapes` import + planned-route line** — mandatory: `/api/trip/:tripId` serves the trip's `shape` polyline; the frontend draws it as the route the bus will follow.
 7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**. Auditing the *result* of those nine items then found seven more things, none of which were in the plan — including two places §10.4 claimed more than the code did: **§10.8**.
-8. **Pre-deploy fixes:** §6.2 (a) `TRUST_PROXY` default, (c) production source maps, (d) deploy config + CSP — plus the §6.1 items. §6.2 (b), the SSE CORS bug, lands **with** the change that sets the real origin.
+8. **Pre-deploy fixes ✅ COMPLETE (2026-08-24).** Every §6.1 and §6.2 item, plus the two §11.8 recorded but not done, plus §10.7's two content decisions. Three of them were changes whose success is indistinguishable from their failure without a measurement, so each is stated with the measurement: **§12**. One finding turned out to have been fixed since Phase 1 and never struck off (§6.1 (d), the refresh lock).
 9. **Phase 6 — the owner's five findings ✅ COMPLETE (2026-08-23).** Two defects found by using the product (a followed bus vanishing at street zoom; the stops list jumping under the reader), one that had been visible in every committed screenshot for weeks (AM/PM and `08/22/2026` in the search form), and the English edition of the whole site with the language switch that reaches it. Measurements, decisions and what looking caught: **§11**.
 10. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
 
@@ -391,7 +391,7 @@ What does remain: **1.1 MB of JS (299 KB gzip) executing at mount**, on phones u
 
 Curated comune pages (§10.3) · URL-addressable app state and the `SearchAction` that depends on it · `localStorage` return-visitor redirect (§10.2) · Netlify's bot prerendering extension — Googlebot has not needed it for years, and it only matters for non-Google crawlers.
 
-### 10.7 Still open before deploy — two content decisions, not code
+### 10.7 Still open before deploy — two content decisions, not code — ✅ SETTLED 2026-08-24 (§12.10)
 
 Neither blocks a build; both make the deployed site wrong if left as they are.
 
@@ -840,3 +840,181 @@ every naming layer to `coalesce(name:it, name, name:latin)` **regardless of inte
 out of scope because they come from the operator's feed. Nothing needed changing, and nothing in this
 audit proposes translating them: a bus stop is not translated, it is asked for by name.
 
+
+---
+
+## 12. The pre-deploy fixes — ✅ DONE 2026-08-24
+
+Roadmap item 8, which had stayed open across two phases: every §6.1 and §6.2 finding, plus the two
+items §11.8 recorded but did not do. Each one is stated below with what it was, what it is now, and
+**how that was checked** — because three of these are exactly the kind of change whose success is
+indistinguishable from its failure until something is measured.
+
+### 12.1 The production install could not start the server — §6.1 (a)
+
+`tsx` and `typescript` were both `devDependencies` and there is no build step, so `npm ci --omit=dev`
+left a box with nothing able to run `src/cli/serve.ts`. `tsx` is a **runtime dependency** now;
+`typescript` stays in dev, where it belongs, since only `tsc --noEmit` uses it (tsx bundles esbuild
+and needs no compiler).
+
+*Checked, not assumed:* a scratch copy of the three manifests plus the lockfile, `npm ci --omit=dev`,
+then a `.ts` file run through the installed binary — it printed. `better-sqlite3` resolves in the same
+tree. The lockfile diff is what it should be: esbuild's platform packages stop being `dev`.
+
+### 12.2 `X-Forwarded-For` was believed by default — §6.2 (a), HIGH
+
+`TRUST_PROXY` was `!== "false"`, so the unsafe mode was the default and both per-IP limits were
+evadable by inventing an address. It is now off unless a deploy says otherwise, and it takes a **hop
+count** — `DOVEBUS_TRUST_PROXY=1` — rather than only a boolean, because `true` trusts the whole chain
+and both Caddy and nginx *append* to the header instead of overwriting it, so the forged leftmost
+value is still what `proxy-addr` walks back to. A value it cannot interpret throws at startup rather
+than being guessed at.
+
+*Checked:* a test that spends the rate limit under three different forged `X-Forwarded-For` values and
+expects the third to be refused — and it was **negative-tested**, by putting the old behaviour back
+and watching it go red. Plus a companion test that the knob still works when a deploy sets it, since
+behind Caddy without it the whole region throttles as one caller.
+
+### 12.3 The live stream broke every CORS whitelist — §6.2 (b), MEDIUM
+
+`stream.ts` wrote the *configured string* into `access-control-allow-origin`. With one origin that is
+accidentally correct; with two it emits `https://a,https://b`, which no browser accepts — so the
+stream would have died for every allowed origin at the exact deploy that stopped allowing all of
+them. Both halves of the API now read one parser (`api/cors.ts`): the JSON routes through
+`@fastify/cors`, the hijacked SSE response through the same module, reflecting the caller's own
+origin and sending `vary: origin`. A disallowed origin gets **no header**, not a wrong one.
+
+*Checked:* unit tests on the parser, and an integration test that opens a real stream against a
+two-origin whitelist and reads the header off the response.
+
+### 12.4 The watch could not give up — §6.1 (c)
+
+The measured state of this source is that it broadcasts live trip ids its own static feed does not
+contain (78000–79999: 0 rows against 27,345 in the range below), so the unmatched ratio sits at ~0.17
+against a 0.10 threshold **permanently**. The cooldown only paced the resulting loop: 24 rebuilds a
+day, ~2.5 GB written each. The watch now measures the ratio *again after* the refresh it triggered,
+and a refresh that leaves it stale disarms the watch for that feed's SHA-1. Only a feed with a
+different SHA-1 rearms it — which the daily timer is what eventually brings in.
+
+This is what makes `DOVEBUS_AUTO_REFRESH=true` defensible as a default again; the deploy note in
+§6.1 (c) telling the operator to turn it off is retired.
+
+*Checked:* the old test asserted the second download after the cooldown, so it was rewritten to assert
+the opposite — no second attempt a day later — with two more tests beside it: a new SHA-1 rearms, and
+a refresh that *did* restore the match leaves the watch armed, so one good outcome cannot silence it
+until the next publication.
+
+### 12.5 §6.1 (d) was already fixed, and the plan had not noticed
+
+The finding says there is no lock anywhere in the refresh paths. There is:
+`server/src/util/lock.ts`, acquired for the whole of `refreshFeed()` at `data/tmp/import.lock` with
+`O_EXCL` and pid takeover for a lock left by a killed process — and both paths, the systemd timer and
+the API's spawned child, go through that one function. It has been there since the Phase-1 commit
+(`c33773b`); §6.1 (d) was written against a reading of the code rather than the code. Nothing to fix.
+
+### 12.6 Production source maps — §6.2 (c)
+
+`sourcemap: false`. It was emitting 2,462,968 bytes of original TypeScript beside the bundle, read by
+nobody: there is no error tracking wired to this site. `"hidden"` is the setting for the day there is.
+
+### 12.7 The deploy config that did not exist — §6.2 (d)
+
+There is now a `netlify.toml` (build command, publish directory, Node version, and the three build
+variables written down where someone setting up the site will look) and a **generated** `_headers`.
+
+Generated, not committed, for the reason the sitemap is: the CSP has to name the API's origin, and
+that origin is `VITE_API_BASE` — a build input. A hand-written copy would be correct on the machine it
+was written on and would block every request on the deploy that moved the API. The build reads the
+same `loadEnv` value the bundle is compiled with, and then **asserts that the origin it allowed is one
+the built JavaScript actually dials** — §11.9's lesson applied before the fact rather than after, and
+negative-tested by forcing the two apart and watching the build refuse.
+
+The headers: `nosniff`, `Referrer-Policy`, `X-Frame-Options`, a `Permissions-Policy` denying every
+sensor the product does not use, HSTS, immutable caching for the hashed assets, and the CSP.
+
+What the file *says* lives in `client/deploy-headers.ts` rather than in the build config: it is a
+deploy artifact with rules of its own, and being a plain function of the API's origin makes it the one
+part of the build that can be **unit tested** — which is where the three measurements below are
+written down as assertions instead of only as comments (§12.11).
+
+**And it is checked by driving it, because a CSP cannot be reviewed by reading.** `npm run
+preview:headers` serves `client/dist` applying the *emitted* `_headers` file, and `npm run
+headers-check` loads all seven pages through it and fails on any violation or console error — and
+also when a map page loaded no tiles or never called the API, since a page that loads nothing
+violates nothing. Three allowances survived that measurement, each for a stated reason:
+
+- `worker-src blob:` — MapLibre decodes tiles in a worker it builds from a blob. Without it the map
+  does not draw at all.
+- `style-src-attr 'unsafe-inline'` — the landing page sets a `--w` per freshness-band segment, which
+  is a style *attribute*. Verified by removing it: the band renders at **zero width**. Granted to
+  attributes alone, so an injected `<style>` block still has nowhere to land.
+- `upgrade-insecure-requests` **only when the API origin is `https`**. Emitted unconditionally it
+  upgraded the LAN API call — the address the site is checked from a phone with — and `connect-src`
+  then blocked it, because a private address is not "potentially trustworthy" the way `localhost` is.
+  A build aimed at an `http` API is not a deploy; making the artifact verifiable locally is worth more
+  than a directive that is redundant when every URL in it is already `https`.
+
+Result: **7 pages, nothing blocked**, both map pages having fetched tiles and called the API.
+
+### 12.8 The cost items — §6.2 (e), (f)
+
+`downloadTo` has a byte ceiling now (512 MB, against a 125 MB feed), refusing both a declared
+`content-length` over it and a body that simply keeps arriving, and it removes the partial file rather
+than leaving half a feed where the next run expects a whole one. Defence in depth: these URLs are
+hardcoded constants no client can reach.
+
+`/api/vehicles` has its own rate limit — 60/min against the general 300 — because it is the one
+endpoint that answers in hundreds of kilobytes (448 KB for the region), which priced one caller at
+~134 MB a minute. The map refreshes every 30 s and again 400 ms after a pan settles, so sixty is far
+more than a person panning hard will use.
+
+### 12.9 The two things §11.8 recorded
+
+`<lastmod>` is **gone** from the sitemap rather than computed. It was the build date on every URL on
+every deploy, including deploys that changed nothing on that page — the opposite of what the field is
+for. Omitting it says nothing; stamping it said something false, and two pages have an honest
+`UPDATED` constant while three do not.
+
+The two Italian `console.warn` strings in `map/map.ts` and `map/style.ts` are English, like every
+other developer-facing string in the repo.
+
+### 12.10 §10.7's two content decisions — settled by the owner, 2026-08-24
+
+1. **The domain is `dovebus.it`.** The placeholder was the real value all along, so `SITE_URL` needs
+   no override at build time and the committed share cards — which have the domain rasterised into
+   them — are correct as they stand.
+2. **`/privacy/` keeps naming the static host generically.** Deliberate, not pending.
+
+### 12.11 The review round
+
+`/ecc:code-review` over the whole change, after the two agent reviews (`security-reviewer`,
+`code-reviewer`) had come back with nothing above INFO. It found three things, all maintainability,
+all fixed in this same change rather than recorded:
+
+1. **`vite.config.ts` had reached 484 lines holding four separate jobs.** The headers moved out to
+   `client/deploy-headers.ts`, beside `site-url.ts` and for the same kind of reason. Proven
+   behaviour-preserving the only way that means anything for a generated artifact: the file was
+   regenerated in both shapes and diffed against a baseline taken before the move — **byte for byte
+   identical**, http build and https build alike.
+2. **The three CSP allowances existed only as comments.** `worker-src blob:`,
+   `style-src-attr 'unsafe-inline'` and the conditional `upgrade-insecure-requests` are exactly the
+   kind of thing a later tidy-up removes for looking too permissive — and nothing would have gone red
+   until someone opened the site. They are eight tests now, each carrying the measurement that
+   justifies it: the band that renders at zero width, the map that does not draw, the LAN API call
+   that gets upgraded and then blocked.
+3. **`watch.ts` threaded the same options into `timetableMatch` twice.** One `measure()`, called by
+   both readings — which have to be taken the same way, or the second is answering a slightly
+   different question than the first.
+
+Accepted rather than "fixed": `createTimetableWatch` sits over the 50-line guidance because it is a
+factory holding two named closures and its own state; splitting it further needs a three-state return
+(`clear` / `leave` / `disarm on this SHA-1`) that reads worse than what it replaces. The `console.log`
+calls in `client/scripts/*` stay, because in those tools stdout **is** the result.
+
+### 12.12 Still not code, and still open
+
+Nothing blocks a deploy in the repository. What remains is the deployment itself: `VITE_API_BASE`
+must be set to the API's public origin **for the build** (it is baked in, and the CSP is generated
+from it), `DOVEBUS_CORS_ORIGIN` and `DOVEBUS_TRUST_PROXY=1` set on the API unit, and the API served
+over `https` — a `http` API base would both fail the mixed-content rules and drop
+`upgrade-insecure-requests` from the CSP, which is the build telling the truth about what it built.

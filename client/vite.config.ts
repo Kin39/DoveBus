@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
+// The headers the built site is served with, kept in their own module: they are
+// a deploy artifact with rules of their own, and unlike the rest of this file
+// they can be unit tested — which is where the three measurements behind them
+// are written down as assertions rather than as comments alone.
+import { deployHeadersFile } from "./deploy-headers";
 // `canonical`, Open Graph, the JSON-LD, `robots.txt`, `sitemap.xml` and the
 // domain printed inside the share card all have to name the same origin. It is
 // resolved in one module so they cannot disagree — see `site-url.ts`.
@@ -8,6 +13,9 @@ import { SITE_URL } from "./site-url";
 
 /** Where an abuse or privacy request should land. Same reasoning as `SITE_URL`. */
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "ciao@dovebus.it";
+
+/** The API base the client falls back to, mirrored from `src/api/client.ts`. */
+const DEFAULT_API_BASE = "http://localhost:3200";
 
 /**
  * The day a page claims as its last change, written once and rendered twice.
@@ -287,15 +295,21 @@ function crawlerFiles(): Plugin {
         source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`,
       });
 
-      const today = new Date().toISOString().slice(0, 10);
       // Both languages, each as its own URL: an alternate is a page in its own
       // right, and a sitemap listing only one half of every pair asks a crawler
       // to find the other half by luck.
+      //
+      // **No `<lastmod>`.** It used to be the build date, on every URL, on every
+      // deploy — including the deploys that changed nothing on that page. That is
+      // the opposite of what the field is for, and a sitemap whose `lastmod` is
+      // always today is one a crawler learns to ignore. Omitting it says nothing;
+      // stamping it said something false. Two pages carry an `UPDATED` constant
+      // and three do not, so the honest per-page date does not exist to write.
       const urls = PAGES.flatMap((page) =>
         (["it", "en"] as const).map(
           (language) =>
             `  <url>\n    <loc>${SITE_URL}${page[language]}</loc>\n` +
-            `    <lastmod>${today}</lastmod>\n    <priority>${page.priority}</priority>\n  </url>`,
+            `    <priority>${page.priority}</priority>\n  </url>`,
         ),
       ).join("\n");
 
@@ -311,38 +325,103 @@ function crawlerFiles(): Plugin {
 }
 
 /**
+ * Emits `client/dist/_headers`, and refuses to emit one that lies.
+ *
+ * Generated rather than committed because the CSP has to name the API's origin,
+ * and that origin is a build input: a hand-written copy would be correct on the
+ * machine it was written on and would block every request on the deploy that
+ * moved the API. What the file *says* lives in `deploy-headers.ts`.
+ */
+function deployHeaders(apiOrigin: string): Plugin {
+  return {
+    name: "dovebus:deploy-headers",
+    apply: "build",
+    generateBundle(_options, bundle) {
+      assertCspReachesTheApi(bundle, apiOrigin);
+      this.emitFile({ type: "asset", fileName: "_headers", source: deployHeadersFile(apiOrigin) });
+    },
+  };
+}
+
+/**
+ * The one failure this file cannot report on its own: a `connect-src` naming an
+ * API the bundle does not call.
+ *
+ * The address is baked into the JavaScript at build time, and the header is
+ * built beside it — from the same variable, but through a different code path.
+ * If those two ever drift the site does not misbehave subtly: every request is
+ * blocked and the map is empty. So the built code is read back and asked whether
+ * the origin the header allows is the one it dials. §11.9's lesson, applied
+ * before rather than after: an assertion that cannot fail proves nothing.
+ */
+function assertCspReachesTheApi(
+  bundle: Record<string, { type: string; code?: string }>,
+  apiOrigin: string,
+): void {
+  const callers = Object.values(bundle).filter(
+    (chunk) => chunk.type === "chunk" && chunk.code?.includes("/api/vehicles"),
+  );
+  if (callers.length === 0) {
+    throw new Error("no chunk calls /api/vehicles — connect-src cannot be checked against it");
+  }
+  for (const chunk of callers) {
+    if (!chunk.code?.includes(apiOrigin)) {
+      throw new Error(
+        `connect-src allows ${apiOrigin}, but the built bundle calls somewhere else — ` +
+          "set VITE_API_BASE for the build rather than only for the header",
+      );
+    }
+  }
+}
+
+/**
  * Port 5280 is fixed by the plan so it never collides with another project on
  * 5173, and `strictPort` makes a collision fail loudly instead of silently
  * hopping to 5281 — the screenshot loop and `VITE_API_BASE` both assume the
  * address they were told.
  */
-export default defineConfig({
-  plugins: [siteConstants(), crawlerFiles()],
-  server: { port: 5280, strictPort: true },
-  preview: { port: 5280, strictPort: true },
-  build: {
-    target: "es2022",
-    sourcemap: true,
-    rollupOptions: {
+export default defineConfig(({ mode }) => {
+  // `loadEnv`, not `process.env`: the bundle's API address comes from the `.env`
+  // files Vite reads, so a header built from the shell's environment would name
+  // an origin the code never calls — which is a CSP that blocks the whole app.
+  const env = loadEnv(mode, CLIENT_ROOT, "VITE_");
+  const apiOrigin = new URL(env.VITE_API_BASE ?? DEFAULT_API_BASE).origin;
+
+  return {
+    plugins: [siteConstants(), crawlerFiles(), deployHeaders(apiOrigin)],
+    server: { port: 5280, strictPort: true },
+    preview: { port: 5280, strictPort: true },
+    build: {
+      target: "es2022",
       /**
-       * Five entry points, each with its own bundle. The point of the split is
-       * that **the four content pages must not import `maplibre-gl`** — the map
-       * costs 1.1 MB of JS, and a visitor arriving cold from a search result
-       * should not pay it to read a paragraph. Check it in the build output
-       * rather than assuming it: only the `mappa` chunk may be large.
+       * **Off.** `true` emitted `dist/assets/index-*.js.map` — 2,462,968 bytes of
+       * original TypeScript, published beside the bundle it explains. Nothing
+       * consumes them: there is no error tracking wired to this site, so the only
+       * reader was whoever went looking. `"hidden"` is the setting to reach for the
+       * day something does need them.
        */
-      input: {
-        landing: resolve(CLIENT_ROOT, "index.html"),
-        mappa: resolve(CLIENT_ROOT, "mappa/index.html"),
-        comeFunziona: resolve(CLIENT_ROOT, "come-funziona/index.html"),
-        fonteDati: resolve(CLIENT_ROOT, "fonte-dati/index.html"),
-        privacy: resolve(CLIENT_ROOT, "privacy/index.html"),
-        enLanding: resolve(CLIENT_ROOT, "en/index.html"),
-        enMap: resolve(CLIENT_ROOT, "en/map/index.html"),
-        enHowItWorks: resolve(CLIENT_ROOT, "en/how-it-works/index.html"),
-        enDataSource: resolve(CLIENT_ROOT, "en/data-source/index.html"),
-        enPrivacy: resolve(CLIENT_ROOT, "en/privacy/index.html"),
+      sourcemap: false,
+      rollupOptions: {
+        /**
+         * Five entry points, each with its own bundle. The point of the split is
+         * that **the four content pages must not import `maplibre-gl`** — the map
+         * costs 1.1 MB of JS, and a visitor arriving cold from a search result
+         * should not pay it to read a paragraph. Check it in the build output
+         * rather than assuming it: only the `mappa` chunk may be large.
+         */
+        input: {
+          landing: resolve(CLIENT_ROOT, "index.html"),
+          mappa: resolve(CLIENT_ROOT, "mappa/index.html"),
+          comeFunziona: resolve(CLIENT_ROOT, "come-funziona/index.html"),
+          fonteDati: resolve(CLIENT_ROOT, "fonte-dati/index.html"),
+          privacy: resolve(CLIENT_ROOT, "privacy/index.html"),
+          enLanding: resolve(CLIENT_ROOT, "en/index.html"),
+          enMap: resolve(CLIENT_ROOT, "en/map/index.html"),
+          enHowItWorks: resolve(CLIENT_ROOT, "en/how-it-works/index.html"),
+          enDataSource: resolve(CLIENT_ROOT, "en/data-source/index.html"),
+          enPrivacy: resolve(CLIENT_ROOT, "en/privacy/index.html"),
+        },
       },
     },
-  },
+  };
 });
