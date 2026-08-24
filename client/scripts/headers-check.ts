@@ -16,6 +16,33 @@
  * map pages additionally have to have fetched tiles and called the API, since a
  * page that loaded nothing violates nothing.
  */
+
+/**
+ * The two refusals that are the host's doing rather than a finding.
+ *
+ * Netlify injects a script into every page it serves — the heads-up display for
+ * logged-in teammates — and that script tries to run inline code and to inject
+ * an inline stylesheet. This CSP blocks both, which is the correct outcome: it
+ * is a widget the page never asked for. Checked, not assumed — neither the
+ * served HTML nor the local build contains an inline `<script>` or `<style>`, so
+ * both arrive at runtime and both come from `/.netlify/scripts/hud`.
+ *
+ * Ignored by the **hash of each exact snippet**, not by "inline is fine". The
+ * browser reports the hash it would need in order to allow it, so this allowlist
+ * names two specific pieces of code: the day Netlify changes what it injects,
+ * the hash changes and the check goes red again — which is what should happen,
+ * because something new is being put into the pages.
+ */
+const NETLIFY_HUD_HASHES = [
+  "sha256-mTJ4cJaTm2Gw95GeXEpZdvEEY9ybh6FZu1bwcNE7QlY=", // the inline script it runs
+  "sha256-3y5TlF5zG6/2W5bLJcFMMnGWSDYZMPAJMXGh07elcnY=", // the inline style it injects
+] as const;
+
+/** Is this console line one of those two, and nothing else? */
+function isNetlifyHud(text: string): boolean {
+  return NETLIFY_HUD_HASHES.some((hash) => text.includes(hash));
+}
+
 import { chromium } from "playwright";
 
 const BASE = process.env.HEADERS_BASE ?? "http://localhost:5290";
@@ -42,6 +69,17 @@ interface PageOutcome {
   readonly vehicleCalls: number;
 }
 
+/**
+ * True when every inline thing this page was refused was the host's.
+ *
+ * Its own predicate so the exemption cannot quietly widen: the console errors it
+ * reads have already had the two known hashes filtered out, so one *unexplained*
+ * inline refusal left standing makes this false and the violations count again.
+ */
+function onlyTheHostWasRefusedInline(consoleErrors: readonly string[]): boolean {
+  return consoleErrors.every((error) => !error.toLowerCase().includes("inline"));
+}
+
 async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path: string) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
@@ -57,7 +95,9 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
     });
   });
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "error" && !isNetlifyHud(message.text())) {
+      consoleErrors.push(message.text());
+    }
   });
   page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error.message}`));
 
@@ -70,8 +110,17 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
 
   const outcome: PageOutcome = {
     path,
-    violations: await page.evaluate(
-      () => (window as unknown as { __violations: string[] }).__violations,
+    // The paired `securitypolicyviolation` event carries no hash, so the same two
+    // refusals are recognised by what they blocked — inline, on a page whose only
+    // unexplained inline refusals are none. The console lines above identify them.
+    violations: (
+      await page.evaluate(() => (window as unknown as { __violations: string[] }).__violations)
+    ).filter(
+      (violation) =>
+        !(
+          (violation === "script-src <- inline" || violation === "style-src <- inline") &&
+          onlyTheHostWasRefusedInline(consoleErrors)
+        ),
     ),
     consoleErrors,
     tiles: await page.evaluate(
