@@ -31,11 +31,23 @@ Every command below is run as `root` unless it says otherwise.
 
 ## 1. First login, and closing the door behind you
 
+**The user is probably not `root`.** OVH's Ubuntu images have no root SSH login at
+all: the account is `ubuntu`, its password arrives from the provider, and the
+first login forces a password change — which `ssh-copy-id` cannot do, because it
+has no terminal to type the new one into. So log in normally first, change the
+password, and only then install the key.
+
 ```bash
-ssh root@YOUR_SERVER_IP
+ssh ubuntu@YOUR_SERVER_IP
 ```
 
-If the provider emailed you a root password, replace it with your key now:
+```bash
+ssh-copy-id ubuntu@YOUR_SERVER_IP
+```
+
+Everything below that says "as root" means after `sudo -i`.
+
+If your provider does give you root and a password, replace it with your key now:
 
 ```bash
 mkdir -p ~/.ssh && nano ~/.ssh/authorized_keys   # paste your public key, save
@@ -93,8 +105,27 @@ to the machine. It needs nothing but its own directory:
 adduser --system --group --home /srv/dovebus dovebus
 ```
 
+**The repository is private**, so the machine needs its own read-only access — a
+deploy key, generated on the VPS and registered on the repo. Read-only is not a
+formality: this server never pushes anything.
+
 ```bash
-git clone https://github.com/Kin39/DoveBus.git /srv/dovebus && chown -R dovebus:dovebus /srv/dovebus
+install -d -o dovebus -g dovebus -m 700 /srv/dovebus-keys && sudo -u dovebus ssh-keygen -q -t ed25519 -N "" -C "dovebus-deploy@vps" -f /srv/dovebus-keys/id_ed25519 && cat /srv/dovebus-keys/id_ed25519.pub
+```
+
+Register that public key on GitHub — *Settings → Deploy keys → Add deploy key*,
+with **write access left unchecked** — or with the CLI:
+
+```bash
+gh api -X POST repos/OWNER/REPO/keys -f title="dovebus-vps (read-only)" -f key="PASTE_THE_PUBLIC_KEY" -F read_only=true
+```
+
+```bash
+install -d -o dovebus -g dovebus -m 755 /srv/dovebus && sudo -u dovebus -H env GIT_SSH_COMMAND="ssh -i /srv/dovebus-keys/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone git@github.com:OWNER/REPO.git /srv/dovebus
+```
+
+```bash
+sudo -u dovebus git -C /srv/dovebus config core.sshCommand "ssh -i /srv/dovebus-keys/id_ed25519 -o IdentitiesOnly=yes"
 ```
 
 ```bash
@@ -288,6 +319,15 @@ HEADERS_BASE=https://dovebus.it npm run headers-check
 
 Then open `https://dovebus.it/mappa/` and watch a bus move. That is the only
 test that covers everything at once.
+
+**Two things will look broken and are not.** A DNS provider can publish records
+several minutes after its own panel shows them, and a record's old TTL still has
+to expire in every resolver that cached it — so the site can be complete, with a
+valid certificate, and still unreachable by name for the best part of an hour.
+Before debugging any of it, check what the *authoritative* server says
+(`dig +short @its-nameserver dovebus.it A`) and try the destination directly
+(`curl --resolve dovebus.it:443:THE_IP https://dovebus.it/`). If those two are
+right, nothing is wrong and the answer is to wait.
 
 ## Living with it
 

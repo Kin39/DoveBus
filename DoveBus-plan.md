@@ -238,7 +238,7 @@ Unit: outlier bbox filter; freshness bucketing; comune PIP + text fallback; **`c
 7. **Phase 5 — public web surface ✅ COMPLETE (2026-08-22).** App split to `/mappa/`, landing at `/`, three trust pages, full head + JSON-LD block, `og-image`, manifest, `robots.txt`, `sitemap.xml`, and the CC-BY attribution moved out of the JS footer into every served document. Built with the `frontend-design` skill, verified by a new content-page screenshot loop and a rerun of the app one. Item-by-item outcome, deviations and what looking caught that the loop did not: **§10.4**. Auditing the *result* of those nine items then found seven more things, none of which were in the plan — including two places §10.4 claimed more than the code did: **§10.8**.
 8. **Pre-deploy fixes ✅ COMPLETE (2026-08-24).** Every §6.1 and §6.2 item, plus the two §11.8 recorded but not done, plus §10.7's two content decisions. Three of them were changes whose success is indistinguishable from their failure without a measurement, so each is stated with the measurement: **§12**. One finding turned out to have been fixed since Phase 1 and never struck off (§6.1 (d), the refresh lock).
 9. **Phase 6 — the owner's five findings ✅ COMPLETE (2026-08-23).** Two defects found by using the product (a followed bus vanishing at street zoom; the stops list jumping under the reader), one that had been visible in every committed screenshot for weeks (AM/PM and `08/22/2026` in the search form), and the English edition of the whole site with the language switch that reaches it. Measurements, decisions and what looking caught: **§11**.
-10. Deploy: Hetzner backend + Netlify frontend + CC-BY attribution.
+10. **Deploy ✅ LIVE 2026-08-24** — https://dovebus.it and https://api.dovebus.it. Not Hetzner: their cheap line was gone (§6). An OVH VPS-1 instead — 2 vCore, 4 GB, 40 GB NVMe, **€5,48/mese IVA inclusa, senza impegno**, the same price Aruba wanted for half the machine. What was done, and the two faults only a deploy could find: **§13**.
 
 ### Phase 2+
 - **Expose the timetable match rate as a metric**, not only as a health flag — it moved 3% → 21% → 0.3% across the 2026-08-15 republish and was the only thing that noticed.
@@ -1025,10 +1025,85 @@ factory holding two named closures and its own state; splitting it further needs
 (`clear` / `leave` / `disarm on this SHA-1`) that reads worse than what it replaces. The `console.log`
 calls in `client/scripts/*` stay, because in those tools stdout **is** the result.
 
-### 12.12 Still not code, and still open
+### 12.12 Still not code, and still open — ✅ CLOSED by the deploy (§13)
 
-Nothing blocks a deploy in the repository. What remains is the deployment itself: `VITE_API_BASE`
-must be set to the API's public origin **for the build** (it is baked in, and the CSP is generated
-from it), `DOVEBUS_CORS_ORIGIN` and `DOVEBUS_TRUST_PROXY=1` set on the API unit, and the API served
-over `https` — a `http` API base would both fail the mixed-content rules and drop
-`upgrade-insecure-requests` from the CSP, which is the build telling the truth about what it built.
+Nothing blocked a deploy in the repository. What remained was the deployment itself: `VITE_API_BASE`
+set to the API's public origin **for the build** (it is baked in, and the CSP is generated from it),
+`DOVEBUS_CORS_ORIGIN` and `DOVEBUS_TRUST_PROXY=1` on the API unit, and the API over `https`. All
+three are in place and each was verified against the running system rather than the configuration
+file — see §13.
+
+---
+
+## 13. The deploy — ✅ LIVE 2026-08-24
+
+`https://dovebus.it` · `https://api.dovebus.it`
+
+**Not Hetzner.** §6 priced a CX22 at €3.99/mo; in their console that line is "Cost-Optimized" and
+unavailable, and what remained started at €14.02. The machine is an **OVH VPS-1** — 2 vCore, 4 GB,
+40 GB NVMe, Strasbourg — at **€5,48/mese IVA inclusa, no commitment**, which is exactly what Aruba
+charges for one vCPU and 2 GB. Latency measured from Tuscany: **31 ms**, inside data that is up to
+two minutes old by construction.
+
+What runs where: Netlify serves ten static pages and rebuilds on every push to `main`; the VPS runs
+one Node process behind Caddy, holding a 1.19 GB SQLite timetable and both realtime pollers, with a
+systemd timer rebuilding the timetable nightly at 04:30. `DEPLOY.md` is the runbook, and it was
+followed rather than written afterwards — the two places it was wrong are noted below.
+
+**The security posture, verified by probing rather than by reading the config.** Password login over
+SSH is refused (`Permission denied (publickey)`); port 3200 does not answer from outside; the API
+reflects `https://dovebus.it` to that origin and sends **no** `access-control-allow-origin` at all to
+one that is not listed. Ubuntu's cloud images keep their real SSH settings in two files under
+`sshd_config.d/` that would have re-enabled passwords behind `sshd_config`'s back — found by asking
+the running daemon (`sshd -T`) instead of trusting the file.
+
+### 13.1 Two faults that only a deploy could find
+
+**Every page but the home redirected to itself, for ever.** `_redirects` marked its bare-to-slash
+rules with `!` — "apply even when the file exists" — and Netlify matches a rule's path with and
+without its trailing slash. So `/mappa/` matched the rule written for `/mappa` and was sent to
+itself: fifty hops and the client gives up. The map, the three content pages and the whole English
+tree were unreachable; the home was fine, which is why the first deploy looked like it had worked.
+Nothing local could have caught it: the dev server does not read `_redirects`, `serve-dist.ts`
+implements headers and not redirects, and the file only becomes executable code on Netlify. Fixed by
+dropping the force flag, which also restores what those lines were for — the existing file wins, and
+only the bare form is redirected. Verified on all ten URLs: 200, zero redirects, and the bare forms
+still redirect in a single hop.
+
+**Netlify injects a widget into every page**, and the CSP blocks it. The heads-up display for
+logged-in teammates loads from `/.netlify/scripts/hud` and then tries to run inline code and inject
+an inline stylesheet — both correctly refused. Not a fault in the site, but it made `headers-check`
+red on every deploy, and a check that always fails is one people stop reading. It now knows those two
+snippets by the hash the browser reports for each; a change to what Netlify injects turns it red
+again, which is the point. Confirmed as the host's and not ours by diffing the served HTML against
+the local build: no inline `<script>` or `<style>` in either, and the only content difference is
+`CONTACT_EMAIL`, correctly set in production.
+
+### 13.2 Where the runbook was wrong, and now is not
+
+`DEPLOY.md` assumed a `root` login and an anonymous `git clone`. Neither holds: OVH's Ubuntu image
+has no root SSH and forces a password change on first login as `ubuntu`, and this repository is
+private, so the server needs a **read-only deploy key** — generated on the VPS and registered on the
+repo, which is the right shape anyway since the machine only ever needs to read.
+
+### 13.3 Measured on the deployed system
+
+| | |
+|---|---|
+| First import on the VPS | **5m 22s** (3m 44s of rebuild), 1.19 GB, 282,329 trips |
+| `/healthz` | `ok` — 1,157 live vehicles, 734 of 773 trips matched, feed valid 20 more days |
+| `https://api.dovebus.it/healthz` | HTTP 200 in **155 ms** from the public internet |
+| The ten pages | 200, zero redirects, both languages |
+| `headers-check` against production | **7 pages, nothing blocked**; both maps `tiles=7 apiCalls=2` |
+| TLS | Let's Encrypt, one certificate covering `dovebus.it` and `www.dovebus.it` |
+| Run cost | €5,48/mese + the domain |
+
+### 13.4 Recorded, not done
+
+**DNS is slow in two places, and neither is a fault.** Aruba published the records about six minutes
+after the panel showed them, and the apex's own TTL was an hour — so the site was reachable by IP,
+with a valid certificate, for 38 minutes before any resolver would say so. Worth knowing before
+anyone debugs a working deploy.
+
+**The `ubuntu` password still exists.** SSH refuses it, but the OVH KVM console does not. Changing it
+costs thirty seconds and closes the last thing anyone was ever told over email.

@@ -15,7 +15,11 @@ search modes, live trip view with trail, planned route, freshness and delay
 share cards (Phase 5), the owner's five findings and the English edition of the
 whole site (Phase 6), and the pre-deploy pass: proxy trust, CORS on the live
 stream, a refresh watch that gives up, and the headers the site is served with
-(Phase 7). What remains is the deployment itself.
+(Phase 7).
+
+**Live since 2026-08-24:** [dovebus.it](https://dovebus.it), with the API at
+`api.dovebus.it` on a small OVH VPS behind Caddy. The runbook that put it there
+is [`DEPLOY.md`](DEPLOY.md); what the deploy itself found is §13 of the plan.
 
 ---
 
