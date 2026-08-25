@@ -1,14 +1,16 @@
 # Deploying DoveBus
 
-Two machines and one domain.
+Two machines, one domain, three names.
 
 ```
 dovebus.it        →  Netlify         static pages, built from client/
 api.dovebus.it    →  a small VPS     Caddy (TLS) → Node on 127.0.0.1:3200 → SQLite
+stats.dovebus.it  →  the same VPS    Caddy (TLS) → GoatCounter on 127.0.0.1:8081 → SQLite
 ```
 
 The frontend is a bundle of files; the API is one always-on process holding a
-1.2 GB timetable and two realtime pollers. Nothing else is running: no database
+1.2 GB timetable and two realtime pollers; the counter is a single static Go
+binary with a SQLite file of its own. Nothing else is running: no database
 server, no queue, no container runtime.
 
 Measured, so you can size any machine against it: the API sits at **133 MB RSS**,
@@ -24,7 +26,8 @@ Every command below is run as `root` unless it says otherwise.
 
 - **The domain.** `dovebus.it` must be registered and its DNS editable by you.
   The API needs `api.dovebus.it` pointing at the VPS **before** Caddy first runs,
-  or the certificate request fails.
+  or the certificate request fails; `stats.dovebus.it` has to be there before the
+  block in §8, for the same reason.
 - **The VPS.** Ubuntu 24.04 LTS (or 26.04 — see the note in step 2), 2 GB RAM
   minimum, its IPv4 and IPv6 addresses to hand.
 - **Your SSH public key**, ready to paste.
@@ -235,11 +238,13 @@ block it returns — it tells you which of the two feeds it is unhappy about.
 |---|---|---|
 | A | `api` | the VPS IPv4 |
 | AAAA | `api` | the VPS IPv6 |
+| A | `stats` | the VPS IPv4 |
+| AAAA | `stats` | the VPS IPv6 |
 
 Wait until this answers with your server's address:
 
 ```bash
-dig +short api.dovebus.it
+dig +short api.dovebus.it && dig +short stats.dovebus.it
 ```
 
 Only then install Caddy:
@@ -262,6 +267,12 @@ apt update && apt install -y caddy
 
 ```bash
 cat > /etc/caddy/Caddyfile <<'EOF'
+# No `log` directive anywhere in this file, and that is deliberate. Caddy writes
+# no access log until it is asked to, and asking would write every request URL
+# to disk — including the API search endpoints, whose query strings carry the
+# line and the two comuni somebody searched for. The privacy page promises that
+# "a successful search leaves no trace". This absence is what makes that true.
+
 api.dovebus.it {
 	reverse_proxy 127.0.0.1:3200
 
@@ -274,8 +285,23 @@ api.dovebus.it {
 		}
 	}
 }
+
+stats.dovebus.it {
+	# GoatCounter listens on loopback only; this is the only way in. It reads the
+	# scheme from X-Forwarded-Proto, which Caddy sets by default, and that is what
+	# makes it mark its own admin cookie Secure. Those cookies belong to this host
+	# and are never sent to dovebus.it — which is what keeps the "no cookies"
+	# promise true for readers of the site itself.
+	reverse_proxy 127.0.0.1:8081
+
+	encode zstd gzip
+}
 EOF
 ```
+
+The stats block will fail to get a certificate until §8 has installed the thing
+it proxies to. If you are following this in order, come back and reload Caddy
+after that section rather than debugging a 502 here.
 
 ```bash
 systemctl reload caddy && curl -s https://api.dovebus.it/healthz | head -c 200
@@ -295,27 +321,166 @@ variables**:
 | `SITE_URL` | `https://dovebus.it` |
 | `VITE_API_BASE` | `https://api.dovebus.it` |
 | `CONTACT_EMAIL` | the address you want in the footer and the privacy page |
+| `VITE_STATS_BASE` | `https://stats.dovebus.it` — **omit it and the site counts nothing** |
 
-**All three are baked into the build**, not read at runtime — `VITE_API_BASE`
+**All four are baked into the build**, not read at runtime — `VITE_API_BASE`
 ends up inside the JavaScript *and* inside the `connect-src` of the generated
 `_headers`. Change either and you rebuild; the build refuses to publish a CSP
 that names an API the bundle does not call.
 
+`VITE_STATS_BASE` works the same way and fails the same way in both directions.
+Unset, the counter is dropped from the bundle by the tree-shaker and no counter
+origin appears in the CSP — a build that counts nothing, which is what every
+build that is not this deploy should be. Set, the counter ships and the header
+allows it. If those two ever disagree the build stops rather than publishing a
+site that fires a request its own CSP blocks, or a header advertising a counter
+that was optimised away.
+
 Then point the apex domain at Netlify (their dashboard gives you the records)
 and deploy.
 
-## 8. Proving it works
+## 8. The pageview counter
+
+A GoatCounter of our own, on the same machine, reachable at `stats.dovebus.it`.
+It exists to answer one question — is anybody using this — and it is configured
+so that answering it costs a reader nothing that could identify them.
+
+**Why not the hosted one, or anything else:** a single static Go binary with
+SQLite fits beside a 1.2 GB timetable on a 4 GB machine, which Plausible CE
+(Postgres *and* ClickHouse) and Matomo (2 GB for the app server alone, plus
+MySQL) do not. Matomo also writes cookies and keeps the IP in the clear by
+default. Self-hosted means no processor, no contract, no transfer out of the EU.
+
+```bash
+adduser --system --group --home /var/lib/goatcounter goatcounter
+```
+
+The binary. There is **no checksum file published** with the release, so the
+digest below is one recorded here at install time: it cannot prove the first
+download, but every upgrade after it can be checked against a value that was
+written down rather than fetched alongside the thing it vouches for.
+
+```bash
+cd /tmp && curl -fsSL -o gc.gz https://github.com/arp242/goatcounter/releases/download/v2.7.0/goatcounter-v2.7.0-linux-amd64.gz && gzip -dc gc.gz > goatcounter && sha256sum goatcounter
+```
+
+    bb753bad7cdf9d75b8f1a5183a570dcdcc8705f2419ab40698f4c752796d6567  goatcounter
+
+```bash
+install -o root -g root -m 755 /tmp/goatcounter /usr/local/bin/goatcounter && rm -f /tmp/gc.gz /tmp/goatcounter && goatcounter version
+```
+
+```bash
+install -d -o goatcounter -g goatcounter -m 750 /var/lib/goatcounter && sudo -u goatcounter goatcounter db migrate -db "sqlite+/var/lib/goatcounter/db.sqlite3" -createdb all
+```
+
+The `sqlite3` command-line tool is not on a stock Ubuntu image and is not needed
+to *run* any of this — GoatCounter and the API both link their own SQLite. It is
+needed to **back the counter up**, which is the one thing here nobody else holds
+a copy of, so install it now rather than discovering it is missing on the day it
+matters:
+
+```bash
+apt install -y sqlite3
+```
+
+The unit, on the same shape as `dovebus-api.service`. `-tls http` is not a
+mistake: Caddy terminates TLS, and GoatCounter reads the scheme back out of the
+`X-Forwarded-Proto` header Caddy sets — which is how it decides to mark its own
+admin cookie `Secure`.
+
+**`-domain stats.dovebus.it` must be exactly that.** It is what `cookieDomain()`
+falls back to when it stamps the admin session cookie. Written as `dovebus.it`
+or `.dovebus.it` it would produce a parent-domain cookie that *is* sent to the
+site itself, and the privacy page's flattest promise would become false without
+anything appearing to break.
+
+```bash
+cat > /etc/systemd/system/goatcounter.service <<'EOF'
+[Unit]
+Description=GoatCounter, the DoveBus pageview counter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=goatcounter
+Group=goatcounter
+WorkingDirectory=/var/lib/goatcounter
+ExecStart=/usr/local/bin/goatcounter serve \
+  -listen 127.0.0.1:8081 \
+  -tls http \
+  -db "sqlite+/var/lib/goatcounter/db.sqlite3" \
+  -domain stats.dovebus.it \
+  -smtp stdout
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/goatcounter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+```bash
+systemctl daemon-reload && systemctl enable --now goatcounter && curl -s -H "Host: stats.dovebus.it" localhost:8081/status
+```
+
+Now reload Caddy so the `stats.dovebus.it` block from §6 can get its certificate:
+
+```bash
+systemctl reload caddy && curl -s https://stats.dovebus.it/status
+```
+
+The site and its login. **`-smtp stdout` means no mail is ever sent**, so there
+is no password reset: the password chosen here is the only way in.
+
+```bash
+sudo -u goatcounter goatcounter db create site -db "sqlite+/var/lib/goatcounter/db.sqlite3" -vhost stats.dovebus.it -user.email YOUR_EMAIL
+```
+
+### What it is allowed to collect
+
+Set under *Settings → Data collection* on the dashboard, and these are choices
+rather than defaults:
+
+| Setting | State | Why |
+|---|---|---|
+| Individual pageviews | **off** | The one that matters. With it off no per-visit row is ever written — only hourly totals — so there is no archive to retain, to leak, or to promise a deletion window for. |
+| Sessions | on | An in-memory hash of IP and User-Agent, held eight hours so a reload is not a second reader. Never written to disk; neither is the IP or the User-Agent. |
+| Referrer | on | Where readers come from, which is half the point. |
+| User-Agent | on | Browser and system *names*, derived; the header itself is not stored. |
+| Size | on | Screen width, in bands. |
+| Country | on | Country only. |
+| Region | **off** | "Toscana" on a map of Tuscany is not information, and it is the finest-grained location on offer. |
+| Language | **off** | Not needed, and one more thing that narrows a crowd. |
+| Data retention | **unset** | Deliberate, and it is not the lax choice. GoatCounter's retention deletes the *aggregates* too, so a 90-day window would throw away the year-on-year trend this exists to produce. With individual pageviews off there is nothing personal left to expire. |
+| Public statistics | **public** | The privacy page claims what is counted; this is what makes the claim checkable by the people it is about. |
+
+## 9. Proving it works
 
 ```bash
 curl -s https://api.dovebus.it/healthz | head -c 400
 ```
 
 From your own machine, against the deployed site — this drives every page in a
-real browser through the real headers and fails on anything the CSP blocked:
+real browser through the real headers and fails on anything the CSP blocked. It
+also asks each page two questions about the counter: did it count, and did it
+leave anything behind. A cookie, a `localStorage` key or a `sessionStorage` key
+on any page fails the run, because that is the privacy page's plainest promise
+and this is the only place it is checked by asking a browser rather than by
+reading the source.
 
 ```bash
 HEADERS_BASE=https://dovebus.it npm run headers-check
 ```
+
+Pointed at a local preview instead, the "did it count" half is skipped on
+purpose: the counter refuses private addresses, so no beacon is *supposed* to
+fire there, and demanding one would be demanding it misbehave. The storage half
+is checked either way.
 
 Then open `https://dovebus.it/mappa/` and watch a bus move. That is the only
 test that covers everything at once.
@@ -336,6 +501,10 @@ journalctl -u dovebus-api -f          # what the API is doing
 ```
 
 ```bash
+journalctl -u goatcounter -f          # what the counter is doing
+```
+
+```bash
 systemctl list-timers dovebus-refresh # when the timetable next rebuilds
 ```
 
@@ -348,7 +517,7 @@ timetable has expired, or too many buses on the road are running trips it has
 never heard of — the second is the signal that noticed a mid-window republish
 that every expiry check had missed.
 
-**Updating:**
+**Updating the app:**
 
 ```bash
 cd /srv/dovebus && sudo -u dovebus git pull && sudo -u dovebus npm ci --omit=dev && systemctl restart dovebus-api
@@ -356,3 +525,33 @@ cd /srv/dovebus && sudo -u dovebus git pull && sudo -u dovebus npm ci --omit=dev
 
 A schema change is the only case that also needs `npm run import`; `/healthz`
 says `staleSchema` when that is what happened.
+
+**Backing up the counter.** It is the only data on this machine that cannot be
+rebuilt from somewhere else: the timetable is re-downloaded every night from the
+operator, and the site is in git, but nobody else has these numbers. Use SQLite's
+own backup rather than `cp` — the file is being written to while you read it:
+
+```bash
+sudo -u goatcounter sqlite3 /var/lib/goatcounter/db.sqlite3 ".backup /var/lib/goatcounter/backup.sqlite3" && sudo gzip -f /var/lib/goatcounter/backup.sqlite3
+```
+
+Then copy `backup.sqlite3.gz` off the machine. `.backup` rather than `cp`
+because the database runs in WAL mode: there is a `-wal` file beside it holding
+writes that have not landed yet, and copying the one file without the other
+copies a database that is missing its most recent hours.
+
+**Updating the counter.** Releases are roughly twice a year and the binary is
+self-contained, so this is a download, a checksum, and a restart. Take a backup
+first: `-automigrate` is deliberately *not* in the unit, so migrations are a
+thing you run and watch rather than something that happens during a restart.
+
+```bash
+cd /tmp && curl -fsSL -o gc.gz https://github.com/arp242/goatcounter/releases/download/vX.Y.Z/goatcounter-vX.Y.Z-linux-amd64.gz && gzip -dc gc.gz > goatcounter && sha256sum goatcounter
+```
+
+```bash
+systemctl stop goatcounter && install -o root -g root -m 755 /tmp/goatcounter /usr/local/bin/goatcounter && sudo -u goatcounter goatcounter db migrate -db "sqlite+/var/lib/goatcounter/db.sqlite3" all && systemctl start goatcounter && curl -s https://stats.dovebus.it/status
+```
+
+Record the new digest in §8 when you do, so the next upgrade has something to
+check against.

@@ -1108,3 +1108,143 @@ anyone debugs a working deploy.
 
 **The `ubuntu` password still exists.** SSH refuses it, but the OVH KVM console does not. Changing it
 costs thirty seconds and closes the last thing anyone was ever told over email.
+
+---
+
+## 14. The pageview counter — planned and ✅ LIVE 2026-08-25
+
+`https://stats.dovebus.it` · public dashboard · GoatCounter v2.7.0, self-hosted
+
+The site had no analytics, so its traffic was unknown, and the question that needed answering before
+renewing hosting and domain — is anybody using this — had no evidence behind it either way. The
+constraint was that answering it must not cost a reader anything, and must not require the privacy
+page to soften a single sentence it had already published.
+
+**GoatCounter, on the VPS that already exists.** A single static Go binary with SQLite fits beside a
+1.19 GB timetable on a 4 GB machine; Plausible CE (Postgres *and* ClickHouse) and Matomo (2 GB for
+the app server alone, plus MySQL) do not. Matomo also writes cookies and keeps the IP in the clear
+by default. Self-hosted means no processor, no contract, no transfer outside the EU, and €0: the
+subdomain is a DNS record, not a purchase. It runs as its own unprivileged user on 127.0.0.1:8081
+behind the Caddy that already terminates TLS for the API.
+
+### 14.1 The counter is ours, and that was not the plan
+
+The plan said: vendor GoatCounter's `count.js`, patch out the `localStorage` read, serve it from
+Netlify. Reading the file first changed the answer twice.
+
+**The `localStorage` problem is bigger than one read.** Besides the read at load, lines 237–245
+*write* `skipgc` when a URL ends in `#toggle-goatcounter`. Anyone following such a link to
+`dovebus.it` would leave a key behind, and "close the tab and nothing is left behind" would be false
+in a way nobody would notice. That write **is** GoatCounter's opt-out, so removing it meant owing the
+reader a replacement.
+
+**Serving it from `stats.dovebus.it` was never possible.** `count.js` is embedded in the Go binary,
+so serving it from GoatCounter means serving it *unpatched*. That option and the promise were
+mutually exclusive, which the plan had treated as an open question.
+
+So the counter is forty lines of our own TypeScript speaking the same wire protocol: **1.24 kB
+gzipped** against 2.4 kB for the trimmed original and 3.33 kB for the untouched one, testable with
+the rest of the suite, and every field on the wire chosen here rather than inherited. Global Privacy
+Control is the opt-out that replaces `skipgc`, and it costs no storage.
+
+**It added no request.** The plan claimed the four content pages shipped no JavaScript at all; they
+already loaded `/src/site/site.ts` from the shared `head-common` partial — the earlier check had
+grepped the pages and not the partial they include. The counter is an import in `site.ts` and
+`main.ts`, so it joined the shared chunk that already existed: **0.40 kB → 1.24 kB gzipped, and the
+same two requests as before.**
+
+### 14.2 The search terms, and the three places they were kept out of
+
+The privacy page promises that "a successful search leaves no trace", and the search endpoints carry
+the line and the two comuni as query parameters. Three separate things had to be true.
+
+**In the page.** Upstream sends the query string twice — as `q`, and glued onto the path — and the
+server stores the *path* with its query attached, stripping only known ad-tracking parameters
+(`hit.go`, `cleanPath`). Our counter takes the path from the page's own `canonical`, which
+`assertPairing` already fails the build over, and **refuses outright** any path carrying a `?` or a
+`#` rather than cleaning it up. Refusing rather than trimming is the point: trimming would mean
+holding an opinion about which parameters are safe to keep, which is the judgement upstream makes
+and gets wrong.
+
+**In Caddy.** Caddy writes no access log until asked. It has never been asked, and the Caddyfile now
+carries a comment at the top saying why it must not be — a `log` directive there would write every
+API request URL, search terms included, to disk.
+
+**On the wire, measured on the live site.** A real search, driven in a browser:
+
+```
+API call    https://api.dovebus.it/api/search/od?comuneA=Firenze&comuneB=Prato&date=…
+page URL    https://dovebus.it/mappa/          (unchanged)
+counting    0 new requests
+database    0 rows in `paths` matching Firenze, Prato, or "?"
+```
+
+### 14.3 The four decisions
+
+| | Decided | Why |
+|---|---|---|
+| Track `/mappa/` too | **yes** | It is where the traffic is, and its URL is always `/mappa/`: the search terms live in the query of the *API* request and the address bar never changes, so counting it records "someone opened the map" and nothing else. |
+| Retention | **individual pageviews off, no expiry set** | GoatCounter's retention deletes the *aggregates* too, so a 90-day window would throw away the year-on-year trend this exists to produce. With `CollectHits` off no per-visit row is ever written, so there is no archive to expire — verified: `hits` holds 0 rows while `hit_counts` fills. |
+| Dashboard | **public** | The privacy page claims what is counted; this makes the claim checkable by the people it is about. |
+| Admin cookie | **does not touch readers** | Proved rather than reasoned: `curl -D-` against the live `/count` returns `access-control-allow-origin`, `content-type: image/gif` and **no `set-cookie` at all**. Session cookies are set only by the dashboard handlers, on the host serving them. Hence `-domain stats.dovebus.it` written exactly — as `dovebus.it` it would produce a parent-domain cookie that *is* sent to the site, and the promise would break silently. |
+
+Also off: region (a "Toscana" on a map of Tuscany is not information, and it is the finest-grained
+location on offer) and language. On: sessions, referrer, User-Agent-derived names, screen width,
+country.
+
+### 14.4 Assertions that can fail, and were made to
+
+The project's rule is that an assertion which cannot fail proves nothing, so each new one was
+checked by breaking the thing it guards.
+
+| Assertion | Broken by | Result |
+|---|---|---|
+| The path refuses a query string | accepting one, as upstream does | 2 tests red |
+| Global Privacy Control is honoured | deleting the check | 1 test red |
+| Bundle and CSP agree | removing the import with `VITE_STATS_BASE` set | build stops: *"the counter was tree-shaken away and the dashboard would sit at zero"* |
+
+`img-src` is granted alongside `connect-src` because the beacon is a POST and its fallback is a
+one-pixel image; allowing only the first works in the browser it was tested in and counts nobody in
+the rest. `script-src` stays `'self'` — the counter is bundled, not fetched from the stats host.
+
+`headers-check` now asks every page two more questions: did it count, and did it leave anything
+behind. A cookie or a storage key on any page fails the run. Against a local preview the first half
+is skipped on purpose — the counter refuses private addresses, so demanding a beacon there would be
+demanding it misbehave.
+
+### 14.5 Verified on the live site
+
+| | |
+|---|---|
+| `headers-check` against production | **7 pages, nothing blocked**, `counted=1` on every one |
+| What the wire carries | `p=/mappa/  t=…  s=390  b=153  rnd=…` — no `q`, no query string |
+| Storage, tab open then closed and reopened | `{"cookie":"","local":[],"session":[]}`, and no cookies in the browser context |
+| Search terms in the counter's database | none |
+| `hits` / `hit_counts` | 0 individual rows / aggregates filling |
+| `location_stats` | `IT` — country, no region |
+| `language_stats` | row present, field **empty** |
+| Deploy | live 30 s after push |
+| Run cost | unchanged: €5,48/mese + the domain |
+
+### 14.6 Recorded, not done
+
+**GoatCounter strips trailing slashes from paths.** `p=/verifica-installazione/` was stored as
+`/verifica-installazione`, so the dashboard will show `/mappa` where the site calls that page
+`/mappa/` everywhere else — in `PAGES`, in the sitemap, in every `canonical`. Cosmetic, and it only
+affects reading the dashboard.
+
+**`VITE_STATS_BASE` is set for Production only.** Netlify pre-fills the same value into all five
+deploy contexts, and its own hint recommends matching Deploy Previews to production. Here that is
+exactly wrong: a preview is publicly reachable, so the private-address filter does not stop it, and
+it carries production's `canonical` — its pageviews would be indistinguishable from the real site's
+in the same dashboard. The four non-production contexts are left empty, which `vite.config.ts`
+treats the same as unset.
+
+**`headers-check`'s Netlify-HUD allowlist is narrower than the HUD.** It records two hashes and
+passes at 390×844, but the screenshot loop at 1280×800 sees a different inline-style hash. The
+exemption failing closed is the safe direction, so nothing is broken — but the allowlist describes
+one viewport, not the widget.
+
+**No checksum is published with GoatCounter's releases.** The digest of v2.7.0's binary is recorded
+in `DEPLOY.md` at install time. It cannot vouch for the first download; it is what every upgrade
+after it gets checked against.
