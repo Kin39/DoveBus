@@ -35,6 +35,7 @@ function looksAutomated(): boolean {
 function readPage(): PageFacts {
   return {
     canonical: document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href ?? null,
+    origin: location.origin,
     hostname: location.hostname,
     protocol: location.protocol,
     referrer: document.referrer,

@@ -43,6 +43,8 @@
 export interface PageFacts {
   /** The `href` of `<link rel="canonical">`, or null when the page has none. */
   readonly canonical: string | null;
+  /** `location.origin` — what the page is actually being served from. */
+  readonly origin: string;
   readonly hostname: string;
   readonly protocol: string;
   readonly referrer: string;
@@ -110,8 +112,17 @@ export function reasonNotToCount(facts: PageFacts): string | null {
  * a query string off would work today and would be the wrong shape: it would
  * mean this function has an opinion about which parameters are safe to keep,
  * which is exactly the judgement upstream makes and gets wrong.
+ *
+ * **`origin` has to match**, which is a second guard on top of the build-time
+ * one. A `canonical` naming somewhere else is either a page this counter has no
+ * business counting, or a page being served from a copy of the site — a deploy
+ * preview, an archive, somebody's mirror — every one of which carries
+ * production's canonical and would otherwise report itself as the real page. It
+ * is not the primary defence there (previews are built without a counter at
+ * all) but it is the one that does not depend on remembering to leave an
+ * environment variable empty.
  */
-export function countablePath(canonical: string | null): string | null {
+export function countablePath(canonical: string | null, origin: string): string | null {
   if (canonical === null || canonical === "") return null;
   let url: URL;
   try {
@@ -119,6 +130,7 @@ export function countablePath(canonical: string | null): string | null {
   } catch {
     return null;
   }
+  if (url.origin !== origin) return null;
   if (url.search !== "" || url.hash !== "") return null;
   if (!url.pathname.startsWith("/")) return null;
   return url.pathname;
@@ -135,7 +147,7 @@ export function countablePath(canonical: string | null): string | null {
  * Nothing else on `PageFacts` reaches the wire.
  */
 export function pageviewQuery(facts: PageFacts, random: string): string | null {
-  const path = countablePath(facts.canonical);
+  const path = countablePath(facts.canonical, facts.origin);
   if (path === null) return null;
 
   const parameters = new URLSearchParams();

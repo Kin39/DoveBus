@@ -7,8 +7,11 @@ import {
 } from "../src/count/counter.js";
 
 /** A reader on the deployed site, on the privacy page, with nothing unusual. */
+const SITE = "https://dovebus.it";
+
 const READER: PageFacts = {
   canonical: "https://dovebus.it/privacy/",
+  origin: SITE,
   hostname: "dovebus.it",
   protocol: "https:",
   referrer: "https://www.google.com/",
@@ -34,9 +37,9 @@ function sent(facts: PageFacts): URLSearchParams {
 
 describe("the path a pageview is counted against", () => {
   test("is the page's own canonical path", () => {
-    expect(countablePath("https://dovebus.it/come-funziona/")).toBe("/come-funziona/");
-    expect(countablePath("https://dovebus.it/")).toBe("/");
-    expect(countablePath("https://dovebus.it/en/map/")).toBe("/en/map/");
+    expect(countablePath("https://dovebus.it/come-funziona/", SITE)).toBe("/come-funziona/");
+    expect(countablePath("https://dovebus.it/", SITE)).toBe("/");
+    expect(countablePath("https://dovebus.it/en/map/", SITE)).toBe("/en/map/");
   });
 
   /**
@@ -52,19 +55,33 @@ describe("the path a pageview is counted against", () => {
    * would eventually keep the wrong one.
    */
   test("is refused entirely when it carries a query string", () => {
-    expect(countablePath("https://dovebus.it/mappa/?linea=14")).toBeNull();
-    expect(countablePath("https://dovebus.it/mappa/?da=Firenze&a=Prato")).toBeNull();
-    expect(countablePath("https://dovebus.it/mappa/?utm_source=x")).toBeNull();
+    expect(countablePath("https://dovebus.it/mappa/?linea=14", SITE)).toBeNull();
+    expect(countablePath("https://dovebus.it/mappa/?da=Firenze&a=Prato", SITE)).toBeNull();
+    expect(countablePath("https://dovebus.it/mappa/?utm_source=x", SITE)).toBeNull();
   });
 
   test("is refused when it carries a fragment", () => {
-    expect(countablePath("https://dovebus.it/mappa/#toggle-goatcounter")).toBeNull();
+    expect(countablePath("https://dovebus.it/mappa/#toggle-goatcounter", SITE)).toBeNull();
+  });
+
+  /**
+   * A copy of the site — a deploy preview, an archive, somebody's mirror —
+   * serves production's `canonical` from a different origin. Previews are built
+   * without a counter at all, so this is the second lock rather than the first;
+   * it is the one that does not depend on remembering to leave an environment
+   * variable empty.
+   */
+  test("is refused when the page is served from somewhere else", () => {
+    expect(
+      countablePath("https://dovebus.it/mappa/", "https://deploy-preview-7.netlify.app"),
+    ).toBeNull();
+    expect(countablePath("https://dovebus.it/mappa/", "http://localhost:5290")).toBeNull();
   });
 
   test("is nothing at all when the page has no canonical to read", () => {
-    expect(countablePath(null)).toBeNull();
-    expect(countablePath("")).toBeNull();
-    expect(countablePath("not a url")).toBeNull();
+    expect(countablePath(null, SITE)).toBeNull();
+    expect(countablePath("", SITE)).toBeNull();
+    expect(countablePath("not a url", SITE)).toBeNull();
   });
 });
 

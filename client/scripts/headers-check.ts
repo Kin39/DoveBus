@@ -110,6 +110,41 @@ function onlyTheHostWasRefusedInline(consoleErrors: readonly string[]): boolean 
 }
 
 /**
+ * The refusals this page reported, minus the host's own two.
+ *
+ * The `securitypolicyviolation` event carries no hash, so the widget Netlify
+ * injects is recognised by what it blocked — inline, on a page whose only
+ * unexplained inline refusals are none. The console lines identify them by hash;
+ * this pairs with that.
+ */
+async function whatTheBrowserRefused(
+  page: Page,
+  consoleErrors: readonly string[],
+): Promise<readonly string[]> {
+  const reported = await page.evaluate(
+    () => (window as unknown as { __violations: string[] }).__violations,
+  );
+  return reported.filter(
+    (violation) =>
+      !(
+        (violation === "script-src <- inline" || violation === "style-src <- inline") &&
+        onlyTheHostWasRefusedInline(consoleErrors)
+      ),
+  );
+}
+
+/** How many resources this page fetched whose URL contains any of `needles`. */
+async function resourcesMatching(page: Page, needles: readonly string[]): Promise<number> {
+  return page.evaluate(
+    (probes) =>
+      performance
+        .getEntriesByType("resource")
+        .filter((entry) => probes.some((probe) => entry.name.includes(probe))).length,
+    needles as string[],
+  );
+}
+
+/**
  * Everything the page put in the browser, which must always be nothing.
  *
  * The privacy page's flattest claim — "no cookies, and not the browser's local
@@ -172,31 +207,10 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
 
   const outcome: PageOutcome = {
     path,
-    // The paired `securitypolicyviolation` event carries no hash, so the same two
-    // refusals are recognised by what they blocked — inline, on a page whose only
-    // unexplained inline refusals are none. The console lines above identify them.
-    violations: (
-      await page.evaluate(() => (window as unknown as { __violations: string[] }).__violations)
-    ).filter(
-      (violation) =>
-        !(
-          (violation === "script-src <- inline" || violation === "style-src <- inline") &&
-          onlyTheHostWasRefusedInline(consoleErrors)
-        ),
-    ),
+    violations: await whatTheBrowserRefused(page, consoleErrors),
     consoleErrors,
-    tiles: await page.evaluate(
-      () =>
-        performance
-          .getEntriesByType("resource")
-          .filter((entry) => entry.name.includes("openfreemap") || entry.name.includes("cartocdn"))
-          .length,
-    ),
-    vehicleCalls: await page.evaluate(
-      () =>
-        performance.getEntriesByType("resource").filter((entry) => entry.name.includes("/api/"))
-          .length,
-    ),
+    tiles: await resourcesMatching(page, ["openfreemap", "cartocdn"]),
+    vehicleCalls: await resourcesMatching(page, ["/api/"]),
     beacons,
     storage: await whatThePageLeftBehind(page),
   };
