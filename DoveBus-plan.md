@@ -1210,6 +1210,18 @@ checked by breaking the thing it guards.
 one-pixel image; allowing only the first works in the browser it was tested in and counts nobody in
 the rest. `script-src` stays `'self'` — the counter is bundled, not fetched from the stats host.
 
+**A review after the fact found the one thing none of those assertions covered.** The counter runs at
+import time and is the first import in `main.ts`, so an exception in it is not a lost pageview: ES
+modules propagate a failed evaluation to every importer, and the map is behind that import. Planted
+a `throw` in `readPage` and measured it — `/mappa/` came back with **no canvas at all**, twice over,
+while the only broken thing was a visit counter. The counting call is now guarded and the same
+experiment leaves the map drawing with a warning on the console. The module also split in two:
+`counter.ts` is pure and importing it starts nothing, `count/index.ts` is the half that touches a
+browser. That split is what lets `headers-check.ts` import `PRIVATE_HOST` instead of keeping a
+second copy of it — the two had already drifted, and the check's copy was missing the `172.16/12`
+range, so a run from a LAN on those addresses would have demanded a beacon the counter is right to
+withhold and then blamed the CSP.
+
 `headers-check` now asks every page two more questions: did it count, and did it leave anything
 behind. A cookie or a storage key on any page fails the run. Against a local preview the first half
 is skipped on purpose — the counter refuses private addresses, so demanding a beacon there would be

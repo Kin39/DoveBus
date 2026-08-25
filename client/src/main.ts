@@ -13,7 +13,7 @@ import "./styles/trip.css";
 // `count/counter.ts`: it sends this page's canonical path, `/mappa/`, and never
 // what was searched — a search puts its terms in the query string of the API
 // request below, and the address bar of this page never changes.
-import "./count/counter.js";
+import "./count/index.js";
 
 import { ApiError, fetchTrip, fetchVehicles, searchLine, searchOd } from "./api/client.js";
 import type { LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";

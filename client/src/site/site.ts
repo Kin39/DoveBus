@@ -27,4 +27,4 @@ import "../styles/site.css";
 // module: a second tag would be a second request on the pages that can least
 // afford one. A build without `VITE_STATS_BASE` folds the whole thing away —
 // checked in `vite.config.ts`, not assumed.
-import "../count/counter.js";
+import "../count/index.js";

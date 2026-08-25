@@ -51,6 +51,7 @@ function isNetlifyHud(text: string): boolean {
 }
 
 import { chromium } from "playwright";
+import { PRIVATE_HOST } from "../src/count/counter.js";
 
 const BASE = process.env.HEADERS_BASE ?? "http://localhost:5290";
 
@@ -83,13 +84,19 @@ interface PageOutcome {
 /**
  * Is this run pointed at the deployed site, or at a build on this machine?
  *
- * It decides one assertion. `counter.ts` refuses to count a private address —
+ * It decides one assertion. The counter refuses to count a private address —
  * that is the rule that keeps an afternoon of development out of the published
  * numbers — so against a local preview no beacon is *supposed* to fire, and
  * demanding one would be demanding the counter misbehave. Against the real
  * host, silence means the CSP blocked it, and that must fail.
+ *
+ * The list comes from `PRIVATE_HOST` itself rather than being written out again
+ * here. Two copies had already drifted: this one was missing the `172.16/12`
+ * range, so a check run from a LAN on those addresses would have demanded a
+ * beacon the counter is right to withhold, and failed with a message about the
+ * CSP.
  */
-const AGAINST_THE_DEPLOY = !/^https?:\/\/(localhost|127\.|192\.168\.|10\.|0\.0\.0\.0)/.test(BASE);
+const AGAINST_THE_DEPLOY = !PRIVATE_HOST.test(new URL(BASE).hostname);
 
 /**
  * True when every inline thing this page was refused was the host's.

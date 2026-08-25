@@ -1,6 +1,12 @@
 /**
- * The pageview counter: one request per page load, to a GoatCounter running on
- * DoveBus' own VPS.
+ * What a pageview counter should send, and who should not be counted — as pure
+ * functions over plain values. The half that touches a browser is `index.ts`.
+ *
+ * Split that way for two reasons. These are the two decisions worth testing, and
+ * they are testable only if importing them starts nothing. And `PRIVATE_HOST`
+ * below has a second reader — `scripts/headers-check.ts`, which must agree with
+ * this file about what counts as somebody's own machine, and would import a
+ * running counter if this module had one.
  *
  * **Why this is not GoatCounter's own `count.js`.** That file is ISC-licensed
  * and could have been vendored, but it reads `localStorage` on every page load
@@ -25,18 +31,6 @@
  * comes from the page's own `canonical` and is rejected outright if it carries
  * a `?` or a `#`.
  */
-
-/**
- * Where the counter lives, or nothing at all.
- *
- * Same reasoning as `VITE_API_BASE`: a deploy fact, read from the environment
- * at build time. Left unset — which is every build that is not the deploy — the
- * constant folds to `undefined`, the branch below is dead, and the whole module
- * is dropped by the bundler. That is not a hope: `assertCounterAgreesWithCsp`
- * in `vite.config.ts` reads the built chunks back and fails if a counter is in
- * the bundle when the header does not name it, or the other way round.
- */
-const STATS_BASE: string | undefined = import.meta.env.VITE_STATS_BASE;
 
 /**
  * Everything the counter needs to know about the page, as plain values.
@@ -67,12 +61,18 @@ export interface PageFacts {
 /**
  * Addresses that are somebody's own machine rather than the deployed site.
  *
+ * Exported because `scripts/headers-check.ts` needs the same list: it demands a
+ * beacon from every page when it runs against the deploy, and must not demand
+ * one when it runs against an address this file refuses to count. Two hand-kept
+ * copies of that list would disagree the first time one of them was extended,
+ * and the check would fail for a reason that looks nothing like its cause.
+ *
  * Taken from upstream's filter, and it earns its place here rather than being
  * trimmed: `192.168.` is how this project is checked from a phone — see the LAN
  * address in `client/.env` — and without this line every developer's afternoon
  * would land in the published numbers.
  */
-const PRIVATE_HOST =
+export const PRIVATE_HOST =
   /(localhost$|^127\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^0\.0\.0\.0$)/;
 
 /**
@@ -149,82 +149,4 @@ export function pageviewQuery(facts: PageFacts, random: string): string | null {
   if (facts.automated) parameters.set("b", "153");
   parameters.set("rnd", random);
   return parameters.toString();
-}
-
-/** The four ways a browser admits to being driven, as upstream checks them. */
-function looksAutomated(): boolean {
-  const anyWindow = window as unknown as Record<string, unknown>;
-  const anyDocument = document as unknown as Record<string, unknown>;
-  if (anyWindow.callPhantom || anyWindow._phantom || anyWindow.phantom) return true;
-  if (anyWindow.__nightmare) return true;
-  if (anyDocument.__selenium_unwrapped || anyDocument.__webdriver_evaluate) return true;
-  return navigator.webdriver === true;
-}
-
-/** The page, read once. The only function here that touches a global. */
-function readPage(): PageFacts {
-  return {
-    canonical: document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href ?? null,
-    hostname: location.hostname,
-    protocol: location.protocol,
-    referrer: document.referrer,
-    title: document.title,
-    screenWidth: window.screen?.width ?? 0,
-    visibility: document.visibilityState,
-    inFrame: window.location !== window.parent.location,
-    automated: looksAutomated(),
-    privacyControl: (navigator as { globalPrivacyControl?: boolean }).globalPrivacyControl === true,
-  };
-}
-
-/**
- * Sends the request, by whichever of the two routes the CSP allows.
- *
- * `sendBeacon` first: it survives the page being closed, which a page someone
- * reads for four seconds at a bus stop very often is. It POSTs, so the header
- * that has to allow it is `connect-src`. When it is unavailable or refused the
- * fallback is a one-pixel image, which `img-src` allows instead — both origins
- * are in `deploy-headers.ts` for this reason, and dropping either would leave a
- * browser that silently never counts.
- */
-function send(url: string): void {
-  if (navigator.sendBeacon?.(url)) return;
-
-  const pixel = new Image();
-  pixel.src = url;
-}
-
-/**
- * Counts this page, once, when it is actually on screen.
- *
- * A page opened in a background tab is counted when the reader gets to it, not
- * when the browser fetched it — otherwise a restored session of nine tabs is
- * nine readers who read nothing.
- */
-function countPageview(): void {
-  const facts = readPage();
-
-  const refusal = reasonNotToCount(facts);
-  if (refusal !== null) return;
-
-  const query = pageviewQuery(facts, Math.random().toString(36).slice(2, 7));
-  if (query === null) {
-    console.warn("This page has no countable canonical path — the pageview was not counted.");
-    return;
-  }
-
-  send(`${STATS_BASE}/count?${query}`);
-}
-
-if (STATS_BASE) {
-  if (document.visibilityState === "visible") {
-    countPageview();
-  } else {
-    const whenVisible = () => {
-      if (document.visibilityState !== "visible") return;
-      document.removeEventListener("visibilitychange", whenVisible);
-      countPageview();
-    };
-    document.addEventListener("visibilitychange", whenVisible);
-  }
 }
