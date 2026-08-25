@@ -454,7 +454,7 @@ rather than defaults:
 | User-Agent | on | Browser and system *names*, derived; the header itself is not stored. |
 | Size | on | Screen width, in bands. |
 | Country | on | Country only. |
-| Region | **off** | "Toscana" on a map of Tuscany is not information, and it is the finest-grained location on offer. |
+| Region | **off** | "Toscana" on a map of Tuscany is not information. It is also off at the source: the dashboard greys the option out, because region needs the "Cities" GeoIP database and the `-geodb` flag, and this install has neither. Country works because GoatCounter carries a country-level database itself. |
 | Language | **off** | Not needed, and one more thing that narrows a crowd. |
 | Data retention | **unset** | Deliberate, and it is not the lax choice. GoatCounter's retention deletes the *aggregates* too, so a 90-day window would throw away the year-on-year trend this exists to produce. With individual pageviews off there is nothing personal left to expire. |
 | Public statistics | **public** | The privacy page claims what is counted; this is what makes the claim checkable by the people it is about. |

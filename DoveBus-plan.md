@@ -1188,9 +1188,12 @@ database    0 rows in `paths` matching Firenze, Prato, or "?"
 | Dashboard | **public** | The privacy page claims what is counted; this makes the claim checkable by the people it is about. |
 | Admin cookie | **does not touch readers** | Proved rather than reasoned: `curl -D-` against the live `/count` returns `access-control-allow-origin`, `content-type: image/gif` and **no `set-cookie` at all**. Session cookies are set only by the dashboard handlers, on the host serving them. Hence `-domain stats.dovebus.it` written exactly — as `dovebus.it` it would produce a parent-domain cookie that *is* sent to the site, and the promise would break silently. |
 
-Also off: region (a "Toscana" on a map of Tuscany is not information, and it is the finest-grained
-location on offer) and language. On: sessions, referrer, User-Agent-derived names, screen width,
-country.
+Also off: region and language. On: sessions, referrer, User-Agent-derived names, screen width,
+country. Region was chosen off, and turns out to be off at the source as well — the dashboard greys
+it out, because it needs the "Cities" GeoIP database and the `-geodb` flag, and this install has
+neither. Country still works because GoatCounter carries a country-level database of its own. The
+choice was right and it was also never available, which is worth writing down: the reasoning stands
+on its own, but nobody should read that row as evidence the option was tested.
 
 ### 14.4 Assertions that can fail, and were made to
 
