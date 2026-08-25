@@ -50,7 +50,7 @@ function isNetlifyHud(text: string): boolean {
   return NETLIFY_HUD_HASHES.some((hash) => text.includes(hash));
 }
 
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import { PRIVATE_HOST } from "../src/count/counter.js";
 
 const BASE = process.env.HEADERS_BASE ?? "http://localhost:5290";
@@ -107,6 +107,31 @@ const AGAINST_THE_DEPLOY = !PRIVATE_HOST.test(new URL(BASE).hostname);
  */
 function onlyTheHostWasRefusedInline(consoleErrors: readonly string[]): boolean {
   return consoleErrors.every((error) => !error.toLowerCase().includes("inline"));
+}
+
+/**
+ * Everything the page put in the browser, which must always be nothing.
+ *
+ * The privacy page's flattest claim — "no cookies, and not the browser's local
+ * storage either: close the tab and nothing is left behind" — asked of the
+ * browser rather than of the source. It is the claim most likely to be quietly
+ * falsified by a dependency rather than by a decision, and the only one that can
+ * be checked here at all.
+ */
+async function whatThePageLeftBehind(page: Page): Promise<readonly string[]> {
+  return page.evaluate(() => {
+    const left: string[] = [];
+    if (document.cookie !== "") left.push(`cookie: ${document.cookie}`);
+    for (const [name, store] of [
+      ["localStorage", localStorage],
+      ["sessionStorage", sessionStorage],
+    ] as const) {
+      for (let index = 0; index < store.length; index++) {
+        left.push(`${name}: ${store.key(index)}`);
+      }
+    }
+    return left;
+  });
 }
 
 async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path: string) {
@@ -173,22 +198,7 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
           .length,
     ),
     beacons,
-    // The privacy page's flattest claim — "no cookies, and not the browser's
-    // local storage either: close the tab and nothing is left behind" — asked
-    // of the browser rather than of the source. It is the claim most likely to
-    // be quietly falsified by a dependency, and the only one that can be
-    // checked here for the cost of three lines.
-    storage: await page.evaluate(() => {
-      const left: string[] = [];
-      if (document.cookie !== "") left.push(`cookie: ${document.cookie}`);
-      for (const [name, store] of [
-        ["localStorage", localStorage],
-        ["sessionStorage", sessionStorage],
-      ] as const) {
-        for (let i = 0; i < store.length; i++) left.push(`${name}: ${store.key(i)}`);
-      }
-      return left;
-    }),
+    storage: await whatThePageLeftBehind(page),
   };
   await context.close();
   return outcome;
