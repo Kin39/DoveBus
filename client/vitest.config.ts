@@ -19,7 +19,12 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      include: ["src/map/tracking.ts", "src/map/viewport.ts", "src/ui/when.ts"],
+      include: [
+        "src/count/counter.ts",
+        "src/map/tracking.ts",
+        "src/map/viewport.ts",
+        "src/ui/when.ts",
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
