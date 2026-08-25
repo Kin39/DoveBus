@@ -1161,8 +1161,8 @@ the line and the two comuni as query parameters. Three separate things had to be
 **In the page.** Upstream sends the query string twice — as `q`, and glued onto the path — and the
 server stores the *path* with its query attached, stripping only known ad-tracking parameters
 (`hit.go`, `cleanPath`). Our counter takes the path from the page's own `canonical`, which
-`assertPairing` already fails the build over, and **refuses outright** any path carrying a `?` or a
-`#` rather than cleaning it up. Refusing rather than trimming is the point: trimming would mean
+`assertPairing` already fails the build over and which must also be served from the page's own
+origin, and **refuses outright** any path carrying a `?` or a `#` rather than cleaning it up. Refusing rather than trimming is the point: trimming would mean
 holding an opinion about which parameters are safe to keep, which is the judgement upstream makes
 and gets wrong.
 
