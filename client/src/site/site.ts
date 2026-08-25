@@ -21,3 +21,10 @@ import "@fontsource-variable/instrument-sans/wdth.css";
 import "../styles/tokens.css";
 import "../styles/brand.css";
 import "../styles/site.css";
+
+// The pageview counter, imported for its effect and nothing else. It lives here
+// rather than in a `<script>` of its own because these pages already load this
+// module: a second tag would be a second request on the pages that can least
+// afford one. A build without `VITE_STATS_BASE` folds the whole thing away —
+// checked in `vite.config.ts`, not assumed.
+import "../count/counter.js";

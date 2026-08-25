@@ -15,6 +15,13 @@
  * `securitypolicyviolation` and every console error counts as a failure; the
  * map pages additionally have to have fetched tiles and called the API, since a
  * page that loaded nothing violates nothing.
+ *
+ * Two more things are asked of every page, both about the counter. It must have
+ * counted — silence there is the same "measured nothing" fault as a map with no
+ * tiles — and it must have left **nothing** in the browser: no cookie, no
+ * `localStorage` key, no `sessionStorage` key. That last one is the privacy
+ * page's plainest promise, and this is the only place it is checked by asking
+ * the browser rather than by reading the source.
  */
 
 /**
@@ -67,7 +74,22 @@ interface PageOutcome {
   readonly consoleErrors: readonly string[];
   readonly tiles: number;
   readonly vehicleCalls: number;
+  /** Requests to the pageview counter, whichever route they took. */
+  readonly beacons: number;
+  /** Anything the page left behind in the browser. Must always be empty. */
+  readonly storage: readonly string[];
 }
+
+/**
+ * Is this run pointed at the deployed site, or at a build on this machine?
+ *
+ * It decides one assertion. `counter.ts` refuses to count a private address —
+ * that is the rule that keeps an afternoon of development out of the published
+ * numbers — so against a local preview no beacon is *supposed* to fire, and
+ * demanding one would be demanding the counter misbehave. Against the real
+ * host, silence means the CSP blocked it, and that must fail.
+ */
+const AGAINST_THE_DEPLOY = !/^https?:\/\/(localhost|127\.|192\.168\.|10\.|0\.0\.0\.0)/.test(BASE);
 
 /**
  * True when every inline thing this page was refused was the host's.
@@ -100,6 +122,14 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
     }
   });
   page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error.message}`));
+
+  // Counted at the network layer rather than from `performance`, because the
+  // beacon is a POST and the fallback is an image: the two routes look nothing
+  // alike to the page, and identical from here.
+  let beacons = 0;
+  page.on("request", (request) => {
+    if (request.url().includes("/count?")) beacons++;
+  });
 
   await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
   const isMap = path.endsWith("/mappa/") || path.endsWith("/map/");
@@ -135,6 +165,23 @@ async function visit(browser: Awaited<ReturnType<typeof chromium.launch>>, path:
         performance.getEntriesByType("resource").filter((entry) => entry.name.includes("/api/"))
           .length,
     ),
+    beacons,
+    // The privacy page's flattest claim — "no cookies, and not the browser's
+    // local storage either: close the tab and nothing is left behind" — asked
+    // of the browser rather than of the source. It is the claim most likely to
+    // be quietly falsified by a dependency, and the only one that can be
+    // checked here for the cost of three lines.
+    storage: await page.evaluate(() => {
+      const left: string[] = [];
+      if (document.cookie !== "") left.push(`cookie: ${document.cookie}`);
+      for (const [name, store] of [
+        ["localStorage", localStorage],
+        ["sessionStorage", sessionStorage],
+      ] as const) {
+        for (let i = 0; i < store.length; i++) left.push(`${name}: ${store.key(i)}`);
+      }
+      return left;
+    }),
   };
   await context.close();
   return outcome;
@@ -158,12 +205,16 @@ for (const outcome of outcomes) {
     // pages is not a pass — it is the check having measured nothing.
     ...(isMap && outcome.tiles === 0 ? ["the basemap loaded no tiles at all"] : []),
     ...(isMap && outcome.vehicleCalls === 0 ? ["the page never called the API"] : []),
+    // Same reasoning one line up, for the counter: a page that counted nothing
+    // has not proved the CSP allows counting, it has proved nothing at all.
+    ...(AGAINST_THE_DEPLOY && outcome.beacons === 0 ? ["the page counted no pageview"] : []),
+    ...outcome.storage.map((left) => `left behind in the browser — ${left}`),
   ];
   if (problems.length > 0) failed++;
 
   console.log(
     `${problems.length === 0 ? "ok  " : "FAIL"} ${outcome.path.padEnd(18)} ` +
-      `tiles=${outcome.tiles} apiCalls=${outcome.vehicleCalls}`,
+      `tiles=${outcome.tiles} apiCalls=${outcome.vehicleCalls} counted=${outcome.beacons}`,
   );
   for (const problem of problems) console.log(`       ${problem}`);
 }

@@ -9,6 +9,12 @@ import "./styles/sheet.css";
 import "./styles/panel.css";
 import "./styles/trip.css";
 
+// The pageview counter, imported for its effect and nothing else. See
+// `count/counter.ts`: it sends this page's canonical path, `/mappa/`, and never
+// what was searched — a search puts its terms in the query string of the API
+// request below, and the address bar of this page never changes.
+import "./count/counter.js";
+
 import { ApiError, fetchTrip, fetchVehicles, searchLine, searchOd } from "./api/client.js";
 import type { LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";
 import { t } from "./i18n/index.js";

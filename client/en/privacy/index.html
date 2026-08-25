@@ -6,7 +6,7 @@
     <title>Privacy — DoveBus asks you for nothing</title>
     <meta
       name="description"
-      content="No account, no cookies, no tracking, no geolocation. What actually leaves your browser when you use DoveBus, who sees it and for how long."
+      content="No account, no cookies, no profiling, no geolocation. What actually leaves your browser when you use DoveBus, who sees it and for how long."
     />
     <link rel="canonical" href="%SITE_URL%/en/privacy/" />
 
@@ -15,7 +15,7 @@
     <meta property="og:title" content="Privacy — DoveBus asks you for nothing" />
     <meta
       property="og:description"
-      content="No account, no cookies, no tracking, no geolocation. And the honest list of what leaves your browser anyway."
+      content="No account, no cookies, no profiling, no geolocation. And the honest list of what leaves your browser anyway."
     />
     <meta property="og:url" content="%SITE_URL%/en/privacy/" />
 
@@ -24,7 +24,7 @@
         "@context": "https://schema.org",
         "@type": "WebPage",
         "name": "DoveBus privacy",
-        "description": "Privacy notice: no account, no cookies, no tracking, no geolocation.",
+        "description": "Privacy notice: no account, no cookies, no profiling, no geolocation. Only a count of the pages opened, on a server belonging to the same owner.",
         "inLanguage": "en-GB",
         "url": "%SITE_URL%/en/privacy/",
         "dateModified": "%PRIVACY_UPDATED%",
@@ -43,9 +43,10 @@
         <p class="eyebrow">Privacy</p>
         <h1 class="page__title">We ask you for nothing</h1>
         <p class="page__standfirst">
-          DoveBus has no account to create, sets no cookies, uses no analytics and never asks where
-          you are. This page does not stop at saying so: it also lists what leaves your browser
-          anyway when you use the site, because something always does.
+          DoveBus has no account to create, sets no cookies and never asks where you are. It
+          counts how often each page is opened, on a server of its own, and further down this page
+          says exactly what that records. This page does not stop at saying so: it also lists what
+          leaves your browser anyway when you use the site, because something always does.
         </p>
 
         <nav class="subnav" aria-label="Information pages">
@@ -77,11 +78,13 @@
             </dd>
           </div>
           <div class="deflist__row">
-            <dt class="deflist__term">No tracking</dt>
+            <dt class="deflist__term">No profiling</dt>
             <dd class="deflist__desc">
               No Google Analytics or anything like it, no pixels, no advertising, no embedded social
-              networks. Even the typefaces are served from here, so opening a page does not contact
-              a font provider.
+              networks. The page count runs on a server of ours and builds no profiles: it does not
+              know who you are, it does not follow you from one page to the next, and it does not
+              end up anywhere else. Even the typefaces are served from here, so opening a page does
+              not contact a font provider.
             </dd>
           </div>
           <div class="deflist__row">
@@ -135,6 +138,34 @@
             </p>
           </div>
           <div class="limits__item">
+            <p class="limits__title">The count of pages opened</p>
+            <p class="limits__body">
+              When you open a page, your browser sends one line to
+              <a href="https://stats.dovebus.it/">stats.dovebus.it</a>: which page you opened, its
+              title, which site you came from if any, and the width of your screen. That is another
+              name for the same machine that answers the rest of the site, run by us: it is not an
+              outside supplier, it is not somebody else's analytics service, and the data goes
+              nowhere from there. <strong>What you searched for never travels</strong>: a search
+              does not change the address in the bar, and the program that counts refuses outright
+              any address carrying parameters at all.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">What is left of the count</p>
+            <p class="limits__body">
+              So that reloading does not count you twice, the program keeps <em>in memory</em>, for
+              eight hours, a fingerprint worked out from your IP address and your kind of browser.
+              That fingerprint is never written to disk, and neither are the IP address or the kind
+              of browser: no row about you remains. What remains is totals — how many times each
+              page was opened, in which hour, from which country, with which browser and at which
+              screen size — and they remain for as long as the site does, because they are numbers
+              and they are about nobody in particular. There is nothing to ask us to delete, and the
+              <a href="https://stats.dovebus.it/">statistics are public</a>: what we see, you can
+              see. If your browser sends the Global Privacy Control signal, you are not counted at
+              all.
+            </p>
+          </div>
+          <div class="limits__item">
             <p class="limits__title">The map tiles</p>
             <p class="limits__body">
               The cartographic background is served by OpenFreeMap (with CARTO as a fallback), which
@@ -175,6 +206,13 @@
           <p>
             No data is sold, handed on or used for profiling, and there is none to sell. The
             third-party connections are only the technical ones listed above.
+          </p>
+          <p>
+            The page count does not ask for your consent because it does not need it: it is
+            first-party, it stays on a machine of ours, it produces only totals and it allows nobody
+            to be identified. Those are the conditions the Italian data protection authority sets
+            for measurement tools treated as technical cookies. If a single one of them stopped
+            being true, this page would change first — and there would be a banner.
           </p>
           <p>
             If you have a question about this page, if you think something described here does not

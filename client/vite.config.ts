@@ -48,7 +48,7 @@ const DEFAULT_API_BASE = "http://localhost:3200";
  * date, not a fix for one. Edit them here when the page changes.
  */
 const UPDATED = {
-  PRIVACY: "2026-08-22",
+  PRIVACY: "2026-08-25",
   COME_FUNZIONA: "2026-08-22",
 } as const;
 
@@ -158,7 +158,9 @@ const LANGSWITCH = {
  * rather than a menu: no dropdown, no focus trap, no script.
  *
  * It is markup rather than behaviour on purpose. The four content pages ship no
- * JavaScript at all, and the map page's switch has to work before its 1.1 MB
+ * JavaScript that draws anything — only the stylesheet entry and the pageview
+ * counter, neither of which touches the page — and the map page's switch has to
+ * work before its 1.1 MB
  * bundle has finished loading — a language control that needs the app to be
  * running is a control that is missing exactly when a lost reader reaches for it.
  */
@@ -340,13 +342,18 @@ function crawlerFiles(): Plugin {
  * machine it was written on and would block every request on the deploy that
  * moved the API. What the file *says* lives in `deploy-headers.ts`.
  */
-function deployHeaders(apiOrigin: string): Plugin {
+function deployHeaders(apiOrigin: string, statsOrigin?: string): Plugin {
   return {
     name: "dovebus:deploy-headers",
     apply: "build",
     generateBundle(_options, bundle) {
       assertCspReachesTheApi(bundle, apiOrigin);
-      this.emitFile({ type: "asset", fileName: "_headers", source: deployHeadersFile(apiOrigin) });
+      assertCounterAgreesWithCsp(bundle, statsOrigin);
+      this.emitFile({
+        type: "asset",
+        fileName: "_headers",
+        source: deployHeadersFile(apiOrigin, statsOrigin),
+      });
     },
   };
 }
@@ -383,6 +390,58 @@ function assertCspReachesTheApi(
 }
 
 /**
+ * The counter and the header that has to allow it, checked against each other.
+ *
+ * Two ways for these to disagree, and both are silent. `VITE_STATS_BASE` unset
+ * but the counter still in the bundle means every page fires a request its own
+ * CSP blocks. Set, but the counter tree-shaken away, means a header advertising
+ * an origin nothing dials and a dashboard that stays at zero while the site is
+ * being read — which is indistinguishable from nobody reading it, and would be
+ * believed, because "nobody visits" is the answer this whole exercise exists to
+ * find out.
+ *
+ * `/count?` is the marker because it is a string literal in `counter.ts` and
+ * string literals survive minification. There is no companion check that the
+ * built code never touches `location.search`: `countablePath` legitimately
+ * reads `url.search` in order to *refuse* a path that has one, so any such
+ * assertion would either always fail or be written loosely enough to pass no
+ * matter what — §11.9 again. That guarantee is a unit test instead, where a
+ * canonical carrying a query string can actually be fed in and refused.
+ */
+function assertCounterAgreesWithCsp(
+  bundle: Record<string, { type: string; code?: string }>,
+  statsOrigin: string | undefined,
+): void {
+  const counters = Object.values(bundle).filter(
+    (chunk) => chunk.type === "chunk" && chunk.code?.includes("/count?"),
+  );
+
+  if (statsOrigin === undefined) {
+    if (counters.length > 0) {
+      throw new Error(
+        "the pageview counter is in the bundle but no VITE_STATS_BASE was set — " +
+          "every page would fire a request its own CSP blocks",
+      );
+    }
+    return;
+  }
+
+  if (counters.length === 0) {
+    throw new Error(
+      `connect-src allows ${statsOrigin}, but no chunk counts anything — ` +
+        "the counter was tree-shaken away and the dashboard would sit at zero",
+    );
+  }
+  for (const chunk of counters) {
+    if (!chunk.code?.includes(statsOrigin)) {
+      throw new Error(
+        `connect-src allows ${statsOrigin}, but the built counter dials somewhere else`,
+      );
+    }
+  }
+}
+
+/**
  * Port 5280 is fixed by the plan so it never collides with another project on
  * 5173, and `strictPort` makes a collision fail loudly instead of silently
  * hopping to 5281 — the screenshot loop and `VITE_API_BASE` both assume the
@@ -394,9 +453,17 @@ export default defineConfig(({ mode }) => {
   // an origin the code never calls — which is a CSP that blocks the whole app.
   const env = loadEnv(mode, CLIENT_ROOT, "VITE_");
   const apiOrigin = new URL(env.VITE_API_BASE ?? DEFAULT_API_BASE).origin;
+  // Unset is the normal case and means "this build does not count anything":
+  // no counter in the bundle, no counter origin in the header. Only the deploy
+  // sets it, which is what keeps a developer's afternoon out of the numbers
+  // even before `counter.ts` refuses a private address at runtime.
+  const statsOrigin =
+    env.VITE_STATS_BASE === undefined || env.VITE_STATS_BASE === ""
+      ? undefined
+      : new URL(env.VITE_STATS_BASE).origin;
 
   return {
-    plugins: [siteConstants(), crawlerFiles(), deployHeaders(apiOrigin)],
+    plugins: [siteConstants(), crawlerFiles(), deployHeaders(apiOrigin, statsOrigin)],
     server: { port: 5280, strictPort: true },
     preview: { port: 5280, strictPort: true },
     build: {

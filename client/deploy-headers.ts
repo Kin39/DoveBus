@@ -9,9 +9,10 @@
  * rather than only as comments.
  *
  * The origins listed are the ones the code actually loads: the vector basemap,
- * its raster fallback, and the API. Nothing else is fetched at runtime — the
- * fonts are bundled, and `dati.toscana.it` and `openstreetmap.org` are links a
- * reader follows, not resources a page loads.
+ * its raster fallback, the API, and — on the deploy alone — the pageview
+ * counter. Nothing else is fetched at runtime; the fonts are bundled, and
+ * `dati.toscana.it` and `openstreetmap.org` are links a reader follows, not
+ * resources a page loads.
  */
 
 /** Everything the map loads from somewhere that is not this origin. */
@@ -23,13 +24,27 @@ export const TILE_ORIGINS = [
 ] as const;
 
 /**
- * The Content-Security-Policy, for a site whose API lives at `apiOrigin`.
+ * The Content-Security-Policy, for a site whose API lives at `apiOrigin` and
+ * whose pageview counter, if it has one, lives at `statsOrigin`.
  *
  * Three of these are here because a browser said so, not because a document
  * recommended them — see `scripts/headers-check.ts`, which drives every built
  * page through the real header and fails on anything blocked.
+ *
+ * `statsOrigin` is optional and its absence is the normal case: only the deploy
+ * sets `VITE_STATS_BASE`. When it is absent the counter is not in the bundle
+ * either, and `assertCounterAgreesWithCsp` fails the build if those two ever
+ * disagree — a header naming a counter that was tree-shaken away, or a counter
+ * shipped to a page whose header will block it.
  */
-export function contentSecurityPolicy(apiOrigin: string): string {
+export function contentSecurityPolicy(apiOrigin: string, statsOrigin?: string): string {
+  // Two directives, not one. The counter sends its pageview with
+  // `navigator.sendBeacon`, which is a POST and so needs `connect-src`, and
+  // falls back to a one-pixel `Image` when the beacon is unavailable or
+  // refused, which needs `img-src`. Allowing only the first would leave every
+  // browser without `sendBeacon` silently uncounted — the failure mode that
+  // looks exactly like nobody visiting.
+  const stats = statsOrigin === undefined ? "" : ` ${statsOrigin}`;
   return [
     "default-src 'self'",
     "base-uri 'self'",
@@ -44,8 +59,8 @@ export function contentSecurityPolicy(apiOrigin: string): string {
     // injected `<style>` block still has nowhere to land.
     "style-src-attr 'unsafe-inline'",
     "font-src 'self'",
-    `img-src 'self' data: blob: ${TILE_ORIGINS.join(" ")}`,
-    `connect-src 'self' ${apiOrigin} ${TILE_ORIGINS.join(" ")}`,
+    `img-src 'self' data: blob: ${TILE_ORIGINS.join(" ")}${stats}`,
+    `connect-src 'self' ${apiOrigin} ${TILE_ORIGINS.join(" ")}${stats}`,
     // MapLibre decodes tiles off the main thread in a worker it creates from a
     // blob. Without this the map does not draw at all.
     "worker-src 'self' blob:",
@@ -64,7 +79,7 @@ export function contentSecurityPolicy(apiOrigin: string): string {
 }
 
 /** The whole file, in Netlify's form: a path pattern, then indented headers. */
-export function deployHeadersFile(apiOrigin: string): string {
+export function deployHeadersFile(apiOrigin: string, statsOrigin?: string): string {
   return [
     "/*",
     "  X-Content-Type-Options: nosniff",
@@ -74,7 +89,7 @@ export function deployHeadersFile(apiOrigin: string): string {
     // one control that implied otherwise — so every one of them is denied.
     "  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()",
     "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
-    `  Content-Security-Policy: ${contentSecurityPolicy(apiOrigin)}`,
+    `  Content-Security-Policy: ${contentSecurityPolicy(apiOrigin, statsOrigin)}`,
     "",
     // Hashed filenames: the content cannot change without the name changing, so
     // a year is not a risk, it is the point of the hash.

@@ -2,11 +2,12 @@ import { describe, expect, test } from "vitest";
 import { contentSecurityPolicy, deployHeadersFile, TILE_ORIGINS } from "../deploy-headers.js";
 
 const API = "https://api.dovebus.it";
+const STATS = "https://stats.dovebus.it";
 
 /** The directives, split back out of the one header line. */
-function directives(apiOrigin: string): Map<string, string> {
+function directives(apiOrigin: string, statsOrigin?: string): Map<string, string> {
   return new Map(
-    contentSecurityPolicy(apiOrigin)
+    contentSecurityPolicy(apiOrigin, statsOrigin)
       .split("; ")
       .map((directive) => {
         const [name, ...values] = directive.split(" ");
@@ -48,6 +49,38 @@ describe("the Content-Security-Policy", () => {
     expect(contentSecurityPolicy("http://192.168.1.10:3200")).not.toContain(
       "upgrade-insecure-requests",
     );
+  });
+
+  /**
+   * The counter needs two directives, not one, and the reason is a fallback.
+   *
+   * `counter.ts` sends its pageview with `navigator.sendBeacon` — a POST, so
+   * `connect-src` — and falls back to a one-pixel `Image` when the beacon is
+   * unavailable or refused, which is `img-src`. Allowing only the first would
+   * work in the browser this was tested in and silently count nobody in the
+   * others, which reads on the dashboard exactly like nobody visiting.
+   */
+  test("lets the counter reach the counter, by both routes it can take", () => {
+    const csp = directives(API, STATS);
+    expect(csp.get("connect-src")).toContain(STATS);
+    expect(csp.get("img-src")).toContain(STATS);
+  });
+
+  /**
+   * A build that was not told about a counter must not advertise one. This is
+   * the header half of the pair `assertCounterAgreesWithCsp` checks in the
+   * bundle: unset means no counter shipped *and* no origin allowed.
+   */
+  test("names no counter when the build was not given one", () => {
+    const csp = directives(API);
+    expect(csp.get("connect-src")).not.toContain("stats");
+    expect(csp.get("img-src")).not.toContain("stats");
+  });
+
+  test("still lets nothing else in when a counter is allowed", () => {
+    // The counter is same-origin script: it is bundled, not fetched from the
+    // stats host, so allowing it must not cost a `script-src` entry.
+    expect(directives(API, STATS).get("script-src")).toBe("'self'");
   });
 
   test("closes the classic bypasses", () => {

@@ -6,7 +6,7 @@
     <title>Privacy — DoveBus non ti chiede niente</title>
     <meta
       name="description"
-      content="Nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione. Cosa esce davvero dal tuo browser quando usi DoveBus, chi lo vede e per quanto tempo."
+      content="Nessun account, nessun cookie, nessuna profilazione, nessuna geolocalizzazione. Cosa esce davvero dal tuo browser quando usi DoveBus, chi lo vede e per quanto tempo."
     />
     <link rel="canonical" href="%SITE_URL%/privacy/" />
 
@@ -15,7 +15,7 @@
     <meta property="og:title" content="Privacy — DoveBus non ti chiede niente" />
     <meta
       property="og:description"
-      content="Nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione. E l'elenco onesto di cosa esce comunque dal browser."
+      content="Nessun account, nessun cookie, nessuna profilazione, nessuna geolocalizzazione. E l'elenco onesto di cosa esce comunque dal browser."
     />
     <meta property="og:url" content="%SITE_URL%/privacy/" />
 
@@ -24,7 +24,7 @@
         "@context": "https://schema.org",
         "@type": "WebPage",
         "name": "Privacy di DoveBus",
-        "description": "Informativa sulla privacy: nessun account, nessun cookie, nessun tracciamento, nessuna geolocalizzazione.",
+        "description": "Informativa sulla privacy: nessun account, nessun cookie, nessuna profilazione, nessuna geolocalizzazione. Solo un conteggio delle pagine aperte, su un server dello stesso titolare.",
         "inLanguage": "it-IT",
         "url": "%SITE_URL%/privacy/",
         "dateModified": "%PRIVACY_UPDATED%",
@@ -43,8 +43,9 @@
         <p class="eyebrow">Privacy</p>
         <h1 class="page__title">Non ti chiediamo niente</h1>
         <p class="page__standfirst">
-          DoveBus non ha un account da creare, non installa cookie, non usa strumenti di analisi e
-          non chiede mai dove ti trovi. Questa pagina non si limita a dirlo: elenca anche cosa esce
+          DoveBus non ha un account da creare, non installa cookie e non chiede mai dove ti trovi.
+          Conta quante volte ogni pagina viene aperta, su un server suo, e più sotto c'è scritto
+          esattamente cosa registra. Questa pagina non si limita a dirlo: elenca anche cosa esce
           comunque dal tuo browser quando usi il sito, perché qualcosa esce sempre.
         </p>
 
@@ -77,10 +78,12 @@
             </dd>
           </div>
           <div class="deflist__row">
-            <dt class="deflist__term">Nessun tracciamento</dt>
+            <dt class="deflist__term">Nessuna profilazione</dt>
             <dd class="deflist__desc">
               Niente Google Analytics o strumenti simili, nessun pixel, nessuna pubblicità, nessun
-              social network incorporato. Anche i caratteri tipografici sono serviti da qui, quindi
+              social network incorporato. Il conteggio delle pagine gira su un server nostro e non
+              costruisce profili: non sa chi sei, non ti segue da una pagina all'altra e non finisce
+              da nessun'altra parte. Anche i caratteri tipografici sono serviti da qui, quindi
               aprire una pagina non contatta un fornitore di font.
             </dd>
           </div>
@@ -136,6 +139,34 @@
             </p>
           </div>
           <div class="limits__item">
+            <p class="limits__title">Il conteggio delle pagine aperte</p>
+            <p class="limits__body">
+              Quando apri una pagina, il browser manda una riga a
+              <a href="https://stats.dovebus.it/">stats.dovebus.it</a>: quale pagina hai aperto, il
+              suo titolo, da quale sito eventualmente arrivavi e la larghezza dello schermo. È un
+              altro nome della stessa macchina che risponde al resto del sito, gestita da noi: non è
+              un fornitore esterno, non è un servizio di analisi di qualcun altro, e da lì i dati non
+              vanno da nessuna parte. <strong>Quello che hai cercato non viaggia mai</strong>: una
+              ricerca non cambia l'indirizzo nella barra, e il programma che conta rifiuta in blocco
+              qualunque indirizzo che si porti dietro dei parametri.
+            </p>
+          </div>
+          <div class="limits__item">
+            <p class="limits__title">Cosa resta del conteggio</p>
+            <p class="limits__body">
+              Per non contarti due volte se ricarichi, il programma tiene <em>in memoria</em> per
+              otto ore un'impronta calcolata dal tuo indirizzo IP e dal tipo di browser. Quell'impronta
+              non viene mai scritta su disco, e l'indirizzo IP e il tipo di browser nemmeno: di te
+              non resta una riga. Restano dei totali — quante volte ogni pagina è stata aperta, in
+              quale ora, da quale paese, con quale browser e con quale misura di schermo — e restano
+              finché il sito esiste, perché sono numeri e non riguardano nessuno in particolare. Non
+              c'è niente da chiedere di cancellare, e le
+              <a href="https://stats.dovebus.it/">statistiche sono pubbliche</a>: quello che vediamo
+              noi lo vedi anche tu. Se il tuo browser manda il segnale Global Privacy Control, non
+              vieni contato affatto.
+            </p>
+          </div>
+          <div class="limits__item">
             <p class="limits__title">Le piastrelle della mappa</p>
             <p class="limits__body">
               Lo sfondo cartografico è servito da OpenFreeMap (con CARTO come riserva), che sono
@@ -175,6 +206,13 @@
           <p>
             Nessun dato viene venduto, ceduto o usato per profilazione, e non ne esiste nessuno da
             vendere. I contatti con terzi sono solo quelli tecnici elencati qui sopra.
+          </p>
+          <p>
+            Il conteggio delle pagine non ti chiede il consenso perché non ne ha bisogno: è di prima
+            parte, resta su una macchina nostra, produce solo totali e non permette di risalire a
+            nessuno. Sono le condizioni che le linee guida del Garante pongono per gli strumenti di
+            misura assimilati ai cookie tecnici. Se una sola di queste smettesse di essere vera,
+            questa pagina cambierebbe prima — e ci sarebbe un banner.
           </p>
           <p>
             Se hai una domanda su questa pagina, se pensi che qualcosa qui descritto non corrisponda
