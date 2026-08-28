@@ -17,6 +17,7 @@
     "shots": "npm run shots --workspace=client --",
     "site-shots": "npm run site-shots --workspace=client --",
     "follow-check": "npm run follow-check --workspace=client",
+    "indexnow": "npm run indexnow --workspace=client --",
     "og": "npm run og --workspace=client",
     "import": "npm run import --workspace=server --",
     "refresh": "npm run refresh --workspace=server --",

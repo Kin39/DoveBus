@@ -494,6 +494,102 @@ Before debugging any of it, check what the *authoritative* server says
 (`curl --resolve dovebus.it:443:THE_IP https://dovebus.it/`). If those two are
 right, nothing is wrong and the answer is to wait.
 
+## 10. Search engines
+
+The site was live for four days before anyone checked whether a search engine
+knew it existed, and none did: `site:dovebus.it` returned nothing, and there was
+no property in Search Console to ask. Nothing was broken — `robots.txt`, the
+sitemap, the canonicals and the `hreflang` pairs were all correct from the first
+deploy. They were simply never *announced*, and a domain with no inbound links is
+not discovered on its own.
+
+Three of the four steps below happen in somebody's browser, once, and cannot be
+scripted. The fourth is a script, and it runs after every deploy.
+
+### Google Search Console — once
+
+1. <https://search.google.com/search-console> → add property → **Domain**
+   (the left-hand option), enter `dovebus.it`.
+2. It gives you a `TXT` record. Add it at Aruba on the apex.
+3. **Wait.** Aruba publishes several minutes after its own panel says it has, and
+   the records carry a one-hour TTL — verifying too early fails and tells you
+   nothing useful. `dig +short TXT dovebus.it` is the honest check; verify once it
+   answers.
+4. Choose **Domain**, not URL-prefix: one property then covers `dovebus.it`,
+   `www`, `api.` and `stats.` together, and the `www` and Netlify hosts are the
+   ones that would otherwise be invisible when something goes wrong on them.
+5. Sitemaps → submit `sitemap.xml`.
+6. URL Inspection → paste each of the ten URLs → **Request indexing**. Tedious,
+   and on a small clean site it is still the fastest route in.
+
+### Bing Webmaster Tools — once
+
+<https://www.bing.com/webmasters> → **Import from Google Search Console**, which
+carries the property and the sitemap across without repeating the DNS step. Worth
+the five minutes it costs: Bing also answers for DuckDuckGo, Copilot and
+ChatGPT's search.
+
+### IndexNow — after every deploy
+
+`npm run indexnow` announces the deployed URLs to Bing, Yandex, Seznam and Naver
+in one request. **Google does not participate**, so this is the other half of
+Search Console, not a replacement for it.
+
+```bash
+npm run indexnow
+```
+
+```bash
+npm run indexnow -- --dry   # verify the deploy, send nothing
+```
+
+**Run it after the deploy is live, never from the build.** A Netlify build
+finishes *before* its output is published, so a ping fired from inside the build
+announces pages whose new content is not there yet — the engine fetches the old
+one and marks it seen. That is why this is a command you run and not a build
+step.
+
+It refuses rather than guesses. Before submitting anything it reads two files off
+the production origin: the key file, whose contents must equal the key it is
+about to send, and `sitemap.xml`, which is where the URL list comes from — so a
+page added to `PAGES` is submitted on the next run with nothing to edit here. If
+the deploy is not live yet it says so and exits 1:
+
+```
+FAIL — key file https://dovebus.it/<key>.txt returned 404.
+       The deploy carrying it is not live yet.
+```
+
+`202` is a success, but a weaker one than `200`: it means the submission was
+taken and the key has not been read yet. If runs keep returning `202` and nothing
+is ever crawled, the key file is unreachable in some way this script's own fetch
+cannot see, and the thing to check is whether it is served on the real edge.
+
+The key lives in `client/indexnow.ts` and **is not a secret** — the protocol
+publishes it at `https://dovebus.it/<key>.txt` by design. It must stay *stable*:
+verification happens when an engine gets round to crawling, so changing the key
+invalidates every submission still in flight.
+
+### The Netlify subdomain
+
+`dovebus.netlify.app` used to serve a complete, crawlable second copy of the
+site — 200 on every path, with its own `robots.txt` saying `Allow: /`. The pages
+did carry a canonical pointing here, which is why it was a duplicate and not an
+outage, but a canonical is a hint an engine may decline. The last rule in
+`client/public/_redirects` now folds that host into the apex with a
+host-qualified `301!`. Deploy previews and branch deploys have different
+hostnames and are untouched.
+
+That rule names the production origin literally, because `_redirects` is a static
+file and `SITE_URL` is a build input. The build refuses rather than letting it
+rot: change `SITE_URL` without updating that line and it fails with
+
+```
+public/_redirects points at https://dovebus.it/:splat, but this build publishes
+https://example.org — update the redirect, or the deployed site sends every page
+to the wrong domain
+```
+
 ## Living with it
 
 ```bash

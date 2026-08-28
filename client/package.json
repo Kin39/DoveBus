@@ -13,6 +13,7 @@
     "shots": "tsx scripts/shots.ts",
     "site-shots": "tsx scripts/site-shots.ts",
     "follow-check": "tsx scripts/follow-check.ts",
+    "indexnow": "tsx scripts/indexnow.ts",
     "og": "tsx scripts/og.ts",
     "test": "vitest run",
     "coverage": "vitest run --coverage"

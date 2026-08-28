@@ -20,6 +20,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: [
+        "indexnow.ts",
         "src/count/counter.ts",
         "src/map/tracking.ts",
         "src/map/viewport.ts",

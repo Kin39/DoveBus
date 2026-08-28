@@ -319,6 +319,7 @@ npm run typecheck
 npm run check       # Biome: lint + format + import order
 npm run check:fix   # apply the safe fixes
 npm run headers-check   # every built page, through the real deploy headers
+npm run indexnow -- --dry   # what the next deploy would announce to the engines
 ```
 
 `verify` asserts the things a green unit test cannot: that the real feed yields

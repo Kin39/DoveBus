@@ -6,6 +6,10 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 // they can be unit tested — which is where the three measurements behind them
 // are written down as assertions rather than as comments alone.
 import { deployHeadersFile } from "./deploy-headers";
+// The IndexNow key is published as a file whose *name* is the key, so the build
+// writes it from the same constant the submission script sends — see
+// `indexnow.ts`.
+import { indexNowKeyFile } from "./indexnow";
 // `canonical`, Open Graph, the JSON-LD, `robots.txt`, `sitemap.xml` and the
 // domain printed inside the share card all have to name the same origin. It is
 // resolved in one module so they cannot disagree — see `site-url.ts`.
@@ -105,6 +109,15 @@ const PAGES = [
 ] as const;
 
 const CLIENT_ROOT = import.meta.dirname;
+
+/**
+ * The Netlify subdomain, which is a *source* in `_redirects`, never a target.
+ *
+ * Named here so the origin check below can tell "the duplicate we are folding
+ * away" apart from "a domain this build is not publishing", which is the thing
+ * that check exists to catch.
+ */
+const NETLIFY_ORIGIN = "https://dovebus.netlify.app/";
 
 /** The URL path a source file is served at: `.../en/map/index.html` → `/en/map/`. */
 function pagePathOf(filename: string): string {
@@ -285,7 +298,39 @@ function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, h
 }
 
 /**
- * Emits `robots.txt` and `sitemap.xml` from `PAGES`.
+ * Fails the build if `public/_redirects` sends traffic to a different origin.
+ *
+ * The file is committed, not generated — it is prose as much as configuration,
+ * and it has earned that by documenting an outage. But one of its rules names
+ * the production origin outright, to fold the Netlify subdomain's duplicate copy
+ * into the real site, and a static file cannot follow `SITE_URL` when that
+ * moves.
+ *
+ * So the coupling is checked instead of trusted. Building for a different origin
+ * with that line unchanged would publish a site every one of whose pages
+ * redirects to the *old* domain — the failure being guarded against is total,
+ * silent, and would look fine in the build log.
+ */
+function assertRedirectsNameThisOrigin(): void {
+  const path = resolve(CLIENT_ROOT, "public/_redirects");
+  const rules = readFileSync(path, "utf8")
+    .split("\n")
+    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("#"));
+
+  const foreign = rules
+    .flatMap((line) => line.match(/https?:\/\/[^\s]+/g) ?? [])
+    .filter((url) => !url.startsWith(`${SITE_URL}/`) && !url.startsWith(NETLIFY_ORIGIN));
+
+  if (foreign.length > 0) {
+    throw new Error(
+      `public/_redirects points at ${foreign.join(", ")}, but this build publishes ${SITE_URL} — ` +
+        `update the redirect, or the deployed site sends every page to the wrong domain`,
+    );
+  }
+}
+
+/**
+ * Emits `robots.txt`, `sitemap.xml` and the IndexNow key from `PAGES`.
  *
  * Generated rather than dropped in `public/` so a page added to the build
  * cannot silently fail to appear in the sitemap.
@@ -304,6 +349,16 @@ function crawlerFiles(): Plugin {
         fileName: "robots.txt",
         source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`,
       });
+
+      // The IndexNow key, emitted here rather than committed in `public/` for
+      // the same reason as the two files around it: the name of this file *is*
+      // the key, so a committed copy could be renamed away from the constant
+      // that gets submitted, and the resulting `403` would arrive days later
+      // from a search engine, not from the build.
+      const key = indexNowKeyFile();
+      this.emitFile({ type: "asset", fileName: key.fileName, source: key.source });
+
+      assertRedirectsNameThisOrigin();
 
       // Both languages, each as its own URL: an alternate is a page in its own
       // right, and a sitemap listing only one half of every pair asks a crawler
