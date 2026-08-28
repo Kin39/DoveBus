@@ -1,5 +1,36 @@
 # Netlify redirects.
 #
+# **This rule is first because `_redirects` is first-match-wins, and it has to
+# win.** Measured in production with it at the bottom: only `/` was redirected.
+# Every other path matched one of the trailing-slash rules further down — those
+# are not host-qualified, so they match on `dovebus.netlify.app` too — and
+# because they are unforced the existing file won and the request never reached
+# this line. `/mappa/` on the Netlify host went on serving a 200.
+#
+# What it fixes: `dovebus.netlify.app` served a complete, crawlable second copy
+# of the site, with its own `robots.txt` saying `Allow: /`. The pages did carry a
+# canonical pointing at the apex, which made it a duplicate rather than an
+# outage — but a canonical is a hint a search engine may decline, and on a domain
+# with no authority yet there is no reason to put it to the vote.
+#
+# Host-qualified, so it matches *only* that hostname: requests to `dovebus.it`
+# do not match it at all and fall through to the rules below, and
+# `deploy-preview-N--dovebus.netlify.app` and branch deploys have their own
+# hostnames and keep working as previews.
+#
+# `301!` is forced because every one of these paths *is* a file on disk, and an
+# unforced rule loses to a file that exists — which is the whole reason the
+# bottom of this file was the wrong place for it. Forcing is safe here for the
+# same reason it was dangerous in the block below: the source names a host that
+# is not the one the real site is served on, so it cannot match a request for a
+# page on `dovebus.it`.
+#
+# The target is spelled out because `_redirects` is static while `SITE_URL` is a
+# build input, so `vite.config.ts` refuses to build when the two disagree rather
+# than letting this line rot.
+https://dovebus.netlify.app/*  https://dovebus.it/:splat  301!
+
+#
 # The canonical form of every page is the trailing slash, because the pages are
 # directories on disk — `/mappa/index.html`, not `/mappa.html`. That form is
 # host-agnostic: it stays correct if the site ever moves off Netlify, whereas
@@ -56,25 +87,3 @@
 # on a header makes `hreflang` a statement about something nobody can check, and
 # turns one URL into two things to cache. `x-default` points here, and the switch
 # in the header is how a reader chooses.
-
-# The Netlify subdomain is a second, fully crawlable copy of this site.
-#
-# `dovebus.netlify.app` answers 200 on every path, serves its own `robots.txt`
-# saying `Allow: /`, and was measured doing exactly that. The pages do carry a
-# canonical pointing at the apex, which is why this is a duplicate rather than an
-# outage — but a canonical is a hint a search engine may decline, and on a domain
-# with no authority yet there is no reason to put it to the vote.
-#
-# Host-qualified, so it matches *only* that hostname: the apex serves these paths
-# untouched, and `deploy-preview-N--dovebus.netlify.app` and branch deploys have
-# different hostnames and keep working as previews.
-#
-# `301!` is forced here for the reason the block above warns about — without the
-# force flag the existing file wins and the rule never fires — and it is safe for
-# the same reason it was dangerous there: the source names a host that is not the
-# one being served, so it cannot match a request for a page on the real site.
-#
-# The target is the production origin. It is spelled out because a `_redirects`
-# file is static, and `SITE_URL` is a build input — so `vite.config.ts` refuses
-# to build when the two disagree, rather than letting this line rot.
-https://dovebus.netlify.app/*  https://dovebus.it/:splat  301!

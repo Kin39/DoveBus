@@ -575,10 +575,21 @@ invalidates every submission still in flight.
 `dovebus.netlify.app` used to serve a complete, crawlable second copy of the
 site — 200 on every path, with its own `robots.txt` saying `Allow: /`. The pages
 did carry a canonical pointing here, which is why it was a duplicate and not an
-outage, but a canonical is a hint an engine may decline. The last rule in
+outage, but a canonical is a hint an engine may decline. The **first** rule in
 `client/public/_redirects` now folds that host into the apex with a
 host-qualified `301!`. Deploy previews and branch deploys have different
 hostnames and are untouched.
+
+It is first because that file is first-match-wins, and this was got wrong once:
+with the rule at the bottom, only `/` redirected. Every other path matched one of
+the trailing-slash rules above it — those are not host-qualified, so they match
+on the Netlify host too — and being unforced they lost to the file on disk, which
+Netlify then served with a 200. Verify it after a deploy that touches this file,
+on a path and not just on the root:
+
+```bash
+curl -sI https://dovebus.netlify.app/mappa/ | head -2
+```
 
 That rule names the production origin literally, because `_redirects` is a static
 file and `SITE_URL` is a build input. The build refuses rather than letting it
