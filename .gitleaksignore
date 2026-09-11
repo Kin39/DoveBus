@@ -1,0 +1,8 @@
+# Findings that were reviewed and are not secrets. One gitleaks fingerprint per
+# line: commit:file:rule:line.
+#
+# The IndexNow key, as first committed. It is public by design — the protocol
+# requires it to be served at https://dovebus.it/<key>.txt, and it has been since
+# 2026-08-28 — see client/indexnow.ts. The current line carries an inline
+# `gitleaks:allow`; this entry covers the commit that added it without one.
+1726483afb801b59bd649b140c560f999446b12a:client/indexnow.ts:generic-api-key:30

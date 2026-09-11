@@ -26,8 +26,13 @@
  * regenerated per build would invalidate every submission still in flight.
  *
  * 32 hex characters, inside the protocol's 8–128 and its [a-zA-Z0-9-] alphabet.
+ *
+ * Secret scanners flag this line — gitleaks reports it as `generic-api-key` —
+ * because a long hex string assigned to a `KEY` looks like a credential. It was
+ * reviewed and is allowed on purpose, here and for its first commit in
+ * `.gitleaksignore`.
  */
-export const INDEXNOW_KEY = "0f7ef924e59486ba6a070b6ede2b14aa";
+export const INDEXNOW_KEY = "0f7ef924e59486ba6a070b6ede2b14aa"; // gitleaks:allow
 
 /**
  * The neutral endpoint, which forwards to every participating engine.
