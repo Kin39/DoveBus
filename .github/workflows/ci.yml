@@ -1,0 +1,59 @@
+# The checks every change has to pass, run on every push and pull request.
+#
+# Until this existed the suite ran only when someone remembered to run it, and a
+# test that had been failing for nine days went unnoticed. The steps are the
+# same commands a person runs locally (README, "Checking a build"), in the same
+# order, so a red run here reproduces with the same command on a laptop.
+#
+# What this deliberately does not run: the Playwright loops in `client/scripts/`
+# and `npm run verify`. They check the app against the *live* API and feed —
+# which is their whole point — and a CI job that fails when the regional feed
+# hiccups would teach everyone to ignore it.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only: nothing here publishes, deploys or comments. Netlify deploys the
+# site from `main` on its own, independently of this workflow.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node 22, as on Netlify (netlify.toml) and on the API's server.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint and format (Biome)
+        run: npm run check
+
+      # Tests with the 80% coverage thresholds enforced, server then client. The
+      # tests build their own fixture databases in temporary directories, so the
+      # 1 GB timetable in data/ — gitignored — is never needed here.
+      - name: Tests and coverage
+        run: npm run coverage
+
+      # The build is a check too: it refuses to emit a page whose canonical,
+      # hreflang or _redirects origin disagrees with SITE_URL.
+      - name: Build the site
+        run: npm run build:client

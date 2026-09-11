@@ -322,6 +322,12 @@ npm run headers-check   # every built page, through the real deploy headers
 npm run indexnow -- --dry   # what the next deploy would announce to the engines
 ```
 
+CI (`.github/workflows/ci.yml`) runs `typecheck`, `check`, `coverage` and the
+client build on every push and pull request. `verify`, `headers-check` and the
+Playwright loops stay manual on purpose: they talk to the live feed and the live
+API, and a job that goes red whenever the regional feed hiccups is a job people
+learn to ignore.
+
 `verify` asserts the things a green unit test cannot: that the real feed yields
 a non-empty active-service set for today, that stops resolved to comuni, that
 every trip has a drawable shape, and that the origin→destination search still
