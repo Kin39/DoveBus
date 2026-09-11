@@ -8,6 +8,17 @@ import { encodeTripUpdates, encodeVehiclePositions, type VehicleFixture } from "
 export const VP_URL = "https://feed.test/vehicle-positions";
 export const TU_URL = "https://feed.test/trip-updates";
 
+/**
+ * A day inside the fixture timetable's validity window (2026-08-12 → 2026-09-01).
+ *
+ * The API's clock is pinned here because `/healthz` compares that window with
+ * "today". Read from the wall clock, the suite passed until 1 September 2026 and
+ * failed from the 2nd, with no code having changed: the fixture had simply
+ * expired. A test that is right on the day it was written and wrong three weeks
+ * later is testing the calendar.
+ */
+export const FIXTURE_TODAY = new Date("2026-08-20T10:00:00Z");
+
 /** Recent enough to land in the "live" freshness bucket whenever the suite runs. */
 export const vehicleTimestamp = (): number => Math.floor(Date.now() / 1000) - 30;
 
@@ -28,6 +39,8 @@ export interface ApiFixture {
 export interface ApiFixtureOptions {
   /** `*` unless a test is checking what a whitelist does. */
   readonly corsOrigin?: string;
+  /** The API's clock. {@link FIXTURE_TODAY} unless a test needs the timetable expired. */
+  readonly now?: () => Date;
 }
 
 export async function createApiFixture(options: ApiFixtureOptions = {}): Promise<ApiFixture> {
@@ -75,6 +88,7 @@ export async function createApiFixture(options: ApiFixtureOptions = {}): Promise
     realtime,
     rateLimit: false,
     maxStreamsPerIp: 2,
+    now: options.now ?? (() => FIXTURE_TODAY),
     ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
   });
 

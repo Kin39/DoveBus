@@ -28,6 +28,8 @@ export interface ApiOptions {
   readonly trustProxy?: boolean | number;
   readonly maxStreamsPerIp?: number;
   readonly startedAtMs?: number;
+  /** Where `/healthz` reads today's date from. The wall clock unless a test pins it. */
+  readonly now?: () => Date;
 }
 
 /**
@@ -43,7 +45,12 @@ export function buildApi(options: ApiOptions): FastifyInstance {
     // See TRUST_PROXY: on behind a reverse proxy, off when exposed directly.
     trustProxy: options.trustProxy ?? TRUST_PROXY,
   });
-  const ctx = createApiContext(options.dbHandle, options.realtime, options.startedAtMs);
+  const ctx = createApiContext(
+    options.dbHandle,
+    options.realtime,
+    options.startedAtMs,
+    options.now,
+  );
   // Parsed here and in the SSE route from the same module, because the stream
   // writes its own headers and the two answers must be the same one.
   const allowedOrigins = parseAllowedOrigins(options.corsOrigin ?? API_CORS_ORIGIN);

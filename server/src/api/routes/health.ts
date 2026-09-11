@@ -23,7 +23,7 @@ export function registerHealthRoutes(app: FastifyInstance, ctx: ApiContext): voi
   app.get("/healthz", () => {
     const db = ctx.db();
     const meta = readFeedMeta(db);
-    const validity = meta === null ? null : feedValidity(meta, toServiceDate(new Date()));
+    const validity = meta === null ? null : feedValidity(meta, toServiceDate(ctx.now()));
     const realtime = ctx.realtime.status();
 
     const liveTripIds = ctx.realtime.state

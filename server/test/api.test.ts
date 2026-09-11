@@ -37,12 +37,35 @@ describe("HTTP API", () => {
       });
     });
 
-    test("stays 200 when the data is stale — liveness is about the process", async () => {
-      // A timetable past its validity window is a data problem, not a dead
-      // process: reporting it as down would take the API out of service for it.
-      const { status, body } = await get("/healthz");
-      expect(status).toBe(200);
-      expect(body.success).toBe(true);
+    /**
+     * This used to assert only the 200, against the fixture as it came — which was
+     * inside its validity window when the test was written, so it never exercised
+     * stale data at all. It passed for the wrong reason, and would have gone on
+     * passing if a 503 had been introduced for expired timetables.
+     */
+    describe("when the timetable has expired", () => {
+      let expired: ApiFixture;
+
+      beforeAll(async () => {
+        // The day after the fixture's feed_end_date.
+        expired = await createApiFixture({ now: () => new Date("2026-09-02T10:00:00Z") });
+        await expired.realtime.pollOnce();
+      });
+
+      afterAll(async () => {
+        await expired.dispose();
+      });
+
+      test("says degraded, and why, while still answering 200", async () => {
+        // A timetable past its validity window is a data problem, not a dead
+        // process: reporting it as down would take the API out of service for it.
+        const response = await expired.app.inject({ method: "GET", url: "/healthz" });
+        const body = response.json();
+        expect(response.statusCode).toBe(200);
+        expect(body.success).toBe(true);
+        expect(body.data.status).toBe("degraded");
+        expect(body.data.feed).toMatchObject({ feedEndDate: "20260901", expired: true });
+      });
     });
   });
 
