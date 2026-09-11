@@ -1,25 +1,119 @@
 # DoveBus
 
-Real-time map of Autolinee Toscane buses in Tuscany, with two search modes
-(line + time window, comune → comune + time) and the path already travelled.
+Where the bus is now — not where the timetable says it should be.
 
-Plan: [`DoveBus-plan.md`](DoveBus-plan.md) · Data-source validation:
-[`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) · Deploy runbook: [`DEPLOY.md`](DEPLOY.md)
+DoveBus is a live map of every Autolinee Toscane bus in Tuscany, and the API
+behind it. It is built on the region's open data — the GTFS timetable and the
+GTFS-Realtime feeds published by Regione Toscana — and has run in production
+since 24 August 2026 at [dovebus.it](https://dovebus.it), with the API at
+`api.dovebus.it`.
 
-**Status:** ready to deploy. Static import + comune enrichment + refresh job
-(Phase 1), the realtime pollers holding live positions, delays, trails and
-freshness in memory (Phase 2), the HTTP API on top of both (Phase 3), the
-mobile-first MapLibre frontend — full-screen map, draggable search sheet, both
-search modes, live trip view with trail, planned route, freshness and delay
-(Phase 4) — the public web surface of five pages with its head, JSON-LD and
-share cards (Phase 5), the owner's five findings and the English edition of the
-whole site (Phase 6), and the pre-deploy pass: proxy trust, CORS on the live
-stream, a refresh watch that gives up, and the headers the site is served with
-(Phase 7).
+It is also the first deployment of something more general: a small,
+self-hostable engine that turns a region's GTFS and GTFS-Realtime feeds into a
+public API and a map a rider can trust. Today the code still carries its Tuscan
+assumptions; taking them out is the next piece of work (see [Status](#status)).
 
-**Live since 2026-08-24:** [dovebus.it](https://dovebus.it), with the API at
-`api.dovebus.it` on a small OVH VPS behind Caddy. The runbook that put it there
-is [`DEPLOY.md`](DEPLOY.md); what the deploy itself found is §13 of the plan.
+DoveBus is an independent project. It is not a service of Autolinee Toscane and
+does not speak for it.
+
+## What it does
+
+- Shows every bus that is running, with its delay and the path it has already
+  travelled.
+- Finds the runs of a line in a time window, or the direct runs between two
+  municipalities. Direct only, no transfers: a deliberate limit.
+- Follows one trip live: planned route, stops, delay, position.
+- Works in a phone browser, in Italian and English, with no app to install, no
+  account and no advertising.
+
+## Principles
+
+- **Every position states its age.** A bus's position is already about two
+  minutes old when the regional feed publishes it. The map prints how old each
+  one is, and hides a bus that has been silent for more than five minutes rather
+  than drawing it where it no longer is.
+- **No client ever reaches the source.** One process polls the regional feeds,
+  and every request is answered from that process's own state. The public feed
+  carries the same load whether one person is using DoveBus or ten thousand.
+- **Nothing about the reader is kept.** No accounts, no cookies, no advertising,
+  no tracking of individuals. The only analytics is an aggregate page counter,
+  and a search leaves no trace on the server.
+- **Measured, not assumed.** The thresholds in the code come from measuring the
+  live feed, and the measurements are written down in
+  [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) and the plan.
+
+## Status
+
+- **Live for all of Tuscany.** The timetable loaded in late August 2026 has
+  28,976 stops, 614 line numbers and 267 municipalities.
+- **Tuscan in its assumptions.** Three things are built in: the region's
+  bounding box, the ISTAT municipal boundaries that place each stop in a
+  municipality, and a calendar model that relies on `calendar_dates` alone,
+  which is how this operator publishes. Generalising them is planned work, so
+  that another region can deploy DoveBus by pointing it at its own feeds. So is
+  turning today's API, which exists to serve the site, into a documented and
+  versioned one for anyone to build on.
+- **Licence:** AGPL-3.0-or-later (see [Licence](#licence)).
+
+## What's in this repository
+
+| Path | What it is |
+|---|---|
+| `server/` | Node.js and TypeScript: the static GTFS import into SQLite, the realtime pollers, the HTTP API |
+| `client/` | The site and the map (Vite, MapLibre GL JS), and the verification scripts in `client/scripts/` |
+| `spikes/` | The probes that measured the live feeds before any product code was written |
+| [`DoveBus-plan.md`](DoveBus-plan.md) | The plan, and the record of the decisions made along the way |
+| [`PHASE0-FINDINGS.md`](PHASE0-FINDINGS.md) | What those first measurements found |
+| [`DEPLOY.md`](DEPLOY.md) | The runbook for the production machine |
+| `.claude/reviews/` | Code reviews made with AI during development |
+| [`AI-DISCLOSURE.md`](AI-DISCLOSURE.md) | How DoveBus was built, and who did what |
+
+## Quick start
+
+Node.js 22 or later. Nothing else: the whole timetable lives in one SQLite file,
+with no database server.
+
+```bash
+npm install
+npm run import   # downloads the regional feed (~125 MB) and builds a ~1 GB database, about 2 minutes
+npm run serve    # the API, on http://127.0.0.1:3200
+npm run dev      # the site, on http://localhost:5280 (in a second terminal)
+```
+
+The sections below explain each step and everything the site and the API do.
+
+## The API at a glance
+
+Read-only JSON, no key, rate limited per address. Under `/api` there are:
+autocomplete for municipalities and lines, the two searches, the live vehicles
+inside a bounding box, the full picture of one trip, and that same picture pushed
+as Server-Sent Events. `/healthz` is for monitoring. Every parameter is in
+[Serving the API](#serving-the-api).
+
+The data belongs to Regione Toscana and is licensed CC BY 4.0: whoever reuses it
+owes the attribution in [Attribution](#attribution-cc-by--required).
+
+## How it was built
+
+DoveBus was designed and directed by its author, a bus driver on the Tuscan
+network who previously worked as a web designer, and written largely with an AI
+coding assistant (Claude, by Anthropic).
+The author decided what to build and how it should behave, tested it on real
+buses, read and reviewed the code, and approved every change. Most of the code,
+tests and documentation were written by the AI under that direction.
+[`AI-DISCLOSURE.md`](AI-DISCLOSURE.md) has the full account: who did what, which
+models were used, and how AI-written changes are marked from now on.
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening one, run
+`npm run typecheck`, `npm run check` and `npm test`: CI runs the same, on every
+push and pull request.
+
+If an AI tool wrote part of your contribution, say so in the pull request, and
+mark the commits with a `Co-Authored-By:` trailer naming the model.
+[`AI-DISCLOSURE.md`](AI-DISCLOSURE.md) explains why this project asks.
+Contributions are accepted under the project's licence, AGPL-3.0-or-later.
 
 ---
 
