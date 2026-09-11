@@ -638,3 +638,19 @@ and the API notices the swap by itself.
 
 - `Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)`
 - `Confini comunali: openpolis/ISTAT (CC BY 4.0)`
+
+## Licence
+
+The code is licensed under the **GNU Affero General Public License, version 3 or
+any later version** (`AGPL-3.0-or-later`); the full text is in [`LICENSE`](LICENSE).
+
+Affero rather than the plain GPL because this is software people use over a
+network. The GPL only asks for the source when a copy is *distributed*, and a
+modified DoveBus running on somebody else's server distributes nothing — its
+users would get the service and never the code. Section 13 of the AGPL closes
+that: if you run a modified version for others, you offer them its source.
+
+The licence covers the code and nothing else. The timetable and realtime data
+belong to Regione Toscana and stay under CC BY 4.0, whoever runs the software:
+the attribution in the section above is owed by every deployment, not just this
+one.
