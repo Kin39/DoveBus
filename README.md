@@ -53,6 +53,8 @@ does not speak for it.
   that another region can deploy DoveBus by pointing it at its own feeds. So is
   turning today's API, which exists to serve the site, into a documented and
   versioned one for anyone to build on.
+- **Listed as a reuse case** in Italy's national open data catalogue:
+  [dati.gov.it/node/503](https://www.dati.gov.it/node/503).
 - **Licence:** AGPL-3.0-or-later (see [Licence](#licence)).
 
 ## What's in this repository
