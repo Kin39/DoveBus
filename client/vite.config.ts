@@ -10,6 +10,12 @@ import { deployHeadersFile } from "./deploy-headers";
 // writes it from the same constant the submission script sends — see
 // `indexnow.ts`.
 import { indexNowKeyFile } from "./indexnow";
+// The generated Italian-only pages: the line, comune and index pages built from
+// `seo/lines.json`. The config needs them twice over — to list them in the
+// sitemap, and to know that a page which declares no `hreflang` is right rather
+// than broken.
+import { assertDataIsCurrent, readLineData, readPublishedList } from "./seo/load";
+import { buildPages, pagePaths } from "./seo/pages";
 // `canonical`, Open Graph, the JSON-LD, `robots.txt`, `sitemap.xml` and the
 // domain printed inside the share card all have to name the same origin. It is
 // resolved in one module so they cannot disagree — see `site-url.ts`.
@@ -109,6 +115,30 @@ const PAGES = [
 ] as const;
 
 const CLIENT_ROOT = import.meta.dirname;
+
+/**
+ * The generated pages, in Italian only.
+ *
+ * They are a second table beside `PAGES` rather than rows inside it, because
+ * what has to be true of them is the *opposite* of what has to be true there.
+ * A page in `PAGES` has an English twin and must say so; these have none, and a
+ * page claiming a translation that does not exist is worse than a page claiming
+ * nothing. What they share is the check that matters most and is invisible when
+ * it fails — that a page's `canonical` names the URL it is served at.
+ *
+ * Italian only by decision: the five English pages stay as they are. The
+ * queries these answer — «percorso linea 32 firenze» — are Italian, and an
+ * English translation of a Tuscan stop list would be a page with no reader.
+ */
+const ITALIAN_ONLY: readonly string[] = (() => {
+  const data = readLineData();
+  // A build is a publication. Publishing departure times out of a timetable
+  // whose window has closed is the one failure here that looks perfect from
+  // the outside, so it stops the build rather than warning into a log nobody
+  // reads.
+  assertDataIsCurrent(data, new Date());
+  return pagePaths(buildPages(data, readPublishedList()));
+})();
 
 /**
  * The Netlify subdomain, which is a *source* in `_redirects`, never a target.
@@ -249,6 +279,12 @@ function siteConstants(): Plugin {
             .replaceAll(LANGSWITCH_TOKEN, (_match, variant: string) =>
               langswitchFor(page, language, variant),
             );
+        } else if (ITALIAN_ONLY.includes(path)) {
+          // No twin, so no `hreflang` block and no switch to it. Both tokens are
+          // removed rather than left alone: the header and footer partials carry
+          // the switch, and an unexpanded token would ship as a raw HTML comment
+          // on a hundred pages.
+          expanded = expanded.replaceAll(HREFLANG_TOKEN, "").replaceAll(LANGSWITCH_TOKEN, "");
         }
         assertPairing(path, page, expanded);
         return expanded;
@@ -274,7 +310,10 @@ function siteConstants(): Plugin {
  * today) is left alone rather than guessed at.
  */
 function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, html: string): void {
-  if (!page) return;
+  if (!page) {
+    assertItalianOnly(path, html);
+    return;
+  }
   if (html.includes(HREFLANG_TOKEN)) throw new Error(`hreflang left unexpanded: ${path}`);
   if (!html.includes('rel="alternate" hreflang="en"')) {
     throw new Error(`page declares no hreflang pair: ${path} — add <!--@hreflang--> to its head`);
@@ -290,6 +329,37 @@ function assertPairing(path: string, page: (typeof PAGES)[number] | undefined, h
   // English twin and no way to reach it.
   if (!html.includes('langswitch"')) {
     throw new Error(`page offers no language switch: ${path} — add <!--@langswitch:nav-->`);
+  }
+  const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+  if (canonical !== `${SITE_URL}${path}`) {
+    throw new Error(`canonical is ${canonical ?? "missing"}, page is served at ${path}`);
+  }
+}
+
+/**
+ * What has to be true of a generated Italian-only page.
+ *
+ * The same canonical check as its bilingual neighbours — it is the one whose
+ * failure is total and invisible, and a hundred generated pages are a hundred
+ * more chances for a template to name the wrong path — plus its opposite: these
+ * pages must *not* declare an `hreflang` pair, because the English twin they
+ * would be promising does not exist.
+ *
+ * A path that is in neither table is left alone rather than guessed at, which
+ * is what the original early return did for every page. The difference is that
+ * a generated page now falls into a table instead of through the check.
+ */
+function assertItalianOnly(path: string, html: string): void {
+  if (!ITALIAN_ONLY.includes(path)) return;
+
+  if (html.includes(HREFLANG_TOKEN) || LANGSWITCH_TOKEN.test(html)) {
+    throw new Error(`generated page left a partial token unexpanded: ${path}`);
+  }
+  if (/rel="alternate" hreflang=/.test(html)) {
+    throw new Error(
+      `${path} declares an hreflang pair, but it has no English twin — ` +
+        "a page that promises a translation nobody wrote is worse than one that promises none",
+    );
   }
   const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
   if (canonical !== `${SITE_URL}${path}`) {
@@ -370,13 +440,30 @@ function crawlerFiles(): Plugin {
       // always today is one a crawler learns to ignore. Omitting it says nothing;
       // stamping it said something false. Two pages carry an `UPDATED` constant
       // and three do not, so the honest per-page date does not exist to write.
-      const urls = PAGES.flatMap((page) =>
-        (["it", "en"] as const).map(
-          (language) =>
-            `  <url>\n    <loc>${SITE_URL}${page[language]}</loc>\n` +
-            `    <priority>${page.priority}</priority>\n  </url>`,
+      //
+      // The generated Italian-only pages join the same list rather than a
+      // sitemap index of their own. An index is what a site needs past 50,000
+      // URLs; this build publishes about 120, and splitting now would buy
+      // nothing while breaking something: `sitemapUrls` in `indexnow.ts` reads
+      // `<loc>` with a regex, and on a `<sitemapindex>` those are the child
+      // sitemaps — same host, https, so every check passes — which would
+      // announce five XML files to the search engines and report success.
+      // Revisit at the thousand mark, with that function's test written first.
+      const urls = [
+        ...PAGES.flatMap((page) =>
+          (["it", "en"] as const).map(
+            (language) =>
+              `  <url>\n    <loc>${SITE_URL}${page[language]}</loc>\n` +
+              `    <priority>${page.priority}</priority>\n  </url>`,
+          ),
         ),
-      ).join("\n");
+        // Below the hand-written pages on purpose: they are the pages the site
+        // is about, and priority is relative within one sitemap.
+        ...ITALIAN_ONLY.map(
+          (path) =>
+            `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <priority>0.5</priority>\n  </url>`,
+        ),
+      ].join("\n");
 
       this.emitFile({
         type: "asset",
@@ -550,6 +637,15 @@ export default defineConfig(({ mode }) => {
           enHowItWorks: resolve(CLIENT_ROOT, "en/how-it-works/index.html"),
           enDataSource: resolve(CLIENT_ROOT, "en/data-source/index.html"),
           enPrivacy: resolve(CLIENT_ROOT, "en/privacy/index.html"),
+          // The generated pages, named after the path they are served at so a
+          // build log and a sitemap entry read as the same thing. They are
+          // written by `npm run seo-pages`, which the build runs first.
+          ...Object.fromEntries(
+            ITALIAN_ONLY.map((path) => [
+              `seo${path.replace(/\//g, "-").replace(/-$/, "")}`,
+              resolve(CLIENT_ROOT, `.${path}index.html`),
+            ]),
+          ),
         },
       },
     },

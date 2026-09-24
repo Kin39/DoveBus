@@ -1,0 +1,431 @@
+{
+  "released": 1,
+  "lines": [
+    {
+      "slug": "23-firenze",
+      "routeId": "473",
+      "shortName": "23",
+      "group": 1
+    },
+    {
+      "slug": "1-firenze",
+      "routeId": "463",
+      "shortName": "1",
+      "group": 1
+    },
+    {
+      "slug": "6-firenze",
+      "routeId": "488",
+      "shortName": "6",
+      "group": 1
+    },
+    {
+      "slug": "14-firenze",
+      "routeId": "468",
+      "shortName": "14",
+      "group": 1
+    },
+    {
+      "slug": "17-firenze",
+      "routeId": "470",
+      "shortName": "17",
+      "group": 1
+    },
+    {
+      "slug": "c2-firenze",
+      "routeId": "500",
+      "shortName": "C2",
+      "group": 1
+    },
+    {
+      "slug": "33-firenze",
+      "routeId": "480",
+      "shortName": "33",
+      "group": 1
+    },
+    {
+      "slug": "30-firenze",
+      "routeId": "478",
+      "shortName": "30",
+      "group": 1
+    },
+    {
+      "slug": "9-firenze",
+      "routeId": "494",
+      "shortName": "9",
+      "group": 1
+    },
+    {
+      "slug": "c3-firenze",
+      "routeId": "496",
+      "shortName": "C3",
+      "group": 1
+    },
+    {
+      "slug": "7-firenze",
+      "routeId": "490",
+      "shortName": "7",
+      "group": 1
+    },
+    {
+      "slug": "77-firenze",
+      "routeId": "491",
+      "shortName": "77",
+      "group": 1
+    },
+    {
+      "slug": "78-firenze",
+      "routeId": "492",
+      "shortName": "78",
+      "group": 1
+    },
+    {
+      "slug": "35-firenze",
+      "routeId": "481",
+      "shortName": "35",
+      "group": 1
+    },
+    {
+      "slug": "20-firenze",
+      "routeId": "472",
+      "shortName": "20",
+      "group": 1
+    },
+    {
+      "slug": "12-firenze",
+      "routeId": "466",
+      "shortName": "12",
+      "group": 1
+    },
+    {
+      "slug": "55-firenze",
+      "routeId": "485",
+      "shortName": "55",
+      "group": 1
+    },
+    {
+      "slug": "c4-firenze",
+      "routeId": "497",
+      "shortName": "C4",
+      "group": 1
+    },
+    {
+      "slug": "13-firenze",
+      "routeId": "467",
+      "shortName": "13",
+      "group": 1
+    },
+    {
+      "slug": "8-firenze",
+      "routeId": "493",
+      "shortName": "8",
+      "group": 1
+    },
+    {
+      "slug": "37-firenze",
+      "routeId": "483",
+      "shortName": "37",
+      "group": 1
+    },
+    {
+      "slug": "29-firenze",
+      "routeId": "476",
+      "shortName": "29",
+      "group": 1
+    },
+    {
+      "slug": "11-firenze",
+      "routeId": "465",
+      "shortName": "11",
+      "group": 1
+    },
+    {
+      "slug": "36-firenze",
+      "routeId": "482",
+      "shortName": "36",
+      "group": 1
+    },
+    {
+      "slug": "56-firenze",
+      "routeId": "486",
+      "shortName": "56",
+      "group": 1
+    },
+    {
+      "slug": "5-firenze",
+      "routeId": "484",
+      "shortName": "5",
+      "group": 1
+    },
+    {
+      "slug": "32-firenze",
+      "routeId": "92",
+      "shortName": "32",
+      "group": 1
+    },
+    {
+      "slug": "57-firenze",
+      "routeId": "487",
+      "shortName": "57",
+      "group": 1
+    },
+    {
+      "slug": "25-firenze",
+      "routeId": "474",
+      "shortName": "25",
+      "group": 1
+    },
+    {
+      "slug": "10-firenze",
+      "routeId": "464",
+      "shortName": "10",
+      "group": 1
+    },
+    {
+      "slug": "40-firenze",
+      "routeId": "436",
+      "shortName": "40",
+      "group": 1
+    },
+    {
+      "slug": "31-firenze",
+      "routeId": "479",
+      "shortName": "31",
+      "group": 1
+    },
+    {
+      "slug": "59-firenze",
+      "routeId": "447",
+      "shortName": "59",
+      "group": 1
+    },
+    {
+      "slug": "44-firenze",
+      "routeId": "439",
+      "shortName": "44",
+      "group": 1
+    },
+    {
+      "slug": "68-firenze",
+      "routeId": "489",
+      "shortName": "68",
+      "group": 1
+    },
+    {
+      "slug": "13-pisa",
+      "routeId": "1309",
+      "shortName": "13",
+      "group": 2
+    },
+    {
+      "slug": "14-pisa",
+      "routeId": "1311",
+      "shortName": "14",
+      "group": 2
+    },
+    {
+      "slug": "10-pisa",
+      "routeId": "1306",
+      "shortName": "10",
+      "group": 2
+    },
+    {
+      "slug": "2-pisa",
+      "routeId": "1316",
+      "shortName": "2",
+      "group": 2
+    },
+    {
+      "slug": "4-pisa",
+      "routeId": "1323",
+      "shortName": "4",
+      "group": 2
+    },
+    {
+      "slug": "6-pisa",
+      "routeId": "1327",
+      "shortName": "6",
+      "group": 2
+    },
+    {
+      "slug": "25-pisa",
+      "routeId": "1380",
+      "shortName": "25",
+      "group": 2
+    },
+    {
+      "slug": "1-livorno",
+      "routeId": "1339",
+      "shortName": "1+",
+      "group": 2
+    },
+    {
+      "slug": "4-livorno",
+      "routeId": "1344",
+      "shortName": "4+",
+      "group": 2
+    },
+    {
+      "slug": "3-livorno",
+      "routeId": "539",
+      "shortName": "3",
+      "group": 2
+    },
+    {
+      "slug": "5-livorno",
+      "routeId": "543",
+      "shortName": "5",
+      "group": 2
+    },
+    {
+      "slug": "15-pistoia",
+      "routeId": "61",
+      "shortName": "15",
+      "group": 2
+    },
+    {
+      "slug": "4-pistoia",
+      "routeId": "1241",
+      "shortName": "4",
+      "group": 2
+    },
+    {
+      "slug": "5-pistoia",
+      "routeId": "525",
+      "shortName": "5",
+      "group": 2
+    },
+    {
+      "slug": "8-pistoia",
+      "routeId": "1255",
+      "shortName": "8",
+      "group": 2
+    },
+    {
+      "slug": "2-lucca",
+      "routeId": "1294",
+      "shortName": "2+",
+      "group": 2
+    },
+    {
+      "slug": "1-lucca",
+      "routeId": "1293",
+      "shortName": "1+",
+      "group": 2
+    },
+    {
+      "slug": "3-lucca",
+      "routeId": "1295",
+      "shortName": "3+",
+      "group": 2
+    },
+    {
+      "slug": "1-prato",
+      "routeId": "1155",
+      "shortName": "1+",
+      "group": 2
+    },
+    {
+      "slug": "3-prato",
+      "routeId": "1171",
+      "shortName": "3+",
+      "group": 2
+    },
+    {
+      "slug": "9-prato",
+      "routeId": "1173",
+      "shortName": "9",
+      "group": 2
+    },
+    {
+      "slug": "26-scandicci",
+      "routeId": "432",
+      "shortName": "26",
+      "group": 2
+    },
+    {
+      "slug": "27-scandicci",
+      "routeId": "433",
+      "shortName": "27",
+      "group": 2
+    },
+    {
+      "slug": "15-scandicci",
+      "routeId": "1",
+      "shortName": "15",
+      "group": 2
+    },
+    {
+      "slug": "2-sesto-fiorentino",
+      "routeId": "471",
+      "shortName": "2",
+      "group": 2
+    },
+    {
+      "slug": "28-sesto-fiorentino",
+      "routeId": "475",
+      "shortName": "28",
+      "group": 2
+    },
+    {
+      "slug": "64-sesto-fiorentino",
+      "routeId": "451",
+      "shortName": "64",
+      "group": 2
+    },
+    {
+      "slug": "s51-siena",
+      "routeId": "249",
+      "shortName": "S51",
+      "group": 3
+    },
+    {
+      "slug": "s52-siena",
+      "routeId": "250",
+      "shortName": "S52",
+      "group": 3
+    },
+    {
+      "slug": "s54-siena",
+      "routeId": "752",
+      "shortName": "S54",
+      "group": 3
+    },
+    {
+      "slug": "a-arezzo",
+      "routeId": "898",
+      "shortName": "A+",
+      "group": 3
+    },
+    {
+      "slug": "b-arezzo",
+      "routeId": "899",
+      "shortName": "B+",
+      "group": 3
+    },
+    {
+      "slug": "l61-massa",
+      "routeId": "302",
+      "shortName": "L61",
+      "group": 3
+    },
+    {
+      "slug": "l60-massa",
+      "routeId": "300",
+      "shortName": "L60",
+      "group": 3
+    },
+    {
+      "slug": "l52-carrara",
+      "routeId": "1455",
+      "shortName": "L52",
+      "group": 3
+    },
+    {
+      "slug": "0g1-grosseto",
+      "routeId": "134",
+      "shortName": "0g1",
+      "group": 3
+    }
+  ]
+}

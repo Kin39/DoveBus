@@ -51,6 +51,27 @@ const PAGES = [
   { name: "6-en-how-it-works", path: "/en/how-it-works/" },
   { name: "7-en-data-source", path: "/en/data-source/" },
   { name: "8-en-privacy", path: "/en/privacy/" },
+  /*
+   * The generated pages: one of each kind, plus the worst cases the data
+   * actually contains rather than three picked for being handy.
+   *
+   * There are 112 of them and three templates, so shooting every one would
+   * photograph the same layout a hundred times. What is worth shooting is where
+   * the content stretches the layout, and that is measurable: the longest stop
+   * list, the longest line name, the longest address. If those hold at 320 px
+   * the rest do.
+   */
+  { name: "9-linee-index", path: "/linee/" },
+  { name: "10-comune-firenze", path: "/comune/firenze/" },
+  { name: "11-linea-32-firenze", path: "/linea/32-firenze/" },
+  // The longest stop list that survives the coverage rule: 57 stops.
+  { name: "12-linea-lista-lunga", path: "/linea/10-pisa/" },
+  // A 94-character line name and a 40-character headsign, both of which have to
+  // wrap inside a heading at 320 px.
+  { name: "13-linea-nome-lungo", path: "/linea/5-pistoia/" },
+  // One direction with a route and one without — the page has to read as a page
+  // in both halves, not as a page with a hole in it.
+  { name: "14-linea-mezza-senza-percorso", path: "/linea/30-firenze/" },
 ] as const;
 
 interface Findings {

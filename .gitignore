@@ -27,3 +27,10 @@ client/shots-site/
 
 # Transient render input for `npm run og` (see client/scripts/og.ts)
 client/scripts/.og.staged.html
+
+# Generated line/comune/index pages: written by `npm run seo-pages` from
+# client/seo/lines.json and client/seo/published.json, which *are* committed.
+# Netlify regenerates them at build time, so the HTML itself is derived.
+client/linea/
+client/comune/
+client/linee/

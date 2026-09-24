@@ -26,6 +26,8 @@ export default defineConfig({
         "src/map/tracking.ts",
         "src/map/urlstate.ts",
         "src/map/viewport.ts",
+        "seo/pages.ts",
+        "seo/render.ts",
         "src/ui/when.ts",
       ],
       thresholds: {

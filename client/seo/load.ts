@@ -1,0 +1,64 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { LineData, PublishedList } from "./pages.js";
+
+/**
+ * Reading the two committed inputs, in one place.
+ *
+ * Both the page generator and `vite.config.ts` need them — the generator to
+ * write the pages, the config to list them in the sitemap and to know which
+ * paths are Italian-only — and two readers with two ideas of where the files
+ * live is how the sitemap ends up describing a different set of pages from the
+ * one on disk.
+ */
+
+const SEO_ROOT = import.meta.dirname;
+
+/** Where generated pages are written, relative to the client root. Cleared before each run. */
+export const SEO_DIRECTORIES = ["linea", "comune", "linee"] as const;
+
+/**
+ * How stale the timetable may be before the build refuses to publish it.
+ *
+ * Zero: a page must not state a first departure from an edition whose own
+ * validity window has closed. The window is about twenty days and the feed is
+ * republished most days, so regenerating is cheap and being out of date is not
+ * an accident anyone would notice from the outside — the pages render perfectly
+ * while describing a timetable that has been replaced.
+ */
+export function assertDataIsCurrent(data: LineData, today: Date): void {
+  const endDate = data.feed.endDate;
+  const iso = `${endDate.slice(0, 4)}-${endDate.slice(4, 6)}-${endDate.slice(6, 8)}`;
+  const closed = new Date(`${iso}T23:59:59Z`);
+  if (Number.isNaN(closed.getTime())) {
+    throw new Error(`seo/lines.json carries an unreadable feed end date: ${endDate}`);
+  }
+  if (today > closed) {
+    throw new Error(
+      `seo/lines.json describes a timetable that expired on ${iso}. ` +
+        "Run `npm run seo-data -w @dovebus/server` against a fresh import and commit the result — " +
+        "these pages print departure times, and a closed window means they are stating old ones",
+    );
+  }
+}
+
+export function readLineData(): LineData {
+  return read<LineData>("lines.json");
+}
+
+export function readPublishedList(): PublishedList {
+  return read<PublishedList>("published.json");
+}
+
+function read<T>(name: string): T {
+  const file = resolve(SEO_ROOT, name);
+  try {
+    return JSON.parse(readFileSync(file, "utf8")) as T;
+  } catch (error) {
+    throw new Error(
+      `cannot read ${file}: ${(error as Error).message}. ` +
+        "`lines.json` comes from `npm run seo-data -w @dovebus/server`; " +
+        "`published.json` is hand-kept and committed",
+    );
+  }
+}

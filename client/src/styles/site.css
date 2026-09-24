@@ -1181,6 +1181,13 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.005em;
   line-height: 0.98;
+  /*
+     Generated line names have no spaces around their slashes —
+     "Prato - Montemurlo/Montale/Agliana" — so the heading refused to wrap and
+     pushed a 320 px page out to 435. Only ever acts on a word that does not
+     fit, so the hand-written titles are untouched.
+  */
+  overflow-wrap: break-word;
 }
 
 .page__standfirst {
@@ -1459,5 +1466,359 @@ a {
     animation-iteration-count: 1 !important;
     /* biome-ignore lint/complexity/noImportantStyles: as above. */
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The generated line, comune and index pages.
+
+   Built from `seo/lines.json`, so these rules dress content nobody hand-wrote:
+   forty stop names in a row, a dozen line codes, three numbers. The whole job
+   is to keep that readable at 375 px without inventing a second visual
+   language — everything here leans on the tokens and the rhythm the four
+   hand-written pages already established.
+   --------------------------------------------------------------------------- */
+
+/* The breadcrumb. Shown, not only marked up: a trail declared to a crawler and
+   withheld from the reader is the fault this site already removed from its FAQ. */
+/*
+   A line of text, not a row of boxes. `display: flex` blockified the links,
+   which made each one a 22 px standalone target — failing the 44 px rule the
+   screenshot round enforces, and failing it for a control that is a sentence.
+   As inline text they fall under the exemption for the honest reason: a
+   breadcrumb reads as prose, and enlarging a link inside a line of prose means
+   wrecking the leading of the line.
+*/
+.crumbs {
+  margin-bottom: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-faint, #6b7a8c);
+}
+
+.crumbs a {
+  display: inline;
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.crumbs a:hover {
+  color: var(--ink, #0d1825);
+}
+
+.crumbs [aria-current="page"] {
+  color: var(--ink, #0d1825);
+  font-weight: 600;
+}
+
+.crumbs__sep {
+  display: inline;
+  padding: 0 0.35rem;
+  opacity: 0.55;
+}
+
+/* The three service facts. A row on a phone, because three short numbers in a
+   column waste the height the stop list needs. */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.75rem;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+}
+
+.facts li {
+  margin: 0;
+}
+
+.facts b {
+  font-variant-numeric: tabular-nums;
+}
+
+.stops__title {
+  margin: 0 0 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* The route, as a line with the stops threaded on it.
+
+   A counter rather than the list's own numbers: the marker is the dot on the
+   route, and a visible "1." beside it would be a second numbering of the same
+   thing. The ordinals still reach a screen reader through the `<ol>`. */
+.stops {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style: none;
+  border-left: 2px solid var(--line, #d3dce6);
+}
+
+.stops__item {
+  position: relative;
+  padding: 0.45rem 0;
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+.stops__item::before {
+  content: "";
+  position: absolute;
+  left: -1.97rem;
+  top: 0.95rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--paper, #fff);
+  border: 2px solid var(--line, #d3dce6);
+}
+
+/* The two termini carry the line's colour: they are what a rider reads first. */
+.stops__item:first-child::before,
+.stops__item:last-child::before {
+  background: var(--accent, #018164);
+  border-color: var(--accent, #018164);
+}
+
+.stops__item:first-child,
+.stops__item:last-child {
+  font-weight: 600;
+}
+
+/* A list of lines, on a comune page and on the index. */
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-soft, #e8eef4);
+}
+
+.lines__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line-soft, #e8eef4);
+}
+
+/*
+   The row is the target, so the row is what has to clear 44 px — stated, not
+   assembled out of the padding around it, which is how it came to be 30 px and
+   then stayed 30 px through every viewport of the first round.
+
+   `min-width: 0` is the other half: without it a flex item refuses to shrink
+   below its content, and at 320 px this row forced the page 31 px wider than
+   the screen.
+*/
+.lines__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 10rem;
+  min-width: 0;
+  min-height: 44px;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* The code is the thing a rider looks for on the front of the bus, so it is
+   the thing the eye should find first going down the column. */
+.lines__code {
+  flex: 0 0 auto;
+  min-width: 3.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line, #d3dce6);
+  border-radius: 3px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.lines__name {
+  font-size: 0.95rem;
+  /* Line names run to 94 characters and pack destinations behind slashes. */
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.lines__link:hover .lines__name {
+  text-decoration: underline;
+}
+
+.lines__meta {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  color: var(--ink-faint, #6b7a8c);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The index, grouped by comune. One column on a phone; more where they fit. */
+.comuni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 2rem 2.5rem;
+}
+
+.comuni__name {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.comuni__name a {
+  color: inherit;
+}
+
+/* The call to action on a generated page.
+
+   It had no margins at all: the paragraph it sits in inherits `margin: 0` here,
+   so a 48 px button was wedged against the paragraph above it and against the
+   rule of the section below, with exactly zero pixels on either side. Measured,
+   not estimated — which is how it got shipped in the first place, since nothing
+   about it looks wrong until you put a ruler on it. */
+.page__cta {
+  margin: 1.75rem 0 2.5rem;
+}
+
+/* Both directions' service, above the stop lists.
+
+   The return direction's first and last departure used to sit 3,000 px down a
+   phone screen, behind forty stop names. "What time is the last one back" is
+   half of what this page is for. */
+.summary {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-soft, #e8eef4);
+}
+
+.summary__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line-soft, #e8eef4);
+}
+
+.summary__to {
+  flex: 1 1 11rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.summary__when {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft, #3d4c5e);
+}
+
+/* The service facts.
+
+   A row wrapped to two lines at 375 px and left the third fact orphaned under
+   the first two, which reads as a broken row rather than a deliberate stack.
+   A grid that is one column until all three fit is neither. */
+.facts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem 1.75rem;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 30rem) {
+  .facts {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+  }
+}
+
+.facts li {
+  margin: 0;
+}
+
+.facts__k {
+  color: var(--ink-faint, #6b7a8c);
+}
+
+.facts b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* What the page says instead of a route it cannot honestly draw, and the note
+   that a drawn route is the common one rather than the only one. */
+.note {
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--paper-sunk, #f4f7fa);
+  border-left: 3px solid var(--line, #d3dce6);
+  font-size: 0.93rem;
+  line-height: 1.55;
+  color: var(--ink-soft, #3d4c5e);
+  max-width: 60ch;
+}
+
+/* A stop list folded away.
+
+   Used for the second direction only. A route is genuinely long — 39 stops
+   each way on Florence's 32 — and two open lists made a phone page 6.4 screens
+   tall, most of it names being scrolled past. Every stop stays in the HTML, so
+   a crawler reads them and nothing is hidden from a reader who wants them; it
+   is one tap instead of a thousand pixels. No script: the site's FAQ opens the
+   same way. */
+.fold {
+  margin: 0 0 0.5rem;
+  border-top: 1px solid var(--line-soft, #e8eef4);
+}
+
+.fold__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  list-style: none;
+}
+
+.fold__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The chevron turns with the disclosure, and is the only thing that moves. */
+.fold__summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--accent, #018164);
+  border-bottom: 2px solid var(--accent, #018164);
+  transform: rotate(45deg);
+  transition: transform 120ms ease;
+}
+
+.fold[open] > .fold__summary::before {
+  transform: rotate(-135deg);
+}
+
+.fold__summary:focus-visible {
+  outline: 2px solid var(--accent, #018164);
+  outline-offset: 3px;
+}
+
+.fold__body {
+  padding-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold__summary::before {
+    transition: none;
   }
 }

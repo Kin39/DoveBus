@@ -28,7 +28,7 @@
     "coverage": "npm run coverage --workspace=server && npm run coverage --workspace=client",
     "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=client",
     "lint": "biome lint server client/src client/scripts client/test client/*.ts",
-    "check": "biome check server client/src client/scripts client/test client/*.ts",
+    "check": "biome check server client/src client/scripts client/seo client/test client/*.ts",
     "check:fix": "biome check --write server client/src client/scripts client/test client/*.ts",
     "format": "biome format --write server client/src client/scripts client/test client/*.ts"
   },

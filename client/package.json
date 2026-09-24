@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run seo-pages && tsc --noEmit && vite build",
     "preview": "vite preview",
     "preview:headers": "tsx scripts/serve-dist.ts",
     "headers-check": "tsx scripts/headers-check.ts",
@@ -17,7 +17,8 @@
     "indexnow": "tsx scripts/indexnow.ts",
     "og": "tsx scripts/og.ts",
     "test": "vitest run",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "seo-pages": "tsx scripts/seo-pages.ts"
   },
   "dependencies": {
     "@fontsource-variable/instrument-sans": "^5.3.0",
