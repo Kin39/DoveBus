@@ -147,12 +147,7 @@ export function collectLines(db: Db, options: CollectOptions): readonly LineSumm
     if (comuni === undefined || comuni.length === 0) return [];
     const comune = comuni[0] as string;
 
-    const directions = collectDirections(
-      db,
-      route.route_id,
-      options.date,
-      options.minimumCoverage,
-    );
+    const directions = collectDirections(db, route.route_id, options.date, options.minimumCoverage);
     // Without a direction there is nothing on the page but a title.
     if (directions.length === 0) return [];
 
@@ -237,9 +232,7 @@ function collectDirections(
     // of the three facts the page prints.
     if (row.first_s === null || row.last_s === null) return [];
 
-    const route = dominantItinerary(
-      directionItineraries(db, routeId, row.direction_id, date),
-    );
+    const route = dominantItinerary(directionItineraries(db, routeId, row.direction_id, date));
     // No itineraries at all means no runs, which the caller has already
     // excluded — but an empty direction would render as a heading over nothing.
     if (route.itineraries === 0) return [];
