@@ -16,10 +16,11 @@ import "./styles/trip.css";
 import "./count/index.js";
 
 import { ApiError, fetchTrip, fetchVehicles, searchLine, searchOd } from "./api/client.js";
-import type { LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";
+import type { LineSearchResponse, LiveTrip, TrailPoint, TripDetail, Vehicle } from "./api/types.js";
 import { t } from "./i18n/index.js";
 import { MapController } from "./map/map.js";
 import { boundsOf } from "./map/trip.js";
+import { type MapState, matchesComune, readState, writeState } from "./map/urlstate.js";
 import { clear, el, query } from "./ui/dom.js";
 import { count } from "./ui/format.js";
 import { BottomSheet } from "./ui/sheet.js";
@@ -70,6 +71,37 @@ class App {
   /** The positions the followed bus genuinely reported, drawn as marks. */
   #trail: readonly TrailPoint[] = [];
   #progressTimer: number | null = null;
+  /**
+   * The comune the open line search is narrowed to, when the address named one.
+   *
+   * It has no field of its own — it arrives only from
+   * `/mappa/?linea=…&comune=…` — so it is held here rather than read back off
+   * the form like everything else in the query.
+   */
+  #comune: string | null = null;
+  /**
+   * The comune the *next* search should use, handed over exactly once.
+   *
+   * A search started from the address and a search a rider types both go
+   * through `SearchPanel`'s submit, which is the point — one validated path,
+   * not two. But that path carries no comune, so the address leaves it here for
+   * `#runSearch` to pick up and clear. Anything a rider submits afterwards
+   * therefore finds it empty, which is right: typing a new line is a new
+   * question, and keeping Florence pinned to it would filter the list down to
+   * nothing and read as "this line is not running".
+   */
+  #pendingComune: string | null = null;
+  /**
+   * The query string the page was opened with, read before anything rewrites it.
+   *
+   * A field initialiser, and that is the whole point: the constructor body calls
+   * `#showSearch()`, which now clears the address, and `#start()` runs after
+   * that. Reading `location.search` at either of those moments finds it already
+   * empty — which is exactly what happened the first time this was wired up, and
+   * it failed silently: every `/mappa/?linea=…` link simply showed the blank
+   * form, with no error anywhere to say why.
+   */
+  readonly #openedWith: string = window.location.search;
 
   constructor() {
     this.#scroll = query(document, "#sheet-scroll");
@@ -118,16 +150,39 @@ class App {
   }
 
   async #start(): Promise<void> {
+    // Before the map: a link from a line page is a question, and its answer is
+    // a list the API alone can produce. Waiting for 1.1 MB of map to settle
+    // first would leave the reader looking at an empty sheet for no reason.
+    this.#runAddress();
     await this.#map.ready;
     this.#refreshFooter();
     await this.#refreshVehicles();
     window.setInterval(() => void this.#refreshVehicles(), VEHICLE_REFRESH_MS);
   }
 
+  /**
+   * Runs the search the address bar carries, if it carries one.
+   *
+   * This is what makes `/mappa/?linea=32&comune=firenze` — the link every line
+   * page leads with — land on the runs of that line rather than on an empty
+   * form asking the reader to type what they just clicked.
+   */
+  #runAddress(): void {
+    const state = readState(this.#openedWith);
+    if (state === null) return;
+    this.#pendingComune = state.mode === "line" ? state.comune : null;
+    this.#search.setQuery(state);
+    this.#search.submitNow();
+  }
+
   // ---- views -------------------------------------------------------------
 
   #showSearch(): void {
     this.#view = "search";
+    // Back to the empty form means back to `/mappa/`: leaving the old query in
+    // the bar would hand out a link to a search the page is no longer showing.
+    this.#comune = null;
+    this.#replaceQuery(writeState(null));
     this.#stopProgressTicker();
     this.#trip.close();
     this.#map.trip?.clear();
@@ -208,16 +263,24 @@ class App {
   async #runSearch(request: SearchQuery): Promise<void> {
     const window_ = { date: request.date, from: request.from, to: request.to };
     this.#searchDate = request.date;
+    // Consumed here and nowhere else: see `#pendingComune`.
+    this.#comune = this.#pendingComune;
+    this.#pendingComune = null;
     this.#setBusy(true);
 
     try {
       if (request.mode === "line") {
         const response = await searchLine(request.route, window_);
-        this.#results.renderLine(response, request.route, this.#runningTrips);
+        this.#results.renderLine(
+          narrowToComune(response, this.#comune),
+          request.route,
+          this.#runningTrips,
+        );
       } else {
         const response = await searchOd(request.comuneA, request.comuneB, window_);
         this.#results.renderOd(response, this.#runningTrips);
       }
+      this.#rememberInAddress(request);
       this.#results.element.dataset.ready = "true";
       this.#view = "results";
       this.#swap(this.#results.element);
@@ -230,6 +293,33 @@ class App {
     } finally {
       this.#setBusy(false);
     }
+  }
+
+  /**
+   * Puts the search that just ran into the address bar.
+   *
+   * `replaceState`, never `pushState`. A rider refining a search — 32, then
+   * C3, then back to 32 — would otherwise have to press back once per attempt
+   * to leave the map, and someone following a bus would walk backwards through
+   * their own hesitation instead of returning to the page they arrived from.
+   * The address is a description of what is on screen, not a log of how it got
+   * there.
+   *
+   * The path and the hash are kept exactly as they are: this runs on `/mappa/`
+   * and on `/en/map/`, and rewriting the path would move an English reader to
+   * the Italian page mid-search.
+   */
+  #rememberInAddress(request: SearchQuery): void {
+    const state: MapState =
+      request.mode === "line"
+        ? { mode: "line", route: request.route, comune: this.#comune }
+        : { mode: "od", comuneA: request.comuneA, comuneB: request.comuneB };
+    this.#replaceQuery(writeState(state));
+  }
+
+  /** The address with a different query string, and nothing else touched. */
+  #replaceQuery(search: string): void {
+    window.history.replaceState(null, "", `${window.location.pathname}${search}`);
   }
 
   // ---- trip --------------------------------------------------------------
@@ -447,6 +537,40 @@ function messageFor(error: unknown): string {
   // reading a log — English, and about parameters rather than about buses. It
   // was being shown to riders; now only the messages this file writes are.
   return t.errors.generic;
+}
+
+/**
+ * Keeps only the runs that belong to the comune the address asked about.
+ *
+ * The feed reuses line numbers across the region: a search for "32" comes back
+ * from the API with Florence's *piazzale Montelungo – Antella* and Empoli's
+ * *Montespertoli – Empoli* in one list, because `/search/line` matches the
+ * line's name and nothing else. A rider in Florence reading that list sees
+ * departures they cannot take.
+ *
+ * A run counts as belonging if *either* endpoint is in the comune, not both:
+ * most of these lines run out of a city to somewhere else, and requiring both
+ * would drop exactly the runs a rider is waiting for.
+ *
+ * **Truncation is the one thing this cannot fix.** The API caps a line search
+ * and says so, and the cap is applied before this filter ever sees the rows —
+ * so a narrowed list from a truncated response may be missing runs that exist.
+ * The flag is carried through untouched rather than recomputed, so the view
+ * still tells the reader the list is partial; inventing a `false` here because
+ * the filtered list looks short would turn "there may be more" into a promise
+ * we cannot keep.
+ */
+function narrowToComune(response: LineSearchResponse, comune: string | null): LineSearchResponse {
+  if (comune === null) return response;
+  const trips = response.trips.filter(
+    (trip) =>
+      matchesComune(trip.origin.comune, comune) || matchesComune(trip.destination.comune, comune),
+  );
+  // A comune that matches nothing is far more likely to be a typo in a shared
+  // link than a line that stopped running, and an empty list would say the
+  // second. The unfiltered answer is the honest one to fall back to.
+  if (trips.length === 0) return response;
+  return { ...response, trips };
 }
 
 function todayServiceDate(): string {

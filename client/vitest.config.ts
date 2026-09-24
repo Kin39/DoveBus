@@ -24,6 +24,7 @@ export default defineConfig({
         "indexnow.ts",
         "src/count/counter.ts",
         "src/map/tracking.ts",
+        "src/map/urlstate.ts",
         "src/map/viewport.ts",
         "src/ui/when.ts",
       ],

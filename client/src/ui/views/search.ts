@@ -1,6 +1,7 @@
 import { fetchComuni, fetchRoutes } from "../../api/client.js";
 import type { Comune, RouteMatch } from "../../api/types.js";
 import { t } from "../../i18n/index.js";
+import type { MapState } from "../../map/urlstate.js";
 import { Autocomplete } from "../autocomplete.js";
 import { el, query } from "../dom.js";
 import { titleCase, toServiceDate } from "../format.js";
@@ -75,6 +76,46 @@ export class SearchPanel {
   focusFirstField(): void {
     const field = this.#mode === "line" ? "#input-line" : "#input-comune-a";
     query<HTMLInputElement>(this.element, field).focus();
+  }
+
+  /**
+   * Fills the form in from a search carried in the address bar.
+   *
+   * Only the *question* comes from the URL — which line, or which two comuni.
+   * The day and the time window keep the defaults, which is deliberate: a link
+   * shared on Tuesday and opened on Friday should show Friday's buses, and a
+   * link that pinned an hour would show an empty list to everyone who opened it
+   * later than that. `/mappa/?linea=32` means "the 32", not "the 32 at 09:15 on
+   * the day I sent this".
+   *
+   * The comune on a line search is not put into any field, because there is no
+   * field for it: it narrows the results afterwards. See `matchesComune`.
+   */
+  setQuery(state: MapState): void {
+    if (state.mode === "line") {
+      this.setMode("line");
+      // `null` for the chosen suggestion: the value came from an address, not
+      // from the dropdown, and claiming otherwise would tell the autocomplete
+      // a suggestion had been picked when none was.
+      query<HTMLInputElement>(this.element, "#input-line").value = state.route;
+      return;
+    }
+    this.setMode("od");
+    this.#comuneA.setValue(state.comuneA, null);
+    this.#comuneB.setValue(state.comuneB, null);
+  }
+
+  /**
+   * Runs the search the form currently holds, as though it had been submitted.
+   *
+   * Exists so a search arriving in the address bar goes down the *same* path as
+   * one a rider types — the same commit of the three time fields, the same
+   * validation, the same callback. A second code path that assembled the query
+   * itself would be the one place the two could drift, and it would drift
+   * silently, on the links the line pages depend on.
+   */
+  submitNow(): void {
+    this.#submit();
   }
 
   #bind(): void {
