@@ -9,7 +9,8 @@
       "!**/coverage/**",
       "!**/package-lock.json",
       "!data/**",
-      "!spikes/**"
+      "!spikes/**",
+      "!client/seo/lines.json"
     ]
   },
   "formatter": {

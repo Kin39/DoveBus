@@ -1,14 +1,14 @@
 {
   "feed": {
-    "startDate": "20260918",
-    "endDate": "20261008",
-    "sha1": "3085d4413e99621759cefe8d828e5c2e60665378",
-    "importedAt": "2026-09-18T15:32:38.555Z"
+    "startDate": "20261008",
+    "endDate": "20261028",
+    "sha1": "e197884aadc4465a590af74543afd410158b19e7",
+    "importedAt": "2026-10-08T13:06:43.589Z"
   },
-  "referenceDate": "20260924",
+  "referenceDate": "20261008",
   "minimumTrips": 70,
   "minimumCoverage": 0.75,
-  "generatedAt": "2026-09-24T14:26:49.170Z",
+  "generatedAt": "2026-10-08T13:11:09.638Z",
   "lines": [
     {
       "routeId": "1305",
@@ -17,7 +17,10 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "1-pisa",
-      "comuni": ["Pisa", "San Giuliano Terme"],
+      "comuni": [
+        "Pisa",
+        "San Giuliano Terme"
+      ],
       "trips": 338,
       "lengthKm": 9.5,
       "directions": [
@@ -52,9 +55,12 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "23-firenze",
-      "comuni": ["Firenze", "Bagno a Ripoli"],
+      "comuni": [
+        "Firenze",
+        "Bagno a Ripoli"
+      ],
       "trips": 297,
-      "lengthKm": 22.5,
+      "lengthKm": 19.8,
       "directions": [
         {
           "directionId": 0,
@@ -119,7 +125,7 @@
             "NUOVA SCUOLA CARABINIERI",
             "FIRENZE T2 GUIDONI"
           ],
-          "itineraries": 7,
+          "itineraries": 8,
           "coverage": 0.87
         },
         {
@@ -156,12 +162,18 @@
             "COLONNA LICEO MICHELANGIOLO",
             "NICCOLINI",
             "LEOPARDI GRAMSCI",
-            "tmp PIAZZA PIAVE",
+            "temporanea PIAZZA PIAVE.",
+            "ZECCA VECCHIA NAZIONALE",
+            "CORSO DEI TINTORI",
+            "SERRISTORI DEMIDOFF",
+            "SERRISTORI PIAZZA POGGI",
+            "CELLINI FERRUCCI",
             "ORSINI MICHELANGIOLO",
             "SALUTATI CECCHI",
             "SALUTATI RIPOLI",
             "SALUTATI GAVINANA",
-            "GUALFREDOTTO",
+            "TMP GIOVANNI DALLE BANDE NERE",
+            "DATINI TRAVERSARI",
             "DATINI ERBOSA",
             "GRAN BRETAGNA D'ANGIÒ",
             "GRAN BRETAGNA LAME",
@@ -183,7 +195,7 @@
             "CROCE A VARLIANO"
           ],
           "itineraries": 4,
-          "coverage": 0.91
+          "coverage": 0.92
         }
       ]
     },
@@ -194,7 +206,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "1-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 292,
       "lengthKm": 3.8,
       "directions": [
@@ -256,7 +270,10 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "6-firenze",
-      "comuni": ["Firenze", "Scandicci"],
+      "comuni": [
+        "Firenze",
+        "Scandicci"
+      ],
       "trips": 286,
       "lengthKm": 12.6,
       "directions": [
@@ -285,9 +302,8 @@
             "STAZIONE SCALETTE",
             "SCALA SANTA MARIA NOVELLA",
             "PESCAIA DI SANTA ROSA",
-            "SODERINI TORRINO SANTA ROSA",
-            "LUNGARNO DI SANTA ROSA",
-            "SANTA MARIA AL PIGNONE",
+            "ARIOSTO ALEARDI",
+            "ALEARDI MONTE OLIVETO",
             "VANNI GADDI",
             "VANNI ROSSO FIORENTINO",
             "FRANCAVILLA",
@@ -304,7 +320,7 @@
             "OSPEDALE TORRE GALLI"
           ],
           "itineraries": 6,
-          "coverage": 0.81
+          "coverage": 0.75
         },
         {
           "directionId": 1,
@@ -362,7 +378,10 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "3-pisa",
-      "comuni": ["Pisa", "San Giuliano Terme"],
+      "comuni": [
+        "Pisa",
+        "San Giuliano Terme"
+      ],
       "trips": 281,
       "lengthKm": 7.9,
       "directions": [
@@ -397,9 +416,12 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "14-firenze",
-      "comuni": ["Firenze", "Fiesole"],
+      "comuni": [
+        "Firenze",
+        "Fiesole"
+      ],
       "trips": 276,
-      "lengthKm": 9.5,
+      "lengthKm": 14.2,
       "directions": [
         {
           "directionId": 0,
@@ -409,7 +431,7 @@
           "last": "21:47",
           "headwayMinutes": 7,
           "stops": [
-            "FIRENZE Stazione S.M.N.",
+            "FIRENZE Stazione SMN",
             "STAZIONE PIAZZA ADUA",
             "INDIPENDENZA XXVII APRILE",
             "XXVII APRILE SANTA REPARATA",
@@ -418,7 +440,7 @@
             "COLONNA LICEO MICHELANGIOLO",
             "NICCOLINI",
             "LEOPARDI GRAMSCI",
-            "tmp PIAZZA PIAVE",
+            "temporanea PIAZZA PIAVE.",
             "ARNOLFO CIMABUE",
             "ARNOLFO ORCAGNA",
             "SELLA CAMPOFIORE",
@@ -443,7 +465,7 @@
         },
         {
           "directionId": 1,
-          "headsign": "L-FIRENZE Stazione S.M.N.",
+          "headsign": "L-FIRENZE Stazione SMN",
           "trips": 138,
           "first": "05:10",
           "last": "21:29",
@@ -476,7 +498,7 @@
             "CAVOUR SAN MARCO",
             "XXVII APRILE SAN ZANOBI",
             "INDIPENDENZA NAZIONALE",
-            "FIRENZE Stazione S.M.N."
+            "FIRENZE Stazione SMN"
           ],
           "itineraries": 2,
           "coverage": 0.88
@@ -490,7 +512,13 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "210-prato",
-      "comuni": ["Prato", "Carmignano", "Poggio a Caiano", "Signa", "Lastra a Signa"],
+      "comuni": [
+        "Prato",
+        "Carmignano",
+        "Poggio a Caiano",
+        "Signa",
+        "Lastra a Signa"
+      ],
       "trips": 273,
       "lengthKm": 15.5,
       "directions": [
@@ -507,7 +535,7 @@
         },
         {
           "directionId": 1,
-          "headsign": "CARMIGNANO Vergheretana",
+          "headsign": "CARMIGNANO REDI SCUOLE 2",
           "trips": 136,
           "first": "06:05",
           "last": "20:52",
@@ -525,7 +553,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "17-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 270,
       "lengthKm": 9.5,
       "directions": [
@@ -562,12 +592,12 @@
             "TOSELLI BELLINI",
             "TOSELLI VERACINI",
             "PIAZZA PUCCINI",
-            "MANIFATTURA TABACCHI",
-            "CASCINE ISTITUTO AGRARIO",
-            "CASCINE SCUOLA DI AGRARIA",
-            "CASCINE PIAZZALE KENNEDY"
+            "TARTINI PUCCINI",
+            "TARTINI PASSERELLA",
+            "BOITO PERGOLESI",
+            "BOITO"
           ],
-          "itineraries": 4,
+          "itineraries": 6,
           "coverage": 0.78
         },
         {
@@ -622,7 +652,9 @@
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "2-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 239,
       "lengthKm": 12.6,
       "directions": [
@@ -657,7 +689,9 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "2-prato",
-      "comuni": ["Prato"],
+      "comuni": [
+        "Prato"
+      ],
       "trips": 238,
       "lengthKm": 13.9,
       "directions": [
@@ -681,7 +715,7 @@
           "headwayMinutes": 8,
           "stops": [],
           "itineraries": 9,
-          "coverage": 0.61
+          "coverage": 0.64
         }
       ]
     },
@@ -692,7 +726,9 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "5-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 238,
       "lengthKm": 5.7,
       "directions": [
@@ -704,8 +740,8 @@
           "last": "20:28",
           "headwayMinutes": 8,
           "stops": [],
-          "itineraries": 4,
-          "coverage": 0.5
+          "itineraries": 3,
+          "coverage": 0.53
         },
         {
           "directionId": 1,
@@ -715,8 +751,8 @@
           "last": "20:48",
           "headwayMinutes": 7,
           "stops": [],
-          "itineraries": 7,
-          "coverage": 0.31
+          "itineraries": 6,
+          "coverage": 0.54
         }
       ]
     },
@@ -727,7 +763,9 @@
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "1-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 232,
       "lengthKm": 11,
       "directions": [
@@ -824,9 +862,11 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "1-prato",
-      "comuni": ["Prato"],
+      "comuni": [
+        "Prato"
+      ],
       "trips": 227,
-      "lengthKm": 11.1,
+      "lengthKm": 10.2,
       "directions": [
         {
           "directionId": 0,
@@ -905,7 +945,7 @@
             "FILZI 6",
             "FILZI 8",
             "FILZI 10",
-            "PISTOIESE 26",
+            "CURTATONE 4",
             "PIAZZA SAN DOMENICO",
             "DUOMO",
             "PIAZZA MERCATALE",
@@ -935,9 +975,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "c1-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 202,
-      "lengthKm": 3.9,
+      "lengthKm": 4.3,
       "directions": [
         {
           "directionId": 0,
@@ -948,7 +990,7 @@
           "headwayMinutes": 11,
           "stops": [],
           "itineraries": 3,
-          "coverage": 0.68
+          "coverage": 0.62
         },
         {
           "directionId": 1,
@@ -959,7 +1001,7 @@
           "headwayMinutes": 11,
           "stops": [],
           "itineraries": 2,
-          "coverage": 0.67
+          "coverage": 0.7
         }
       ]
     },
@@ -970,9 +1012,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "c2-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 199,
-      "lengthKm": 4.5,
+      "lengthKm": 4.4,
       "directions": [
         {
           "directionId": 0,
@@ -1007,7 +1051,7 @@
           "last": "01:10",
           "headwayMinutes": 11,
           "stops": [
-            "PIAZZA BECCARIA",
+            "PIAZZA BECCARIA.",
             "AGNOLO",
             "SALVEMINI",
             "ORIUOLO DUOMO",
@@ -1020,7 +1064,6 @@
             "PALAZZUOLO",
             "BORGO OGNISSANTI",
             "ROTONDA BARBETTI",
-            "SOLFERINO",
             "LEOPOLDA T1 PORTA AL PRATO"
           ],
           "itineraries": 1,
@@ -1035,7 +1078,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "33-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 196,
       "lengthKm": 3.3,
       "directions": [
@@ -1092,7 +1137,9 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "3-prato",
-      "comuni": ["Prato"],
+      "comuni": [
+        "Prato"
+      ],
       "trips": 188,
       "lengthKm": 9,
       "directions": [
@@ -1154,8 +1201,6 @@
             "CIULLI 2",
             "FOSCOLO 2",
             "OSPEDALE Pensilina",
-            "SAN PAOLO 2",
-            "TRAVERSA PISTOIESE 2",
             "PALLI 2",
             "PALLI 4",
             "VIA RIMINI (Passerella Scuole Reggiana)",
@@ -1175,7 +1220,7 @@
             "PRATO Stazione FS"
           ],
           "itineraries": 2,
-          "coverage": 0.91
+          "coverage": 0.9
         }
       ]
     },
@@ -1186,9 +1231,14 @@
       "comune": "Vernio",
       "comuneSlug": "vernio",
       "slug": "214-vernio",
-      "comuni": ["Vernio", "Vaiano", "Prato", "Cantagallo"],
+      "comuni": [
+        "Vernio",
+        "Vaiano",
+        "Prato",
+        "Cantagallo"
+      ],
       "trips": 187,
-      "lengthKm": 44.1,
+      "lengthKm": 43.2,
       "directions": [
         {
           "directionId": 0,
@@ -1221,7 +1271,11 @@
       "comune": "Sesto Fiorentino",
       "comuneSlug": "sesto-fiorentino",
       "slug": "2-sesto-fiorentino",
-      "comuni": ["Sesto Fiorentino", "Calenzano", "Firenze"],
+      "comuni": [
+        "Sesto Fiorentino",
+        "Calenzano",
+        "Firenze"
+      ],
       "trips": 179,
       "lengthKm": 14.4,
       "directions": [
@@ -1338,7 +1392,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "30-firenze",
-      "comuni": ["Firenze", "Campi Bisenzio", "Sesto Fiorentino"],
+      "comuni": [
+        "Firenze",
+        "Campi Bisenzio",
+        "Sesto Fiorentino"
+      ],
       "trips": 178,
       "lengthKm": 18.7,
       "directions": [
@@ -1366,7 +1424,6 @@
             "CAMPO LA VILLA",
             "TOGLIATTI CONFINI",
             "CONFINI BARBERINESE",
-            "BARBERINESE LA VILLA",
             "BARBERINESE CASTRONELLA",
             "FIESOLI PASOLINI",
             "FIESOLI SAN MARTINO",
@@ -1410,7 +1467,7 @@
             "LEOPOLDA PORTA AL PRATO"
           ],
           "itineraries": 6,
-          "coverage": 0.89
+          "coverage": 0.88
         }
       ]
     },
@@ -1421,7 +1478,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "9-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 176,
       "lengthKm": 6.6,
       "directions": [
@@ -1470,9 +1529,33 @@
           "first": "05:53",
           "last": "01:15",
           "headwayMinutes": 13,
-          "stops": [],
+          "stops": [
+            "FOGGINI T1 FEDERIGA",
+            "FOGGINI BACCIO DA MONTELUPO",
+            "BEZZUOLI LE TORRI",
+            "LUNGA LE TORRI",
+            "MARTINI LIVORNO",
+            "MARTINI BASSI",
+            "MARTINI SIGNORELLI",
+            "SIGNORELLI BRAMANTE",
+            "BIBLIOTECANOVA",
+            "CANOVA SANTA MARIA A CINTOIA",
+            "CANOVA MARTINI",
+            "CANOVA ARGIN GROSSO",
+            "ARGIN GROSSO CANOVA",
+            "ARGIN GROSSO S.M. A CINTOIA",
+            "ARGIN GROSSO ASSISI",
+            "ARGIN GROSSO FEDI",
+            "ARGIN GROSSO CISERI",
+            "TORCICODA ARGIN GROSSO",
+            "TORCICODA SERNESI",
+            "TORCICODA GERANI",
+            "TORCICODA GINESTRE",
+            "TORCICODA AZALEE",
+            "PIAZZA BATONI"
+          ],
           "itineraries": 3,
-          "coverage": 0.7
+          "coverage": 0.77
         }
       ]
     },
@@ -1483,7 +1566,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "c3-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 168,
       "lengthKm": 5,
       "directions": [
@@ -1513,8 +1598,8 @@
             "LEOPARDI GRAMSCI",
             "PIAZZA BECCARIA"
           ],
-          "itineraries": 1,
-          "coverage": 1
+          "itineraries": 2,
+          "coverage": 0.94
         },
         {
           "directionId": 1,
@@ -1523,24 +1608,9 @@
           "first": "07:07",
           "last": "01:15",
           "headwayMinutes": 13,
-          "stops": [
-            "PIAZZA BECCARIA",
-            "AGNOLO",
-            "PEPI",
-            "MAGLIABECHI",
-            "CORSO DEI TINTORI",
-            "SANTA MARIA SOPRARNO",
-            "BORGO SAN IACOPO",
-            "FRESCOBALDI",
-            "GUICCIARDINI CARRAIA",
-            "SODERINI TORRINO SANTA ROSA",
-            "LUNGARNO DI SANTA ROSA",
-            "SANTA MARIA AL PIGNONE",
-            "VITTORIO VENETO",
-            "LEOPOLDA T1 PORTA AL PRATO"
-          ],
-          "itineraries": 1,
-          "coverage": 1
+          "stops": [],
+          "itineraries": 2,
+          "coverage": 0.58
         }
       ]
     },
@@ -1551,7 +1621,10 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "7-firenze",
-      "comuni": ["Firenze", "Fiesole"],
+      "comuni": [
+        "Firenze",
+        "Fiesole"
+      ],
       "trips": 167,
       "lengthKm": 7.3,
       "directions": [
@@ -1669,7 +1742,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "77-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 162,
       "lengthKm": 4.1,
       "directions": [
@@ -1728,7 +1803,9 @@
       "comune": "Lucca",
       "comuneSlug": "lucca",
       "slug": "2-lucca",
-      "comuni": ["Lucca"],
+      "comuni": [
+        "Lucca"
+      ],
       "trips": 160,
       "lengthKm": 8.8,
       "directions": [
@@ -1829,7 +1906,9 @@
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "4-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 159,
       "lengthKm": 10.3,
       "directions": [
@@ -1927,7 +2006,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "78-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 158,
       "lengthKm": 4,
       "directions": [
@@ -1986,7 +2067,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "35-firenze",
-      "comuni": ["Firenze", "Campi Bisenzio", "Signa"],
+      "comuni": [
+        "Firenze",
+        "Campi Bisenzio",
+        "Signa"
+      ],
       "trips": 157,
       "lengthKm": 12.7,
       "directions": [
@@ -2056,7 +2141,12 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "207-prato",
-      "comuni": ["Prato", "Montemurlo", "Agliana", "Montale"],
+      "comuni": [
+        "Prato",
+        "Montemurlo",
+        "Agliana",
+        "Montale"
+      ],
       "trips": 156,
       "lengthKm": 13.8,
       "directions": [
@@ -2069,7 +2159,7 @@
           "headwayMinutes": 13,
           "stops": [],
           "itineraries": 22,
-          "coverage": 0.21
+          "coverage": 0.2
         },
         {
           "directionId": 1,
@@ -2091,7 +2181,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "20-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 151,
       "lengthKm": 11.6,
       "directions": [
@@ -2196,9 +2288,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "12-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 150,
-      "lengthKm": 7.8,
+      "lengthKm": 8.2,
       "directions": [
         {
           "directionId": 0,
@@ -2210,8 +2304,8 @@
           "stops": [
             "IL PRATO BARBETTI",
             "SODERINI TORRINO SANTA ROSA",
-            "LUNGARNO DI SANTA ROSA",
-            "SANTA MARIA AL PIGNONE",
+            "ARIOSTO ALEARDI",
+            "ALEARDI MONTE OLIVETO",
             "VANNI GADDI",
             "VANNI ROSSO FIORENTINO",
             "GIOVANNI DELLA CASA",
@@ -2246,7 +2340,6 @@
             "MICHELANGIOLO PALAGI",
             "MICHELANGIOLO FERRUCCI",
             "AMENDOLA ARNOLFO",
-            "AMENDOLA GIOBERTI",
             "MAZZINI BOVIO",
             "MAZZINI MASACCIO",
             "MASACCIO GIAMBOLOGNA",
@@ -2275,7 +2368,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "55-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 148,
       "lengthKm": 8.3,
       "directions": [
@@ -2359,9 +2454,14 @@
       "comune": "Scandicci",
       "comuneSlug": "scandicci",
       "slug": "26-scandicci",
-      "comuni": ["Scandicci", "Firenze", "Signa", "Lastra a Signa"],
+      "comuni": [
+        "Scandicci",
+        "Signa",
+        "Firenze",
+        "Lastra a Signa"
+      ],
       "trips": 145,
-      "lengthKm": 8.1,
+      "lengthKm": 10.9,
       "directions": [
         {
           "directionId": 0,
@@ -2372,7 +2472,7 @@
           "headwayMinutes": 14,
           "stops": [],
           "itineraries": 5,
-          "coverage": 0.41
+          "coverage": 0.39
         },
         {
           "directionId": 1,
@@ -2419,7 +2519,10 @@
       "comune": "Scandicci",
       "comuneSlug": "scandicci",
       "slug": "27-scandicci",
-      "comuni": ["Scandicci", "Firenze"],
+      "comuni": [
+        "Scandicci",
+        "Firenze"
+      ],
       "trips": 144,
       "lengthKm": 15,
       "directions": [
@@ -2449,8 +2552,6 @@
             "ROMA BIBLIOTECA COMUNALE",
             "ROMA CELLINI",
             "GIOTTO CIMABUE",
-            "FANFANI MARCO POLO",
-            "SCUOLA RUSSELL",
             "COSTITUZIONE SETTE REGOLE",
             "COSTITUZIONE T1 VILLA COSTANZA",
             "DEI CILIEGI FANFANI",
@@ -2511,7 +2612,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "c4-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 141,
       "lengthKm": 6.4,
       "directions": [
@@ -2543,8 +2646,8 @@
             "PO PALAGI VILLA MARGHERITA",
             "PRESIDIO OSPEDALIERO PALAGI"
           ],
-          "itineraries": 1,
-          "coverage": 1
+          "itineraries": 2,
+          "coverage": 0.95
         },
         {
           "directionId": 1,
@@ -2553,27 +2656,9 @@
           "first": "06:48",
           "last": "01:13",
           "headwayMinutes": 16,
-          "stops": [
-            "PRESIDIO OSPEDALIERO PALAGI",
-            "MICHELANGIOLO FERRUCCI",
-            "CELLINI FORNACE",
-            "SERRISTORI TERRAZZA MARASCO",
-            "SERRISTORI GRAZIE",
-            "SANTA MARIA SOPRARNO",
-            "BORGO SAN IACOPO",
-            "FRESCOBALDI",
-            "PIAZZA SAURO",
-            "PIAZZA PIATTELLINA",
-            "PIAZZA TASSO",
-            "ARIOSTO DELL'ORTO",
-            "SANT'ONOFRIO",
-            "BORGO OGNISSANTI",
-            "SANTA LUCIA",
-            "STAZIONE ORTI ORICELLARI",
-            "SANTA MARIA MAGGIORE"
-          ],
-          "itineraries": 1,
-          "coverage": 1
+          "stops": [],
+          "itineraries": 2,
+          "coverage": 0.68
         }
       ]
     },
@@ -2584,7 +2669,9 @@
       "comune": "Certaldo",
       "comuneSlug": "certaldo",
       "slug": "certaldo-certaldo",
-      "comuni": ["Certaldo"],
+      "comuni": [
+        "Certaldo"
+      ],
       "trips": 140,
       "lengthKm": null,
       "directions": [
@@ -2595,7 +2682,10 @@
           "first": "07:30",
           "last": "00:45",
           "headwayMinutes": 15,
-          "stops": ["Certaldo Basso", "Certaldo Alto"],
+          "stops": [
+            "Certaldo Basso",
+            "Certaldo Alto"
+          ],
           "itineraries": 1,
           "coverage": 1
         },
@@ -2606,7 +2696,10 @@
           "first": "07:35",
           "last": "00:50",
           "headwayMinutes": 15,
-          "stops": ["Certaldo Alto", "Certaldo Basso"],
+          "stops": [
+            "Certaldo Alto",
+            "Certaldo Basso"
+          ],
           "itineraries": 1,
           "coverage": 1
         }
@@ -2619,9 +2712,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "13-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 138,
-      "lengthKm": 6.8,
+      "lengthKm": 12.9,
       "directions": [
         {
           "directionId": 0,
@@ -2643,8 +2738,7 @@
             "CAMPO MARTE FS",
             "MAZZINI REPETTI",
             "SEGNI",
-            "tmp PIAZZA PIAVE",
-            "PECORI GIRALDI",
+            "temporanea PIAZZA PIAVE.",
             "MICHELANGIOLO BASTIONI",
             "MICHELANGIOLO PIETRO TACCA",
             "MICHELANGIOLO CAMPO ASSI",
@@ -2691,9 +2785,11 @@
       "comune": "Lucca",
       "comuneSlug": "lucca",
       "slug": "1-lucca",
-      "comuni": ["Lucca"],
+      "comuni": [
+        "Lucca"
+      ],
       "trips": 137,
-      "lengthKm": 8.8,
+      "lengthKm": 8.7,
       "directions": [
         {
           "directionId": 0,
@@ -2780,9 +2876,11 @@
       "comune": "Lucca",
       "comuneSlug": "lucca",
       "slug": "3-lucca",
-      "comuni": ["Lucca"],
+      "comuni": [
+        "Lucca"
+      ],
       "trips": 136,
-      "lengthKm": 3.4,
+      "lengthKm": 5.7,
       "directions": [
         {
           "directionId": 0,
@@ -2845,7 +2943,9 @@
       "comune": "Carrara",
       "comuneSlug": "carrara",
       "slug": "l52-carrara",
-      "comuni": ["Carrara"],
+      "comuni": [
+        "Carrara"
+      ],
       "trips": 133,
       "lengthKm": 10.5,
       "directions": [
@@ -2939,9 +3039,12 @@
       "comune": "Sesto Fiorentino",
       "comuneSlug": "sesto-fiorentino",
       "slug": "28-sesto-fiorentino",
-      "comuni": ["Sesto Fiorentino", "Firenze"],
+      "comuni": [
+        "Sesto Fiorentino",
+        "Firenze"
+      ],
       "trips": 133,
-      "lengthKm": 9.2,
+      "lengthKm": 9.6,
       "directions": [
         {
           "directionId": 0,
@@ -2997,8 +3100,7 @@
             "ARIOSTO TASSONI",
             "ARIOSTO CIOMPI",
             "ARIOSTO SAN LORENZO",
-            "ARIOSTO OSMANNORO",
-            "ARIOSTO MILLE",
+            "NERUDA MILLE",
             "MILLE ZAMBRA FS",
             "MILLE GRAMSCI",
             "GRAMSCI CALAMANDREI",
@@ -3031,7 +3133,11 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "r1-prato",
-      "comuni": ["Prato", "Firenze", "Sesto Fiorentino"],
+      "comuni": [
+        "Prato",
+        "Firenze",
+        "Sesto Fiorentino"
+      ],
       "trips": 132,
       "lengthKm": 17.5,
       "directions": [
@@ -3066,15 +3172,17 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "8-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 130,
-      "lengthKm": 7.7,
+      "lengthKm": 12.2,
       "directions": [
         {
           "directionId": 0,
           "headsign": "BISARNO",
           "trips": 65,
-          "first": "05:50",
+          "first": "05:49",
           "last": "21:30",
           "headwayMinutes": 15,
           "stops": [
@@ -3085,12 +3193,13 @@
             "DELLA ROBBIA ARTISTI",
             "DELLA ROBBIA LA FARINA",
             "SEGNI",
-            "tmp PIAZZA PIAVE",
+            "temporanea PIAZZA PIAVE.",
             "ORSINI MICHELANGIOLO",
             "SALUTATI CECCHI",
             "SALUTATI RIPOLI",
             "SALUTATI GAVINANA",
-            "GUALFREDOTTO",
+            "TMP GIOVANNI DALLE BANDE NERE",
+            "DATINI TRAVERSARI",
             "DATINI ERBOSA",
             "GRAN BRETAGNA D'ANGIÒ",
             "GRAN BRETAGNA LAME",
@@ -3100,7 +3209,7 @@
             "BISARNO"
           ],
           "itineraries": 2,
-          "coverage": 0.83
+          "coverage": 1
         },
         {
           "directionId": 1,
@@ -3114,7 +3223,6 @@
             "GRAN BRETAGNA KIEV",
             "GRAN BRETAGNA KYOTO",
             "GRAN BRETAGNA ERBOSA",
-            "DATINI FEDERICO D'ANTIOCHIA",
             "DATINI SER LAPO MAZZEI",
             "DATINI GUALFREDOTTO",
             "GIOVANNI DALLE BANDE NERE",
@@ -3122,7 +3230,6 @@
             "BALDOVINI",
             "ORSINI FERRUCCI",
             "AMENDOLA ARNOLFO",
-            "AMENDOLA GIOBERTI",
             "MAZZINI BOVIO",
             "MAZZINI MASACCIO",
             "MASACCIO GIAMBOLOGNA",
@@ -3146,9 +3253,13 @@
       "comune": "Cascina",
       "comuneSlug": "cascina",
       "slug": "190-cascina",
-      "comuni": ["Cascina", "Pisa", "Calcinaia"],
+      "comuni": [
+        "Cascina",
+        "Pisa",
+        "Calcinaia"
+      ],
       "trips": 129,
-      "lengthKm": 13.6,
+      "lengthKm": 14,
       "directions": [
         {
           "directionId": 0,
@@ -3181,7 +3292,10 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "37-firenze",
-      "comuni": ["Firenze", "Impruneta"],
+      "comuni": [
+        "Firenze",
+        "Impruneta"
+      ],
       "trips": 126,
       "lengthKm": 9.6,
       "directions": [
@@ -3271,9 +3385,12 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "29-firenze",
-      "comuni": ["Firenze", "Sesto Fiorentino"],
+      "comuni": [
+        "Firenze",
+        "Sesto Fiorentino"
+      ],
       "trips": 119,
-      "lengthKm": 10.4,
+      "lengthKm": 10.6,
       "directions": [
         {
           "directionId": 0,
@@ -3295,7 +3412,7 @@
             "BARACCA IL BARCO",
             "BARACCA ALLORI",
             "BARACCA PIETRI",
-            "BARACCA QUARTIERE 5",
+            "GORI GEMINIANI",
             "PRATESE DI MOTRONE",
             "PRATESE MAGRINI",
             "PRATESE PALAGIO DEGLI SPINI",
@@ -3337,7 +3454,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "11-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 118,
       "lengthKm": 12.8,
       "directions": [
@@ -3436,13 +3555,96 @@
       ]
     },
     {
+      "routeId": "1",
+      "shortName": "15",
+      "longName": "Badia a Settimo - T1 De Andrè",
+      "comune": "Scandicci",
+      "comuneSlug": "scandicci",
+      "slug": "15-scandicci",
+      "comuni": [
+        "Scandicci"
+      ],
+      "trips": 117,
+      "lengthKm": 8,
+      "directions": [
+        {
+          "directionId": 0,
+          "headsign": "BADIA A SETTIMO",
+          "trips": 59,
+          "first": "05:25",
+          "last": "21:10",
+          "headwayMinutes": 16,
+          "stops": [
+            "T1 DE ANDRÉ",
+            "VESPUCCI MANZONI",
+            "MANZONI",
+            "SAN BARTOLO FOSCOLO",
+            "COLOMBO DEI CILIEGI",
+            "FANFANI DEI CILIEGI",
+            "DEI CILIEGI SCUOLA RODARI",
+            "COSTITUZIONE SETTE REGOLE",
+            "DON PEROSI PONCHIELLI",
+            "NEWTON CODIGNOLA",
+            "NEWTON CHARTA '77",
+            "PISANA SAN PAOLO",
+            "PISANA OLMO",
+            "PISANA DI PORTO",
+            "PISANA DELLA PIEVE",
+            "PISANA VIOTTOLONE",
+            "PISANA LE FORNACI",
+            "BARONTINI GOZZOLI",
+            "EUROPA STAGNACCI",
+            "STAGNACCI MAFAI",
+            "DI PORTO GEMMI",
+            "SAN COLOMBANO LA FIORITA",
+            "BADIA A SETTIMO"
+          ],
+          "itineraries": 2,
+          "coverage": 0.92
+        },
+        {
+          "directionId": 1,
+          "headsign": "T1 DE ANDRÉ",
+          "trips": 58,
+          "first": "05:25",
+          "last": "20:46",
+          "headwayMinutes": 16,
+          "stops": [
+            "BADIA A SETTIMO",
+            "SAN COLOMBANO SAN LORENZO",
+            "CIMITERO SAN COLOMBANO",
+            "SAN COLOMBANO",
+            "STAGNACCIO BASSO MATTARELLA",
+            "STAGNACCIO BASSO DEL CINI",
+            "STAGNACCIO BASSO EUROPA",
+            "EUROPA BARONTINI",
+            "BARONTINI PISANA",
+            "PISANA MEUCCI",
+            "PISANA DI CASTELPULCI",
+            "PISANA PIEVE A SETTIMO",
+            "PISANA PARLAMENTO EUROPEO",
+            "PISANA CHARTA '77",
+            "NEWTON DEPOSITO AT",
+            "NEWTON BACHELET",
+            "DON PEROSI CRISTOFORI",
+            "COSTITUZIONE T1 VILLA COSTANZA",
+            "T1 DE ANDRÉ"
+          ],
+          "itineraries": 2,
+          "coverage": 0.95
+        }
+      ]
+    },
+    {
       "routeId": "249",
       "shortName": "S51",
       "longName": "CORONCINA-P.ZA DEL MERCATO ",
       "comune": "Siena",
       "comuneSlug": "siena",
       "slug": "s51-siena",
-      "comuni": ["Siena"],
+      "comuni": [
+        "Siena"
+      ],
       "trips": 115,
       "lengthKm": 4.1,
       "directions": [
@@ -3454,7 +3656,7 @@
           "last": "21:00",
           "headwayMinutes": 15,
           "stops": [
-            "CORONCINA Cap.",
+            "CORONCINA Capolinea",
             "CORONCINA",
             "CASSIA SUD 37",
             "CERCHIAIA",
@@ -3475,7 +3677,7 @@
         },
         {
           "directionId": 1,
-          "headsign": "CORONCINA Cap.",
+          "headsign": "CORONCINA Capolinea",
           "trips": 57,
           "first": "06:45",
           "last": "20:45",
@@ -3495,7 +3697,7 @@
             "CERCHIAIA",
             "CASSIA SUD DISTRIBUTORE",
             "CORONCINA",
-            "CORONCINA Cap."
+            "CORONCINA Capolinea"
           ],
           "itineraries": 1,
           "coverage": 1
@@ -3509,7 +3711,9 @@
       "comune": "Siena",
       "comuneSlug": "siena",
       "slug": "s52-siena",
-      "comuni": ["Siena"],
+      "comuni": [
+        "Siena"
+      ],
       "trips": 115,
       "lengthKm": 4.6,
       "directions": [
@@ -3531,14 +3735,11 @@
             "ARETINA DUE PONTI",
             "ARETINA 127",
             "ARETINA 65",
-            "PORTA PISPINI",
-            "PIAZZA MARIO CIONI",
-            "PISPINI",
             "PANTANETO",
             "LOGGE DEL PAPA"
           ],
           "itineraries": 3,
-          "coverage": 0.94
+          "coverage": 0.92
         },
         {
           "directionId": 1,
@@ -3551,9 +3752,6 @@
             "LOGGE DEL PAPA",
             "SAN MARTINO",
             "PONTE DI ROMANA",
-            "PISPINI",
-            "PIAZZA MARIO CIONI",
-            "PORTA PISPINI",
             "ARETINA 100",
             "ARETINA 158",
             "ARETINA DUE PONTI",
@@ -3566,7 +3764,7 @@
             "SIENA MERCATO ORTOFRUTTICOLO"
           ],
           "itineraries": 3,
-          "coverage": 0.94
+          "coverage": 0.93
         }
       ]
     },
@@ -3577,7 +3775,9 @@
       "comune": "Siena",
       "comuneSlug": "siena",
       "slug": "s54-siena",
-      "comuni": ["Siena"],
+      "comuni": [
+        "Siena"
+      ],
       "trips": 114,
       "lengthKm": 11.4,
       "directions": [
@@ -3594,7 +3794,7 @@
         },
         {
           "directionId": 1,
-          "headsign": "CORONCINA Cap.",
+          "headsign": "CORONCINA Capolinea",
           "trips": 59,
           "first": "06:32",
           "last": "20:47",
@@ -3635,7 +3835,7 @@
             "CERCHIAIA",
             "CASSIA SUD DISTRIBUTORE",
             "CORONCINA",
-            "CORONCINA Cap."
+            "CORONCINA Capolinea"
           ],
           "itineraries": 5,
           "coverage": 0.86
@@ -3649,9 +3849,11 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "13-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 113,
-      "lengthKm": 4.8,
+      "lengthKm": 7,
       "directions": [
         {
           "directionId": 0,
@@ -3731,7 +3933,9 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "14-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 113,
       "lengthKm": 5.2,
       "directions": [
@@ -3809,7 +4013,10 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "36-firenze",
-      "comuni": ["Firenze", "Impruneta"],
+      "comuni": [
+        "Firenze",
+        "Impruneta"
+      ],
       "trips": 112,
       "lengthKm": 9.6,
       "directions": [
@@ -3895,7 +4102,9 @@
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "3-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 110,
       "lengthKm": 7.5,
       "directions": [
@@ -3972,91 +4181,15 @@
       ]
     },
     {
-      "routeId": "1",
-      "shortName": "15",
-      "longName": "Badia a Settimo - T1 De Andrè",
-      "comune": "Scandicci",
-      "comuneSlug": "scandicci",
-      "slug": "15-scandicci",
-      "comuni": ["Scandicci"],
-      "trips": 105,
-      "lengthKm": 8,
-      "directions": [
-        {
-          "directionId": 0,
-          "headsign": "BADIA A SETTIMO",
-          "trips": 53,
-          "first": "05:25",
-          "last": "21:10",
-          "headwayMinutes": 18,
-          "stops": [
-            "T1 DE ANDRÉ",
-            "VESPUCCI MANZONI",
-            "MANZONI",
-            "SAN BARTOLO FOSCOLO",
-            "COLOMBO DEI CILIEGI",
-            "SCUOLA RUSSELL",
-            "COSTITUZIONE SETTE REGOLE",
-            "DON PEROSI PONCHIELLI",
-            "NEWTON CODIGNOLA",
-            "NEWTON CHARTA '77",
-            "PISANA SAN PAOLO",
-            "PISANA OLMO",
-            "PISANA DI PORTO",
-            "PISANA DELLA PIEVE",
-            "PISANA VIOTTOLONE",
-            "PISANA LE FORNACI",
-            "BARONTINI GOZZOLI",
-            "EUROPA STAGNACCI",
-            "STAGNACCI MAFAI",
-            "DI PORTO GEMMI",
-            "SAN COLOMBANO LA FIORITA",
-            "BADIA A SETTIMO"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        },
-        {
-          "directionId": 1,
-          "headsign": "T1 DE ANDRÉ",
-          "trips": 52,
-          "first": "05:25",
-          "last": "20:46",
-          "headwayMinutes": 18,
-          "stops": [
-            "BADIA A SETTIMO",
-            "SAN COLOMBANO SAN LORENZO",
-            "CIMITERO SAN COLOMBANO",
-            "SAN COLOMBANO",
-            "STAGNACCIO BASSO MATTARELLA",
-            "STAGNACCIO BASSO DEL CINI",
-            "STAGNACCIO BASSO EUROPA",
-            "EUROPA BARONTINI",
-            "BARONTINI PISANA",
-            "PISANA MEUCCI",
-            "PISANA DI CASTELPULCI",
-            "PISANA PIEVE A SETTIMO",
-            "PISANA PARLAMENTO EUROPEO",
-            "PISANA CHARTA '77",
-            "NEWTON DEPOSITO AT",
-            "NEWTON BACHELET",
-            "DON PEROSI CRISTOFORI",
-            "COSTITUZIONE T1 VILLA COSTANZA",
-            "T1 DE ANDRÉ"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        }
-      ]
-    },
-    {
       "routeId": "486",
       "shortName": "56",
       "longName": "Le Piagge FS - via Niccolò da Tolentino",
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "56-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 105,
       "lengthKm": 12.1,
       "directions": [
@@ -4154,7 +4287,9 @@
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "montenero-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 104,
       "lengthKm": null,
       "directions": [
@@ -4165,7 +4300,10 @@
           "first": "07:15",
           "last": "20:03",
           "headwayMinutes": 15,
-          "stops": ["Montenero Basso", "Montenero Alto"],
+          "stops": [
+            "Montenero Basso",
+            "Montenero Alto"
+          ],
           "itineraries": 1,
           "coverage": 1
         },
@@ -4176,7 +4314,10 @@
           "first": "07:15",
           "last": "20:03",
           "headwayMinutes": 15,
-          "stops": ["Montenero Alto", "Montenero Basso"],
+          "stops": [
+            "Montenero Alto",
+            "Montenero Basso"
+          ],
           "itineraries": 1,
           "coverage": 1
         }
@@ -4189,7 +4330,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "5-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 102,
       "lengthKm": 13.2,
       "directions": [
@@ -4284,120 +4427,6 @@
       ]
     },
     {
-      "routeId": "92",
-      "shortName": "32",
-      "longName": "piazzale Montelungo - Antella",
-      "comune": "Firenze",
-      "comuneSlug": "firenze",
-      "slug": "32-firenze",
-      "comuni": ["Firenze", "Bagno a Ripoli"],
-      "trips": 102,
-      "lengthKm": 18,
-      "directions": [
-        {
-          "directionId": 0,
-          "headsign": "ANTELLA",
-          "trips": 52,
-          "first": "05:27",
-          "last": "21:38",
-          "headwayMinutes": 19,
-          "stops": [
-            "STAZIONE MONTELUNGO",
-            "BESLAN T1 FORTEZZA",
-            "INDIPENDENZA XXVII APRILE",
-            "XXVII APRILE SANTA REPARATA",
-            "SAN MARCO PIAZZA",
-            "COLONNA PERGOLA",
-            "COLONNA LICEO MICHELANGIOLO",
-            "NICCOLINI",
-            "LEOPARDI GRAMSCI",
-            "tmp PIAZZA PIAVE",
-            "ORSINI MICHELANGIOLO",
-            "SALUTATI CECCHI",
-            "SALUTATI RIPOLI",
-            "SALUTATI GAVINANA",
-            "GUALFREDOTTO",
-            "DATINI ERBOSA",
-            "GRAN BRETAGNA D'ANGIÒ",
-            "GRAN BRETAGNA LAME",
-            "GRAN BRETAGNA PORTOGALLO",
-            "PIAZZA FRANCIA",
-            "OLANDA EUROPA",
-            "DANIMARCA",
-            "CHIANTIGIANA SCUOLE",
-            "CHIANTIGIANA SAN MARCELLINO",
-            "CHIANTIGIANA DELLA TORRE",
-            "FORTINI GUALDRADA",
-            "FORTINI CHIANTIGIANA",
-            "MUSEO GINO BARTALI",
-            "CHIANTIGIANA FERRERO",
-            "CHIANTIGIANA LONGO",
-            "CHIANTIGIANA DELL'ANTELLA",
-            "DI ANTELLA BELMONTE",
-            "OSPEDALE ANNUNZIATA",
-            "DI ANTELLA 05",
-            "DI ANTELLA TORRICELLA",
-            "BRIG. PARTIGIANE TORRICELLA",
-            "BRIG. PARTIGIANE GIARDINI",
-            "ANTELLA_"
-          ],
-          "itineraries": 2,
-          "coverage": 0.95
-        },
-        {
-          "directionId": 1,
-          "headsign": "STAZIONE MONTELUNGO",
-          "trips": 50,
-          "first": "05:48",
-          "last": "21:42",
-          "headwayMinutes": 19,
-          "stops": [
-            "ANTELLA_",
-            "DI ANTELLA PERUZZI",
-            "DI ANTELLA PERTINI",
-            "DI ANTELLA ROMANELLI",
-            "DI ANTELLA 06",
-            "OSMA PARCHEGGIO",
-            "DI ANTELLA PONTE A NICCHERI",
-            "CHIANTIGIANA PONTE A NICCHERI",
-            "CIMITERO SAN PIERO A EMA",
-            "CHIANTIGIANA DA FELTRE",
-            "CHIANTIGIANA CIRCOLO",
-            "CHIANTIGIANA PONTE A EMA",
-            "CHIANTIGIANA DIACCETO",
-            "CHIANTIGIANA BUIA",
-            "CHIANTIGIANA IMPIANTI SPORT",
-            "Provvisoria Danimarca",
-            "OLANDA FRANCIA",
-            "GRAN BRETAGNA KIEV",
-            "GRAN BRETAGNA KYOTO",
-            "GRAN BRETAGNA ERBOSA",
-            "DATINI FEDERICO D'ANTIOCHIA",
-            "DATINI SER LAPO MAZZEI",
-            "DATINI GUALFREDOTTO",
-            "GIOVANNI DALLE BANDE NERE",
-            "SALUTATI BRUNI",
-            "BALDOVINI",
-            "ORSINI FERRUCCI",
-            "AMENDOLA ARNOLFO",
-            "AMENDOLA GIOBERTI",
-            "SEGNI",
-            "MATTONAIA",
-            "COLONNA LICEO CASTELNUOVO",
-            "COLONNA MUSEO ARCHEOLOGICO",
-            "SAN MARCO BASILICA",
-            "XXVII APRILE SAN ZANOBI",
-            "INDIPENDENZA RIDOLFI",
-            "FORTEZZA T1 STROZZI",
-            "SPADOLINI T1 STROZZI",
-            "STAZIONE MONTELUNGO"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        }
-      ]
-    },
-    {
       "routeId": "201",
       "shortName": "130",
       "longName": "SIENA-POGGIBONSI-S.GIMIGNANO- STRADA ",
@@ -4446,7 +4475,11 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "57-firenze",
-      "comuni": ["Firenze", "Sesto Fiorentino", "Calenzano"],
+      "comuni": [
+        "Firenze",
+        "Sesto Fiorentino",
+        "Calenzano"
+      ],
       "trips": 100,
       "lengthKm": 17.2,
       "directions": [
@@ -4569,7 +4602,9 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "10-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 99,
       "lengthKm": 25.3,
       "directions": [
@@ -4662,7 +4697,9 @@
       "comune": "San Miniato",
       "comuneSlug": "san-miniato",
       "slug": "320-san-miniato",
-      "comuni": ["San Miniato"],
+      "comuni": [
+        "San Miniato"
+      ],
       "trips": 99,
       "lengthKm": 4.6,
       "directions": [
@@ -4697,7 +4734,13 @@
       "comune": "Empoli",
       "comuneSlug": "empoli",
       "slug": "48-empoli",
-      "comuni": ["Empoli", "Montelupo Fiorentino", "Capraia e Limite", "Vinci", "Fucecchio"],
+      "comuni": [
+        "Empoli",
+        "Montelupo Fiorentino",
+        "Capraia e Limite",
+        "Vinci",
+        "Fucecchio"
+      ],
       "trips": 99,
       "lengthKm": 7.9,
       "directions": [
@@ -4732,7 +4775,12 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "25-firenze",
-      "comuni": ["Firenze", "Vaglia", "Fiesole", "Sesto Fiorentino"],
+      "comuni": [
+        "Firenze",
+        "Vaglia",
+        "Fiesole",
+        "Sesto Fiorentino"
+      ],
       "trips": 98,
       "lengthKm": 11.5,
       "directions": [
@@ -4819,13 +4867,131 @@
       ]
     },
     {
+      "routeId": "92",
+      "shortName": "32",
+      "longName": "piazzale Montelungo - Antella",
+      "comune": "Firenze",
+      "comuneSlug": "firenze",
+      "slug": "32-firenze",
+      "comuni": [
+        "Firenze",
+        "Bagno a Ripoli"
+      ],
+      "trips": 98,
+      "lengthKm": 21.2,
+      "directions": [
+        {
+          "directionId": 0,
+          "headsign": "ANTELLA.-",
+          "trips": 50,
+          "first": "05:24",
+          "last": "21:35",
+          "headwayMinutes": 20,
+          "stops": [
+            "STAZIONE MONTELUNGO",
+            "BESLAN T1 FORTEZZA",
+            "INDIPENDENZA XXVII APRILE",
+            "XXVII APRILE SANTA REPARATA",
+            "SAN MARCO PIAZZA",
+            "COLONNA PERGOLA",
+            "COLONNA LICEO MICHELANGIOLO",
+            "NICCOLINI",
+            "LEOPARDI GRAMSCI",
+            "temporanea PIAZZA PIAVE.",
+            "ARNOLFO CIMABUE",
+            "ARNOLFO ORCAGNA",
+            "SELLA CAMPOFIORE",
+            "SELLA DE SANCTIS",
+            "SELLA BELLARIVA",
+            "tmp LAPO DA CASTIGLIONCHIO",
+            "DATINI TRAVERSARI",
+            "DATINI ERBOSA",
+            "GRAN BRETAGNA D'ANGIÒ",
+            "GRAN BRETAGNA LAME",
+            "GRAN BRETAGNA PORTOGALLO",
+            "PIAZZA FRANCIA",
+            "OLANDA EUROPA",
+            "DANIMARCA",
+            "CHIANTIGIANA SCUOLE",
+            "CHIANTIGIANA SAN MARCELLINO",
+            "CHIANTIGIANA DELLA TORRE",
+            "FORTINI GUALDRADA",
+            "FORTINI CHIANTIGIANA",
+            "MUSEO GINO BARTALI",
+            "CHIANTIGIANA FERRERO",
+            "CHIANTIGIANA LONGO",
+            "DI ANTELLA BELMONTE",
+            "OSPEDALE ANNUNZIATA",
+            "DI ANTELLA 05",
+            "DI ANTELLA TORRICELLA",
+            "BRIG. PARTIGIANE TORRICELLA",
+            "BRIG. PARTIGIANE GIARDINI",
+            "ANTELLA.-"
+          ],
+          "itineraries": 2,
+          "coverage": 1
+        },
+        {
+          "directionId": 1,
+          "headsign": "STAZIONE MONTELUNGO",
+          "trips": 48,
+          "first": "05:48",
+          "last": "21:37",
+          "headwayMinutes": 20,
+          "stops": [
+            "ANTELLA.-",
+            "DI ANTELLA PERUZZI",
+            "DI ANTELLA PERTINI",
+            "DI ANTELLA ROMANELLI",
+            "DI ANTELLA 06",
+            "OSMA PARCHEGGIO",
+            "DI ANTELLA PONTE A NICCHERI",
+            "CHIANTIGIANA PONTE A NICCHERI",
+            "CIMITERO SAN PIERO A EMA",
+            "CHIANTIGIANA DA FELTRE",
+            "CHIANTIGIANA CIRCOLO",
+            "CHIANTIGIANA PONTE A EMA",
+            "CHIANTIGIANA DIACCETO",
+            "CHIANTIGIANA BUIA",
+            "CHIANTIGIANA IMPIANTI SPORT",
+            "BADIA A RIPOLI",
+            "OLANDA FRANCIA",
+            "GRAN BRETAGNA KIEV",
+            "GRAN BRETAGNA KYOTO",
+            "GRAN BRETAGNA ERBOSA",
+            "DATINI SER LAPO MAZZEI",
+            "DATINI GUALFREDOTTO",
+            "LANZA MADONNONE",
+            "LANZA DE SANCTIS",
+            "PIAGENTINA BEATO ANGELICO",
+            "BEATO ANGELICO GHIRLANDAIO",
+            "BEATO ANGELICO AMENDOLA",
+            "SEGNI",
+            "MATTONAIA",
+            "COLONNA LICEO CASTELNUOVO",
+            "COLONNA MUSEO ARCHEOLOGICO",
+            "SAN MARCO BASILICA",
+            "XXVII APRILE SAN ZANOBI",
+            "INDIPENDENZA RIDOLFI",
+            "FORTEZZA T1 STROZZI",
+            "SPADOLINI T1 STROZZI",
+            "STAZIONE MONTELUNGO"
+          ],
+          "itineraries": 1,
+          "coverage": 1
+        }
+      ]
+    },
+    {
       "routeId": "61",
       "shortName": "15",
       "longName": "Gello - Pistoia FS - Candeglia - Pistoia FS - Gello",
       "comune": "Pistoia",
       "comuneSlug": "pistoia",
       "slug": "15-pistoia",
-      "comuni": ["Pistoia"],
+      "comuni": [
+        "Pistoia"
+      ],
       "trips": 95,
       "lengthKm": 13,
       "directions": [
@@ -4947,13 +5113,15 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "10-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 93,
-      "lengthKm": 8,
+      "lengthKm": 7.6,
       "directions": [
         {
           "directionId": 0,
-          "headsign": "SETTIGNANO.",
+          "headsign": "SETTIGNANO",
           "trips": 47,
           "first": "06:00",
           "last": "22:02",
@@ -4983,7 +5151,7 @@
             "SETTIGNANO."
           ],
           "itineraries": 2,
-          "coverage": 1
+          "coverage": 0.96
         },
         {
           "directionId": 1,
@@ -5028,7 +5196,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "40-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 92,
       "lengthKm": 7.4,
       "directions": [
@@ -5082,7 +5252,9 @@
       "comune": "Pistoia",
       "comuneSlug": "pistoia",
       "slug": "4-pistoia",
-      "comuni": ["Pistoia"],
+      "comuni": [
+        "Pistoia"
+      ],
       "trips": 90,
       "lengthKm": 6.3,
       "directions": [
@@ -5160,7 +5332,9 @@
       "comune": "Massa",
       "comuneSlug": "massa",
       "slug": "l61-massa",
-      "comuni": ["Massa"],
+      "comuni": [
+        "Massa"
+      ],
       "trips": 90,
       "lengthKm": 6.5,
       "directions": [
@@ -5234,7 +5408,12 @@
       "comune": "Scarperia e San Piero",
       "comuneSlug": "scarperia-e-san-piero",
       "slug": "305-b-scarperia-e-san-piero",
-      "comuni": ["Scarperia e San Piero", "Barberino di Mugello", "Borgo San Lorenzo", "Vicchio"],
+      "comuni": [
+        "Scarperia e San Piero",
+        "Barberino di Mugello",
+        "Borgo San Lorenzo",
+        "Vicchio"
+      ],
       "trips": 90,
       "lengthKm": 44.8,
       "directions": [
@@ -5269,7 +5448,9 @@
       "comune": "Sesto Fiorentino",
       "comuneSlug": "sesto-fiorentino",
       "slug": "64-sesto-fiorentino",
-      "comuni": ["Sesto Fiorentino"],
+      "comuni": [
+        "Sesto Fiorentino"
+      ],
       "trips": 90,
       "lengthKm": 5.5,
       "directions": [
@@ -5339,9 +5520,11 @@
       "comune": "Pistoia",
       "comuneSlug": "pistoia",
       "slug": "5-pistoia",
-      "comuni": ["Pistoia"],
+      "comuni": [
+        "Pistoia"
+      ],
       "trips": 89,
-      "lengthKm": 5.5,
+      "lengthKm": 8.3,
       "directions": [
         {
           "directionId": 0,
@@ -5436,7 +5619,7 @@
         "Massa e Cozzile"
       ],
       "trips": 89,
-      "lengthKm": 30.3,
+      "lengthKm": 12.3,
       "directions": [
         {
           "directionId": 0,
@@ -5477,7 +5660,7 @@
         "San Casciano in Val di Pesa"
       ],
       "trips": 89,
-      "lengthKm": 45.3,
+      "lengthKm": 45.5,
       "directions": [
         {
           "directionId": 0,
@@ -5499,7 +5682,7 @@
           "headwayMinutes": 22,
           "stops": [],
           "itineraries": 20,
-          "coverage": 0.51
+          "coverage": 0.5
         }
       ]
     },
@@ -5510,7 +5693,9 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "9-prato",
-      "comuni": ["Prato"],
+      "comuni": [
+        "Prato"
+      ],
       "trips": 87,
       "lengthKm": 10.4,
       "directions": [
@@ -5573,9 +5758,11 @@
       "comune": "Pistoia",
       "comuneSlug": "pistoia",
       "slug": "8-pistoia",
-      "comuni": ["Pistoia"],
+      "comuni": [
+        "Pistoia"
+      ],
       "trips": 87,
-      "lengthKm": 9.3,
+      "lengthKm": 7.1,
       "directions": [
         {
           "directionId": 0,
@@ -5663,7 +5850,10 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "2-pisa",
-      "comuni": ["Pisa", "San Giuliano Terme"],
+      "comuni": [
+        "Pisa",
+        "San Giuliano Terme"
+      ],
       "trips": 86,
       "lengthKm": 6.1,
       "directions": [
@@ -5748,9 +5938,11 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "4-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 86,
-      "lengthKm": 7.3,
+      "lengthKm": 6.3,
       "directions": [
         {
           "directionId": 0,
@@ -5815,8 +6007,6 @@
             "SAN ZENO 2",
             "SANTA CATERINA",
             "PARLASCIO",
-            "BAGNI DI NERONE 1",
-            "BRENNERO SAN ZENO 1",
             "LUCCHESE",
             "LUCCHESE 4",
             "RINDI 2",
@@ -5839,7 +6029,9 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "6-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 86,
       "lengthKm": 7,
       "directions": [
@@ -5909,7 +6101,11 @@
       "comune": "Calci",
       "comuneSlug": "calci",
       "slug": "161-calci",
-      "comuni": ["Calci", "Cascina", "Vicopisano"],
+      "comuni": [
+        "Calci",
+        "Cascina",
+        "Vicopisano"
+      ],
       "trips": 86,
       "lengthKm": 7.8,
       "directions": [
@@ -5938,119 +6134,18 @@
       ]
     },
     {
-      "routeId": "479",
-      "shortName": "31",
-      "longName": "piazzale Montelungo - Grassina",
-      "comune": "Firenze",
-      "comuneSlug": "firenze",
-      "slug": "31-firenze",
-      "comuni": ["Firenze", "Bagno a Ripoli"],
-      "trips": 85,
-      "lengthKm": 13.6,
-      "directions": [
-        {
-          "directionId": 0,
-          "headsign": "GRASSINA UMBERTO I",
-          "trips": 43,
-          "first": "05:52",
-          "last": "21:25",
-          "headwayMinutes": 22,
-          "stops": [
-            "STAZIONE MONTELUNGO",
-            "BESLAN T1 FORTEZZA",
-            "INDIPENDENZA XXVII APRILE",
-            "XXVII APRILE SANTA REPARATA",
-            "SAN MARCO PIAZZA",
-            "COLONNA PERGOLA",
-            "COLONNA LICEO MICHELANGIOLO",
-            "NICCOLINI",
-            "LEOPARDI GRAMSCI",
-            "tmp PIAZZA PIAVE",
-            "ORSINI MICHELANGIOLO",
-            "SALUTATI CECCHI",
-            "SALUTATI RIPOLI",
-            "SALUTATI GAVINANA",
-            "GUALFREDOTTO",
-            "DATINI ERBOSA",
-            "GRAN BRETAGNA D'ANGIÒ",
-            "GRAN BRETAGNA LAME",
-            "GRAN BRETAGNA PORTOGALLO",
-            "PIAZZA FRANCIA",
-            "OLANDA EUROPA",
-            "DANIMARCA",
-            "CHIANTIGIANA SCUOLE",
-            "CHIANTIGIANA SAN MARCELLINO",
-            "CHIANTIGIANA DELLA TORRE",
-            "FORTINI GUALDRADA",
-            "FORTINI CHIANTIGIANA",
-            "MUSEO GINO BARTALI",
-            "CHIANTIGIANA FERRERO",
-            "CHIANTIGIANA LONGO",
-            "CHIANTIGIANA ALIGHIERI",
-            "CHIANTIGIANA BORGO SANI",
-            "GRASSINA UMBERTO I"
-          ],
-          "itineraries": 2,
-          "coverage": 0.94
-        },
-        {
-          "directionId": 1,
-          "headsign": "STAZIONE MONTELUNGO",
-          "trips": 42,
-          "first": "06:17",
-          "last": "21:42",
-          "headwayMinutes": 23,
-          "stops": [
-            "GRASSINA UMBERTO I",
-            "CHIANTIGIANA BARTOLINI",
-            "CHIANTIGIANA CAMPIGLIANO",
-            "CHIANTIGIANA BELMONTE",
-            "CHIANTIGIANA PONTE A NICCHERI",
-            "CIMITERO SAN PIERO A EMA",
-            "CHIANTIGIANA DA FELTRE",
-            "CHIANTIGIANA CIRCOLO",
-            "CHIANTIGIANA PONTE A EMA",
-            "CHIANTIGIANA DIACCETO",
-            "CHIANTIGIANA BUIA",
-            "CHIANTIGIANA IMPIANTI SPORT",
-            "Provvisoria Danimarca",
-            "OLANDA FRANCIA",
-            "GRAN BRETAGNA KIEV",
-            "GRAN BRETAGNA KYOTO",
-            "GRAN BRETAGNA ERBOSA",
-            "DATINI FEDERICO D'ANTIOCHIA",
-            "DATINI SER LAPO MAZZEI",
-            "DATINI GUALFREDOTTO",
-            "GIOVANNI DALLE BANDE NERE",
-            "SALUTATI BRUNI",
-            "BALDOVINI",
-            "ORSINI FERRUCCI",
-            "AMENDOLA ARNOLFO",
-            "AMENDOLA GIOBERTI",
-            "SEGNI",
-            "MATTONAIA",
-            "COLONNA LICEO CASTELNUOVO",
-            "COLONNA MUSEO ARCHEOLOGICO",
-            "SAN MARCO BASILICA",
-            "XXVII APRILE SAN ZANOBI",
-            "INDIPENDENZA RIDOLFI",
-            "FORTEZZA T1 STROZZI",
-            "SPADOLINI T1 STROZZI",
-            "STAZIONE MONTELUNGO"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        }
-      ]
-    },
-    {
       "routeId": "572",
       "shortName": "E26",
       "longName": "PIETRASANTA-VIAREGGIO-MASSAROSA",
       "comune": "Pietrasanta",
       "comuneSlug": "pietrasanta",
       "slug": "e26-pietrasanta",
-      "comuni": ["Pietrasanta", "Viareggio", "Camaiore", "Massarosa"],
+      "comuni": [
+        "Pietrasanta",
+        "Viareggio",
+        "Camaiore",
+        "Massarosa"
+      ],
       "trips": 85,
       "lengthKm": 19.6,
       "directions": [
@@ -6085,9 +6180,12 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "59-firenze",
-      "comuni": ["Firenze", "Sesto Fiorentino"],
+      "comuni": [
+        "Firenze",
+        "Sesto Fiorentino"
+      ],
       "trips": 84,
-      "lengthKm": 6.8,
+      "lengthKm": 7.1,
       "directions": [
         {
           "directionId": 0,
@@ -6187,7 +6285,9 @@
       "comune": "Arezzo",
       "comuneSlug": "arezzo",
       "slug": "a-arezzo",
-      "comuni": ["Arezzo"],
+      "comuni": [
+        "Arezzo"
+      ],
       "trips": 84,
       "lengthKm": 8.8,
       "directions": [
@@ -6202,7 +6302,7 @@
             "VIA CONCINO CONCINI (2)",
             "MERIDIANA",
             "MERIDIANA - OPP. EX CAPOLINEA",
-            "PRIMA DI EX CAP. CIRCOLARI VS AR OPP. 54",
+            "VIA ALFIERI OPPOSTO 54",
             "VIA ALFIERI - CENTRO COMMERCIALE",
             "VIA ALFIERI 180 - OP V.GIO DANTE",
             "VIA ALFIERI 49/51 - OPP SCUOLA SEVERI",
@@ -6281,7 +6381,9 @@
       "comune": "Arezzo",
       "comuneSlug": "arezzo",
       "slug": "b-arezzo",
-      "comuni": ["Arezzo"],
+      "comuni": [
+        "Arezzo"
+      ],
       "trips": 84,
       "lengthKm": 10.9,
       "directions": [
@@ -6353,7 +6455,7 @@
             "V. ALFIERI 23 - SCUOLE ELEMENTARI",
             "VIA ALFIERI LATO V.GIO DANTE",
             "VIA ALFIERI 180 - EX CAPOLINEA",
-            "VIA ALFIERI 54 - DOPO EX CAP.CIRCOLARI",
+            "VIA ALFIERI 54 - DOPO EX CAPOLINEA",
             "OSPEDALE NUOVO"
           ],
           "itineraries": 1,
@@ -6368,7 +6470,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "44-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 83,
       "lengthKm": 9.1,
       "directions": [
@@ -6421,7 +6525,7 @@
             "BACCIO FEDERIGA",
             "PIAZZA PIER DELLA FRANCESCA"
           ],
-          "itineraries": 1,
+          "itineraries": 2,
           "coverage": 1
         }
       ]
@@ -6433,7 +6537,9 @@
       "comune": "Massa",
       "comuneSlug": "massa",
       "slug": "l60-massa",
-      "comuni": ["Massa"],
+      "comuni": [
+        "Massa"
+      ],
       "trips": 82,
       "lengthKm": 7.8,
       "directions": [
@@ -6512,12 +6618,12 @@
       "routeId": "422",
       "shortName": "307 A",
       "longName": "RAZZUOLO-BORGO SAN LORENZO-SAN PIERO A SIEVE-FIRENZE",
-      "comune": "Firenze",
-      "comuneSlug": "firenze",
-      "slug": "307-a-firenze",
+      "comune": "Scarperia e San Piero",
+      "comuneSlug": "scarperia-e-san-piero",
+      "slug": "307-a-scarperia-e-san-piero",
       "comuni": [
-        "Firenze",
         "Scarperia e San Piero",
+        "Firenze",
         "Vaglia",
         "Borgo San Lorenzo",
         "Fiesole",
@@ -6559,7 +6665,9 @@
       "comune": "Grosseto",
       "comuneSlug": "grosseto",
       "slug": "0g1-grosseto",
-      "comuni": ["Grosseto"],
+      "comuni": [
+        "Grosseto"
+      ],
       "trips": 79,
       "lengthKm": 12.9,
       "directions": [
@@ -6647,13 +6755,125 @@
       ]
     },
     {
+      "routeId": "479",
+      "shortName": "31",
+      "longName": "piazzale Montelungo - Grassina",
+      "comune": "Firenze",
+      "comuneSlug": "firenze",
+      "slug": "31-firenze",
+      "comuni": [
+        "Firenze",
+        "Bagno a Ripoli"
+      ],
+      "trips": 79,
+      "lengthKm": 19.9,
+      "directions": [
+        {
+          "directionId": 0,
+          "headsign": "GRASSINA UMBERTO I",
+          "trips": 40,
+          "first": "05:48",
+          "last": "21:25",
+          "headwayMinutes": 24,
+          "stops": [
+            "STAZIONE MONTELUNGO",
+            "BESLAN T1 FORTEZZA",
+            "INDIPENDENZA XXVII APRILE",
+            "XXVII APRILE SANTA REPARATA",
+            "SAN MARCO PIAZZA",
+            "COLONNA PERGOLA",
+            "COLONNA LICEO MICHELANGIOLO",
+            "NICCOLINI",
+            "LEOPARDI GRAMSCI",
+            "temporanea PIAZZA PIAVE.",
+            "ARNOLFO CIMABUE",
+            "ARNOLFO ORCAGNA",
+            "SELLA CAMPOFIORE",
+            "SELLA DE SANCTIS",
+            "SELLA BELLARIVA",
+            "tmp LAPO DA CASTIGLIONCHIO",
+            "DATINI TRAVERSARI",
+            "DATINI ERBOSA",
+            "GRAN BRETAGNA D'ANGIÒ",
+            "GRAN BRETAGNA LAME",
+            "GRAN BRETAGNA PORTOGALLO",
+            "PIAZZA FRANCIA",
+            "OLANDA EUROPA",
+            "DANIMARCA",
+            "CHIANTIGIANA SCUOLE",
+            "CHIANTIGIANA SAN MARCELLINO",
+            "CHIANTIGIANA DELLA TORRE",
+            "FORTINI GUALDRADA",
+            "FORTINI CHIANTIGIANA",
+            "MUSEO GINO BARTALI",
+            "CHIANTIGIANA FERRERO",
+            "CHIANTIGIANA LONGO",
+            "CHIANTIGIANA DELL'ANTELLA",
+            "CHIANTIGIANA ALIGHIERI",
+            "CHIANTIGIANA BORGO SANI",
+            "GRASSINA UMBERTO I"
+          ],
+          "itineraries": 2,
+          "coverage": 1
+        },
+        {
+          "directionId": 1,
+          "headsign": "STAZIONE MONTELUNGO",
+          "trips": 39,
+          "first": "06:16",
+          "last": "21:42",
+          "headwayMinutes": 24,
+          "stops": [
+            "GRASSINA UMBERTO I",
+            "CHIANTIGIANA BARTOLINI",
+            "CHIANTIGIANA CAMPIGLIANO",
+            "CHIANTIGIANA BELMONTE",
+            "CHIANTIGIANA PONTE A NICCHERI",
+            "CIMITERO SAN PIERO A EMA",
+            "CHIANTIGIANA DA FELTRE",
+            "CHIANTIGIANA CIRCOLO",
+            "CHIANTIGIANA PONTE A EMA",
+            "CHIANTIGIANA DIACCETO",
+            "CHIANTIGIANA BUIA",
+            "CHIANTIGIANA IMPIANTI SPORT",
+            "BADIA A RIPOLI",
+            "OLANDA FRANCIA",
+            "GRAN BRETAGNA KIEV",
+            "GRAN BRETAGNA KYOTO",
+            "GRAN BRETAGNA ERBOSA",
+            "DATINI SER LAPO MAZZEI",
+            "DATINI GUALFREDOTTO",
+            "LANZA MADONNONE",
+            "LANZA DE SANCTIS",
+            "PIAGENTINA BEATO ANGELICO",
+            "BEATO ANGELICO GHIRLANDAIO",
+            "BEATO ANGELICO AMENDOLA",
+            "SEGNI",
+            "MATTONAIA",
+            "COLONNA LICEO CASTELNUOVO",
+            "COLONNA MUSEO ARCHEOLOGICO",
+            "SAN MARCO BASILICA",
+            "XXVII APRILE SAN ZANOBI",
+            "INDIPENDENZA RIDOLFI",
+            "FORTEZZA T1 STROZZI",
+            "SPADOLINI T1 STROZZI",
+            "STAZIONE MONTELUNGO"
+          ],
+          "itineraries": 1,
+          "coverage": 1
+        }
+      ]
+    },
+    {
       "routeId": "543",
       "shortName": "5",
       "longName": "LA ROSA - STADIO - MATTEOTTI - GRANDE - VARCO FORTEZZA",
       "comune": "Livorno",
       "comuneSlug": "livorno",
       "slug": "5-livorno",
-      "comuni": ["Livorno"],
+      "comuni": [
+        "Livorno"
+      ],
       "trips": 79,
       "lengthKm": 10.3,
       "directions": [
@@ -6776,7 +6996,11 @@
       "comune": "Rosignano Marittimo",
       "comuneSlug": "rosignano-marittimo",
       "slug": "102-rosignano-marittimo",
-      "comuni": ["Rosignano Marittimo", "Livorno", "Cecina"],
+      "comuni": [
+        "Rosignano Marittimo",
+        "Livorno",
+        "Cecina"
+      ],
       "trips": 74,
       "lengthKm": 39.6,
       "directions": [
@@ -6811,9 +7035,12 @@
       "comune": "Pistoia",
       "comuneSlug": "pistoia",
       "slug": "12-pistoia",
-      "comuni": ["Pistoia", "Agliana"],
+      "comuni": [
+        "Pistoia",
+        "Agliana"
+      ],
       "trips": 73,
-      "lengthKm": 11.3,
+      "lengthKm": 12.2,
       "directions": [
         {
           "directionId": 0,
@@ -6846,7 +7073,12 @@
       "comune": "Prato",
       "comuneSlug": "prato",
       "slug": "212-prato",
-      "comuni": ["Prato", "Campi Bisenzio", "Sesto Fiorentino", "Firenze"],
+      "comuni": [
+        "Prato",
+        "Campi Bisenzio",
+        "Sesto Fiorentino",
+        "Firenze"
+      ],
       "trips": 72,
       "lengthKm": 11.1,
       "directions": [
@@ -6881,7 +7113,9 @@
       "comune": "Pisa",
       "comuneSlug": "pisa",
       "slug": "25-pisa",
-      "comuni": ["Pisa"],
+      "comuni": [
+        "Pisa"
+      ],
       "trips": 72,
       "lengthKm": 4.7,
       "directions": [
@@ -6944,7 +7178,14 @@
       "comune": "Vinci",
       "comuneSlug": "vinci",
       "slug": "49-vinci",
-      "comuni": ["Vinci", "Cerreto Guidi", "Lamporecchio", "Empoli", "Larciano", "Fucecchio"],
+      "comuni": [
+        "Vinci",
+        "Cerreto Guidi",
+        "Lamporecchio",
+        "Empoli",
+        "Larciano",
+        "Fucecchio"
+      ],
       "trips": 72,
       "lengthKm": 17.9,
       "directions": [
@@ -6979,7 +7220,13 @@
       "comune": "Massarosa",
       "comuneSlug": "massarosa",
       "slug": "e2-massarosa",
-      "comuni": ["Massarosa", "Camaiore", "Lucca", "Viareggio", "Pietrasanta"],
+      "comuni": [
+        "Massarosa",
+        "Camaiore",
+        "Lucca",
+        "Viareggio",
+        "Pietrasanta"
+      ],
       "trips": 72,
       "lengthKm": 26.9,
       "directions": [
@@ -7014,7 +7261,9 @@
       "comune": "Firenze",
       "comuneSlug": "firenze",
       "slug": "68-firenze",
-      "comuni": ["Firenze"],
+      "comuni": [
+        "Firenze"
+      ],
       "trips": 70,
       "lengthKm": 6.5,
       "directions": [
