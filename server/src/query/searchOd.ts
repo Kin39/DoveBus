@@ -68,19 +68,41 @@ export function resolveComune(db: Db, value: string): ComuneRef | null {
  *
  * The calendar filter is not optional: without it the brief measured 736 rows
  * where 34 real runs exist, because every date's copy of every trip matches.
+ *
+ * `candidates` comes first because reading stop_times by stop is what made this
+ * slow. Firenze has 1,351 stops and 1.1M departures across the feed, of which
+ * one day's 7.7k trips are wanted: 6.8 s on the VPS, during which the single
+ * Node thread answered nobody else. `trip_comuni` names the trips that call in
+ * both comuni, in an order that can work, running that day, with a departure in
+ * comune A that can fall inside the window — a necessary condition only, so the
+ * exact stops are still chosen from stop_times below, as before. The CROSS JOINs
+ * pin SQLite to that order: left to itself it may start from the stop index
+ * again, which returns the same rows at the old cost.
  */
 export function searchOd(db: Db, options: OdSearchOptions): OdSearchResult {
   const limit = options.limit ?? DEFAULT_OD_TRIP_LIMIT;
 
   const rows = db
     .prepare(
-      `WITH boarding AS (
-         SELECT st.trip_id, MIN(st.stop_sequence) AS seq
-           FROM stop_times st
-           JOIN trips t ON t.trip_id = st.trip_id
-          WHERE st.stop_id IN (SELECT stop_id FROM stops WHERE comune_istat = @comuneA)
-            AND st.departure_s BETWEEN @from AND @to
+      `WITH candidates AS (
+         SELECT a.trip_id
+           FROM trip_comuni a
+           CROSS JOIN trip_comuni b
+           CROSS JOIN trips t
+          WHERE a.comune_istat = @comuneA
+            AND a.max_dep_s >= @from AND a.min_dep_s <= @to
+            AND b.comune_istat = @comuneB AND b.trip_id = a.trip_id
+            AND a.min_seq < b.max_seq
+            AND t.trip_id = a.trip_id
             AND t.service_id IN (${ACTIVE_SERVICES_SQL})
+       ),
+       boarding AS (
+         SELECT st.trip_id, MIN(st.stop_sequence) AS seq
+           FROM candidates c
+           CROSS JOIN stop_times st
+          WHERE st.trip_id = c.trip_id
+            AND st.stop_id IN (SELECT stop_id FROM stops WHERE comune_istat = @comuneA)
+            AND st.departure_s BETWEEN @from AND @to
           GROUP BY st.trip_id
        ),
        alighting AS (

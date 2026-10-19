@@ -4,6 +4,7 @@ import { analyzeDatabase, createIndexes, createStagingDatabase, type Db } from "
 import { writeFeedMeta } from "../feed/meta.js";
 import { createComuneResolver, loadComuni } from "../geo/comuni.js";
 import { type EnrichmentStats, enrichStops, seedComuni } from "../geo/enrich.js";
+import { buildTripComuni } from "../geo/tripComuni.js";
 import { readCsv } from "./csv.js";
 import { type FeedInfo, readFeedInfo } from "./feedInfo.js";
 import { buildRowMapper, insertStatementFor, TABLE_SPECS, type TableSpec } from "./tables.js";
@@ -45,7 +46,8 @@ export interface ImportResult {
  * Builds a complete SQLite database from the consolidated feed zip.
  *
  * Order matters: bulk rows first, then comune enrichment (needs `stops`), then
- * indexes (an order of magnitude cheaper after the inserts than during them).
+ * indexes (an order of magnitude cheaper after the inserts than during them),
+ * then the trip/comune table the comune→comune search prunes with.
  */
 export async function importFeed(options: ImportOptions): Promise<ImportResult> {
   const startedAt = Date.now();
@@ -65,6 +67,9 @@ export async function importFeed(options: ImportOptions): Promise<ImportResult> 
 
     report({ kind: "step", message: "indexes" });
     createIndexes(db);
+
+    report({ kind: "step", message: "trip comuni" });
+    buildTripComuni(db);
 
     report({ kind: "step", message: "analyze" });
     analyzeDatabase(db);

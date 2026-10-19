@@ -1,6 +1,7 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { DB_VERSION } from "../src/config.js";
 import { openDatabase } from "../src/db/index.js";
 import { readFeedMeta } from "../src/feed/meta.js";
 import { type ImportResult, importFeed } from "../src/gtfs/import.js";
@@ -104,9 +105,47 @@ describe("importFeed", () => {
       sourceSha1: "abc123",
       sourceEtag: 'W/"v1"',
       sourceBytes: 4242,
-      dbVersion: 1,
+      dbVersion: DB_VERSION,
     });
     expect(Date.parse(meta?.importedAt ?? "")).not.toBeNaN();
+  });
+
+  test("records, per trip, the comuni it calls in and where", () => {
+    const rows = db.prepare("SELECT * FROM trip_comuni ORDER BY trip_id, comune_istat").all();
+    expect(rows).toEqual([
+      {
+        comune_istat: "051001",
+        trip_id: "T1",
+        min_seq: 2,
+        max_seq: 2,
+        min_dep_s: 26100,
+        max_dep_s: 26100,
+      },
+      {
+        comune_istat: "051002",
+        trip_id: "T1",
+        min_seq: 1,
+        max_seq: 1,
+        min_dep_s: 23400,
+        max_dep_s: 23400,
+      },
+      {
+        comune_istat: "051001",
+        trip_id: "T2",
+        min_seq: 2,
+        max_seq: 2,
+        min_dep_s: 93000,
+        max_dep_s: 93000,
+      },
+      {
+        comune_istat: "051002",
+        trip_id: "T2",
+        min_seq: 1,
+        max_seq: 1,
+        min_dep_s: 90600,
+        max_dep_s: 90600,
+      },
+    ]);
   });
 
   test("creates the indexes the search queries depend on", () => {

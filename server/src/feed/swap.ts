@@ -11,6 +11,9 @@ const REQUIRED_NON_EMPTY_TABLES = [
   "shapes",
   "calendar_dates",
   "comuni",
+  // Empty, it would not fail loudly: every comune→comune search would answer
+  // "no direct runs", which reads as a fact about the buses.
+  "trip_comuni",
   "feed_meta",
 ] as const;
 

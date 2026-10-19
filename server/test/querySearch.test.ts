@@ -170,6 +170,116 @@ describe("searchOd", () => {
   });
 });
 
+/**
+ * Trips that make the comune→comune search earn its keep: one that calls in
+ * Arezzo twice and only the second call is in the window, one whose first
+ * Arezzo stop has no departure time, one that runs on a service removed that
+ * day, one in the opposite direction, and one that calls in Anghiari on both
+ * sides of Arezzo. Each answer below was computed by the original query, which
+ * read stop_times alone; any faster query has to give exactly these back.
+ */
+const TRICKY_TRIPS = {
+  "trips.txt": [
+    "route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id,wheelchair_accessible,bikes_allowed",
+    'R1,S1,T1,"Anghiari",1101,0,,SH1,,',
+    'R2,S1,T2,"Anghiari",1102,0,,SH2,,',
+    'R1,S1,T3,"Anghiari",1103,0,,,,',
+    'R2,S2,T4,"Anghiari",1104,0,,,,',
+    'R1,S1,T5,"Anghiari",1105,0,,,,',
+    'R2,S1,T6,"Arezzo",1106,1,,,,',
+    'R1,S1,T7,"Anghiari",1107,0,,,,',
+  ].join("\n"),
+  "stop_times.txt": [
+    "trip_id,arrival_time,departure_time,stop_id,stop_sequence,timepoint,shape_dist_traveled,stop_headsign,pickup_type,drop_off_type",
+    "T1,06:30:00,06:30:00,AR001,1,1,0,,0,0",
+    "T1,07:15:00,07:15:00,AN001,2,0,28500,,0,0",
+    "T2,25:10:00,25:10:00,AR002,1,1,0,,0,0",
+    "T2,25:50:00,25:50:00,AN001,2,0,29100,,0,0",
+    "T3,05:00:00,05:00:00,AR001,1,1,,,0,0",
+    "T3,05:30:00,05:30:00,AN001,2,1,,,0,0",
+    "T3,08:00:00,08:00:00,AR002,3,1,,,0,0",
+    "T3,08:40:00,08:40:00,AN001,4,1,,,0,0",
+    "T4,08:10:00,08:10:00,AR001,1,1,,,0,0",
+    "T4,08:50:00,08:50:00,AN001,2,1,,,0,0",
+    "T5,,,AR001,1,0,,,0,0",
+    "T5,08:20:00,08:20:00,AR002,2,1,,,0,0",
+    "T5,09:00:00,09:00:00,AN001,3,1,,,0,0",
+    "T6,08:05:00,08:05:00,AN001,1,1,,,0,0",
+    "T6,08:45:00,08:45:00,AR001,2,1,,,0,0",
+    "T7,07:50:00,07:50:00,AN001,1,1,,,0,0",
+    "T7,08:15:00,08:15:00,AR001,2,1,,,0,0",
+    "T7,08:55:00,08:55:00,AN001,3,1,,,0,0",
+  ].join("\n"),
+};
+
+describe("searchOd on trips that loop, skip times or do not run", () => {
+  let fixture: FixtureDb;
+  const MORNING = { fromSeconds: 7 * 3600, toSeconds: 9 * 3600 };
+  const boardings = (trips: ReturnType<typeof searchOd>["trips"]) =>
+    trips.map((trip) => [
+      trip.tripId,
+      trip.boarding.stopId,
+      trip.boarding.sequence,
+      trip.alighting.stopId,
+      trip.alighting.sequence,
+    ]);
+
+  beforeAll(async () => {
+    fixture = await createFixtureDb(TRICKY_TRIPS);
+  });
+  afterAll(async () => {
+    await fixture.dispose();
+  });
+
+  test("boards at the first stop inside the window, not the trip's first call in the comune", () => {
+    const result = searchOd(fixture.db, {
+      comuneA: AREZZO,
+      comuneB: ANGHIARI,
+      date: DATE,
+      ...MORNING,
+    });
+    expect(boardings(result.trips)).toEqual([
+      ["T3", "AR002", 3, "AN001", 4],
+      ["T7", "AR001", 2, "AN001", 3],
+      ["T5", "AR002", 2, "AN001", 3],
+    ]);
+  });
+
+  test("serves the opposite direction only with the trips that run that way", () => {
+    const result = searchOd(fixture.db, {
+      comuneA: ANGHIARI,
+      comuneB: AREZZO,
+      date: DATE,
+      ...MORNING,
+    });
+    expect(boardings(result.trips)).toEqual([
+      ["T7", "AN001", 1, "AR001", 2],
+      ["T6", "AN001", 1, "AR001", 2],
+    ]);
+  });
+
+  test("finds a trip that leaves a comune and comes back to it", () => {
+    const result = searchOd(fixture.db, {
+      comuneA: AREZZO,
+      comuneB: AREZZO,
+      date: DATE,
+      ...ALL_DAY,
+    });
+    expect(boardings(result.trips)).toEqual([["T3", "AR001", 1, "AR002", 3]]);
+  });
+
+  test("leaves out a trip whose service is removed that day", () => {
+    const result = searchOd(fixture.db, {
+      comuneA: AREZZO,
+      comuneB: ANGHIARI,
+      date: DATE,
+      ...ALL_DAY,
+    });
+    expect(result.trips.map((trip) => trip.tripId)).not.toContain("T4");
+    expect(result.trips.map((trip) => trip.tripId)).toEqual(["T3", "T1", "T7", "T5", "T2"]);
+  });
+});
+
 describe("resolveComune", () => {
   let fixture: FixtureDb;
 

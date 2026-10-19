@@ -3,15 +3,17 @@
  *
  * Unit tests run on a 5-row fixture; this asserts the real 125 MB feed produced
  * a database the MVP's queries can actually use — the calendar_dates resolver
- * returns a non-empty service set, the origin→destination self-join finds the
+ * returns a non-empty service set, the comune→comune search finds the
  * Arezzo→Anghiari runs the plan validated, and every trip has a drawable shape.
  *
  *   npm run verify [-- --date=20260812]
  */
+import { SERVICE_DAY_END_SECONDS } from "../api/params.js";
 import { LIVE_DB_PATH } from "../config.js";
 import { openDatabase } from "../db/index.js";
 import { feedValidity, readFeedMeta } from "../feed/meta.js";
 import { logger } from "../logger.js";
+import { searchOd } from "../query/searchOd.js";
 import { toServiceDate } from "../util/date.js";
 
 const AREZZO = "051002";
@@ -79,26 +81,20 @@ check("planned-route shapes", tripsWithShape / tripsTotal > 0.99, {
   shapePoints: count("SELECT COUNT(*) AS n FROM shapes"),
 });
 
+// The search the API serves, not a stand-in for it: this check exists to fail
+// when the query the riders use cannot answer on the real feed.
 const startedAt = performance.now();
-const odRows = db
-  .prepare(
-    `SELECT DISTINCT r.route_short_name AS line, sa.departure_time AS departure, t.trip_id AS trip
-       FROM stop_times sa
-       JOIN stop_times sb ON sa.trip_id = sb.trip_id AND sa.stop_sequence < sb.stop_sequence
-       JOIN trips t ON t.trip_id = sa.trip_id
-       JOIN routes r ON r.route_id = t.route_id
-      WHERE sa.stop_id IN (SELECT stop_id FROM stops WHERE comune_istat = ?)
-        AND sb.stop_id IN (SELECT stop_id FROM stops WHERE comune_istat = ?)
-        AND t.service_id IN (SELECT service_id FROM calendar_dates WHERE date = ? AND exception_type = 1)
-      ORDER BY sa.departure_s`,
-  )
-  .all(AREZZO, ANGHIARI, date) as ReadonlyArray<{ line: string; trip: string }>;
+const od = searchOd(db, {
+  comuneA: AREZZO,
+  comuneB: ANGHIARI,
+  date,
+  fromSeconds: 0,
+  toSeconds: SERVICE_DAY_END_SECONDS,
+});
 const odMs = performance.now() - startedAt;
-const odTrips = new Set(odRows.map((row) => row.trip));
-check("Arezzo→Anghiari search (plan fixture)", odTrips.size > 0 && odMs < 2000, {
-  rows: odRows.length,
-  trips: odTrips.size,
-  lines: [...new Set(odRows.map((row) => row.line))].join(", "),
+check("Arezzo→Anghiari search (plan fixture)", od.trips.length > 0 && odMs < 2000, {
+  trips: od.trips.length,
+  lines: [...new Set(od.trips.map((trip) => trip.line))].join(", "),
   queryMs: Number(odMs.toFixed(1)),
 });
 

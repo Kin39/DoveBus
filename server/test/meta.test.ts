@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { DB_VERSION } from "../src/config.js";
 import { createStagingDatabase } from "../src/db/index.js";
 import { type FeedMeta, feedValidity, readFeedMeta, writeFeedMeta } from "../src/feed/meta.js";
 
@@ -9,7 +10,7 @@ const BASE_META: FeedMeta = {
   sourceEtag: 'W/"v1"',
   sourceSha1: "deadbeef",
   sourceBytes: 125_017_286,
-  dbVersion: 1,
+  dbVersion: DB_VERSION,
 };
 
 describe("feed_meta round trip", () => {

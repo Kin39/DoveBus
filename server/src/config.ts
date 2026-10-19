@@ -46,7 +46,7 @@ export const SERVICE_ABOUT = {
 } as const;
 
 /** Bumped whenever the schema changes in a way that requires a full re-import. */
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 /** Rows per write transaction during bulk import — bounds journal growth. */
 export const IMPORT_BATCH_SIZE = 100_000;

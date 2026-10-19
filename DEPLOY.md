@@ -630,8 +630,22 @@ that every expiry check had missed.
 cd /srv/dovebus && sudo -u dovebus git pull && sudo -u dovebus npm ci --omit=dev && systemctl restart dovebus-api
 ```
 
-A schema change is the only case that also needs `npm run import`; `/healthz`
-says `staleSchema` when that is what happened.
+A schema change (a bump of `DB_VERSION` in `server/src/config.ts`) also needs
+`npm run import`, and **the order matters**: import with the new code *before*
+restarting, or the new API runs against a database without the tables it
+queries until the import lands. The running API keeps serving from the old
+code while the import builds the new database beside it, and the old code reads
+the new database fine.
+
+```bash
+cd /srv/dovebus && sudo -u dovebus git pull && sudo -u dovebus npm ci --omit=dev \
+  && sudo -u dovebus npm run import && systemctl restart dovebus-api
+```
+
+Never run `refresh` or `import` from an *older* checkout against a newer
+database — it sees a different `DB_VERSION` and rebuilds the old schema over
+it. Rolling back past a schema change therefore means a re-import too.
+`/healthz` says `staleSchema` whenever the code and the database disagree.
 
 **Backing up the counter.** It is the only data on this machine that cannot be
 rebuilt from somewhere else: the timetable is re-downloaded every night from the

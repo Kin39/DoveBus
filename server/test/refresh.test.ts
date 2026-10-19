@@ -4,6 +4,8 @@ import { copyFile, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { DB_VERSION } from "../src/config.js";
+import { openDatabase } from "../src/db/index.js";
 import { refreshFeed } from "../src/feed/refresh.js";
 import type { DownloadResult } from "../src/gtfs/download.js";
 import { acquireLock } from "../src/util/lock.js";
@@ -107,6 +109,27 @@ describe("refreshFeed", () => {
     expect(result.reason).toBe("unchanged");
     expect(result.result).toBeNull();
     expect((await stat(livePath)).mtimeMs).toBe(before.mtimeMs);
+  });
+
+  test("rebuilds an unchanged feed when the database was built for an older schema", async () => {
+    // How a schema change reaches production: the feed is the same bytes, but a
+    // database without the new tables must not be kept just because of that.
+    await run().outcome;
+    const old = openDatabase(livePath, { readonly: false });
+    old.prepare("UPDATE feed_meta SET db_version = ?").run(DB_VERSION - 1);
+    old.prepare("DELETE FROM trip_comuni").run();
+    old.close();
+
+    const result = await run().outcome;
+    expect(result.imported).toBe(true);
+    expect(result.reason).toBe("schema-version");
+
+    const rebuilt = openDatabase(livePath, { readonly: true });
+    const tripComuni = rebuilt.prepare("SELECT COUNT(*) AS n FROM trip_comuni").get() as {
+      n: number;
+    };
+    rebuilt.close();
+    expect(tripComuni.n).toBeGreaterThan(0);
   });
 
   test("re-imports when the published feed changed", async () => {

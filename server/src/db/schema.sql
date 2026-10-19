@@ -113,6 +113,24 @@ CREATE TABLE calendar_dates (
   exception_type INTEGER NOT NULL
 );
 
+-- Derived at import: one row per (comune, trip) the trip calls in, with the
+-- span of stop sequences and departures it has there. The comune→comune search
+-- reads this to find the few trips that can possibly match before it touches
+-- stop_times, instead of reading every departure of every stop in comune A for
+-- the whole feed — 1.1M rows for Firenze, to keep 7.7k trips that run that day.
+-- It only prunes: the exact boarding/alighting stops are still computed from
+-- stop_times, so the answer cannot differ from reading stop_times alone.
+CREATE TABLE trip_comuni (
+  comune_istat TEXT NOT NULL,
+  trip_id      TEXT NOT NULL,
+  min_seq      INTEGER NOT NULL,
+  max_seq      INTEGER NOT NULL,
+  -- NULL when no stop of the trip in this comune has a departure time.
+  min_dep_s    INTEGER,
+  max_dep_s    INTEGER,
+  PRIMARY KEY (comune_istat, trip_id)
+) WITHOUT ROWID;
+
 -- Tuscan municipalities (openpolis R_9), drives comune autocomplete.
 CREATE TABLE comuni (
   istat_code   TEXT PRIMARY KEY,
