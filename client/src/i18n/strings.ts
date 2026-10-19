@@ -1,5 +1,8 @@
 import type { FreshnessBucket } from "../api/types.js";
 
+/** The repository this site and its API are built from, under the AGPL-3.0. */
+export const SOURCE_CODE_URL = "https://github.com/Kin39/DoveBus";
+
 /**
  * Every word the interface says, and the shape both languages must fill.
  *
@@ -145,6 +148,12 @@ export interface Strings {
     readonly attributionHtml: string;
     readonly nav: string;
     readonly links: readonly { readonly href: string; readonly text: string }[];
+    /**
+     * Where the code that serves this page can be read — the AGPL asks a network
+     * service to offer its users the source. Outside `links` because it is not
+     * one of the site's own pages, and so belongs to no language.
+     */
+    readonly sourceCode: { readonly href: string; readonly text: string };
     /**
      * The other language's map, for the credits block inside the sheet.
      *

@@ -33,6 +33,18 @@ export const AGENCY_TIMEZONE = "Europe/Rome";
 export const ATTRIBUTION_GTFS = "Dati: Regione Toscana — dati.toscana.it (CC BY 4.0)";
 export const ATTRIBUTION_COMUNI = "Confini comunali: openpolis/ISTAT (CC BY 4.0)";
 
+/**
+ * What `GET /` tells a caller: who serves this API and where its code is. The
+ * AGPL asks a network service to offer its users the source, and an API's
+ * users never see the site's footer.
+ */
+export const SERVICE_ABOUT = {
+  name: "DoveBus",
+  website: "https://dovebus.it",
+  sourceCode: "https://github.com/Kin39/DoveBus",
+  licence: "AGPL-3.0-or-later",
+} as const;
+
 /** Bumped whenever the schema changes in a way that requires a full re-import. */
 export const DB_VERSION = 1;
 

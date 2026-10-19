@@ -9,6 +9,7 @@ import { createApiContext } from "./context.js";
 import { parseAllowedOrigins } from "./cors.js";
 import { fail } from "./envelope.js";
 import { HttpError } from "./errors.js";
+import { registerAboutRoutes } from "./routes/about.js";
 import { registerCatalogRoutes } from "./routes/catalog.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerSearchRoutes } from "./routes/search.js";
@@ -115,6 +116,7 @@ export function buildApi(options: ApiOptions): FastifyInstance {
   );
 
   // Deliberately unprefixed: monitoring watches /healthz, not /api/healthz.
+  registerAboutRoutes(app);
   registerHealthRoutes(app, ctx);
 
   return app;

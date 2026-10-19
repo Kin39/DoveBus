@@ -238,6 +238,7 @@ class App {
         el("p", { text: t.credits.boundaries(basemap) }),
         el("nav", { class: "credits__nav", "aria-label": t.credits.nav }, [
           ...t.credits.links.map((link) => el("a", { href: link.href, text: link.text })),
+          el("a", { href: t.credits.sourceCode.href, text: t.credits.sourceCode.text }),
           // The language, in the language it leads to. On a phone with the sheet
           // open this is the only one of the two switches still on screen.
           el("a", {

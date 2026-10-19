@@ -1,4 +1,4 @@
-import type { Strings } from "./strings.js";
+import { SOURCE_CODE_URL, type Strings } from "./strings.js";
 
 /**
  * English, for the visitor who is standing at a Tuscan bus stop and does not
@@ -155,6 +155,7 @@ export const en: Strings = {
       { href: "/en/data-source/", text: "Data source" },
       { href: "/en/privacy/", text: "Privacy" },
     ],
+    sourceCode: { href: SOURCE_CODE_URL, text: "Source code" },
     otherLanguage: {
       href: "/mappa/",
       name: "Italiano",

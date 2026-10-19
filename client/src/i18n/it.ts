@@ -1,4 +1,4 @@
-import type { Strings } from "./strings.js";
+import { SOURCE_CODE_URL, type Strings } from "./strings.js";
 
 /**
  * Italian — the language this interface was written in, moved here unchanged.
@@ -151,6 +151,7 @@ export const it: Strings = {
       { href: "/fonte-dati/", text: "Fonte dati" },
       { href: "/privacy/", text: "Privacy" },
     ],
+    sourceCode: { href: SOURCE_CODE_URL, text: "Codice sorgente" },
     otherLanguage: {
       href: "/en/map/",
       name: "English",

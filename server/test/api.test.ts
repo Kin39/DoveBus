@@ -26,6 +26,19 @@ describe("HTTP API", () => {
     await fixture.dispose();
   });
 
+  describe("GET /", () => {
+    test("points a caller at the source code and its licence, as the AGPL asks", async () => {
+      const { status, body } = await get("/");
+      expect(status).toBe(200);
+      expect(body.data).toEqual({
+        name: "DoveBus",
+        website: "https://dovebus.it",
+        sourceCode: "https://github.com/Kin39/DoveBus",
+        licence: "AGPL-3.0-or-later",
+      });
+    });
+  });
+
   describe("GET /healthz", () => {
     test("reports liveness, the loaded timetable and both realtime feeds", async () => {
       const { status, body } = await get("/healthz");
