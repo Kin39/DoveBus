@@ -1,18 +1,21 @@
 import {
+  BUILD_MARKER_PATH,
   explainStatus,
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
   INDEXNOW_KEY_PATH,
   indexNowSubmission,
   sitemapUrls,
+  waitForBuild,
 } from "../indexnow.js";
 import { SITE_URL } from "../site-url.js";
 
 /**
  * Announces the deployed URLs to the IndexNow engines.
  *
- *   npm run indexnow            submit
- *   npm run indexnow -- --dry   check everything, send nothing
+ *   npm run indexnow                    submit
+ *   npm run indexnow -- --dry           check everything, send nothing
+ *   npm run indexnow -- --wait-for=SHA  first wait until that commit is live
  *
  * **Run this after a deploy is live, not during the build.** That is the whole
  * reason it is a script you run rather than a Netlify build step, and the
@@ -29,14 +32,30 @@ import { SITE_URL } from "../site-url.js";
  *
  * Exits 1 if the site is not ready or the endpoint refuses, so it can be
  * chained after a deploy check.
+ *
+ * `--wait-for` is how a workflow runs it straight after a push: it polls the
+ * build marker (`/build.txt`) until the live site names that commit, for up to
+ * fifteen minutes, and only then does the rest.
  */
 
 const DRY_RUN = process.argv.includes("--dry") || process.argv.includes("--dry-run");
 const ORIGIN = process.env.INDEXNOW_ORIGIN ?? SITE_URL;
 const TIMEOUT_MS = 15_000;
+const WAIT_FOR = process.argv
+  .slice(2)
+  .find((arg) => arg.startsWith("--wait-for="))
+  ?.slice("--wait-for=".length);
+/** Netlify builds this site in about a minute; fifteen is a failed deploy, not a slow one. */
+const DEPLOY_TIMEOUT_MS = 15 * 60_000;
+const DEPLOY_POLL_MS = 15_000;
 
 async function main(): Promise<void> {
   console.log(`IndexNow — ${ORIGIN}${DRY_RUN ? " (dry run)" : ""}`);
+
+  if (WAIT_FOR !== undefined && !(await deployIsLive(WAIT_FOR))) {
+    process.exitCode = 1;
+    return;
+  }
 
   const keyServed = await verifyKeyFile();
   if (!keyServed) {
@@ -98,6 +117,34 @@ async function verifyKeyFile(): Promise<boolean> {
 
   console.log(`  key file verified at ${INDEXNOW_KEY_PATH}`);
   return true;
+}
+
+/** Waits for the build marker to name `commit`; false when it never does. */
+async function deployIsLive(commit: string): Promise<boolean> {
+  const url = `${ORIGIN}${BUILD_MARKER_PATH}`;
+  console.log(`  waiting for ${url} to name ${commit}`);
+  const result = await waitForBuild(
+    async () => {
+      const response = await get(url);
+      return response?.ok ? await response.text() : null;
+    },
+    commit,
+    {
+      timeoutMs: DEPLOY_TIMEOUT_MS,
+      intervalMs: DEPLOY_POLL_MS,
+      now: () => Date.now(),
+      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    },
+  );
+  if (result === "live") {
+    console.log("  that deploy is live");
+    return true;
+  }
+  console.error(`  FAIL — ${commit} was not live after ${DEPLOY_TIMEOUT_MS / 60_000} minutes.`);
+  console.error(
+    "         The deploy failed or was replaced by a newer one; nothing was submitted.",
+  );
+  return false;
 }
 
 /** The deployed sitemap is the URL list — one source of truth, already public. */

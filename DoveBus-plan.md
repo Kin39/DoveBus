@@ -1380,7 +1380,13 @@ on a public repository.
 might not), and that Netlify builds on a push made by the bot. Netlify's webhook should fire, but
 that is to be seen, not assumed.
 
-### 15.3 Step 2 — IndexNow after each deploy
+### 15.3 Step 2 — IndexNow after each deploy — ✅ BUILT 2026-10-31
+
+`/build.txt` carries Netlify's `COMMIT_REF`; `npm run indexnow -- --wait-for=<sha>` polls it and
+submits only once the live site names that commit; `.github/workflows/indexnow.yml` runs it on
+pushes that change the site, and can be called by the line-data workflow. Checked against a locally
+served build before pushing: the wait recognised the commit, then the key file and the sitemap.
+
 
 1. **A build marker.** The build emits `/build.txt` containing Netlify's `COMMIT_REF` (`local`
    outside Netlify). Test: the plugin writes it; the CSP and `_headers` are unaffected.

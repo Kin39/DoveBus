@@ -1,0 +1,59 @@
+# Tells the IndexNow engines about the site's pages once a deploy is live.
+#
+# It used to be `npm run indexnow`, run by hand after each deploy, which is the
+# same as not run. It cannot be a Netlify build step: a build finishes before
+# its output is published, so a ping from there announces pages whose new
+# content is not served yet. Instead this waits for the live `/build.txt` to
+# name the commit that was pushed (`--wait-for`), then submits the sitemap.
+#
+# Triggered by pushes that change the site, and by the line-data workflow once
+# it pushes on its own (its pushes do not start workflows by themselves).
+
+name: IndexNow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/**"
+      - "!client/test/**"
+      - "!client/scripts/**"
+  workflow_call:
+    inputs:
+      sha:
+        description: The commit whose deploy to wait for
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: The commit whose deploy to wait for (default — the latest on main)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+# A newer push supersedes the deploy an older run is waiting for.
+concurrency:
+  group: indexnow
+  cancel-in-progress: true
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Wait for the deploy, then submit
+        env:
+          SHA: ${{ inputs.sha || github.sha }}
+        run: npm run indexnow -- --wait-for="$SHA"

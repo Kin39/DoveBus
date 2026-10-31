@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+  BUILD_MARKER_PATH,
+  buildMarkerFile,
   explainStatus,
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
@@ -8,6 +10,7 @@ import {
   indexNowSubmission,
   MAX_URLS_PER_SUBMISSION,
   sitemapUrls,
+  waitForBuild,
 } from "../indexnow.js";
 
 const SITE = "https://dovebus.it";
@@ -124,5 +127,68 @@ describe("the response codes", () => {
     expect(explainStatus(422)).toMatch(/host/);
     expect(explainStatus(429)).toMatch(/rate limited/);
     expect(explainStatus(500)).toBe("unexpected response");
+  });
+});
+
+describe("the build marker", () => {
+  test("names the commit Netlify built, so a run can tell which deploy is live", () => {
+    expect(buildMarkerFile("6bd3828abc")).toEqual({ fileName: "build.txt", source: "6bd3828abc" });
+    expect(BUILD_MARKER_PATH).toBe("/build.txt");
+  });
+
+  test("says local outside Netlify, where there is no commit to name", () => {
+    expect(buildMarkerFile(undefined).source).toBe("local");
+    expect(buildMarkerFile("  ").source).toBe("local");
+  });
+});
+
+describe("waitForBuild", () => {
+  /** A clock that only moves when the code under test sleeps. */
+  function fakeClock() {
+    let now = 0;
+    return {
+      now: () => now,
+      sleep: async (ms: number) => {
+        now += ms;
+      },
+    };
+  }
+
+  test("returns at once when the expected commit is already live", async () => {
+    const clock = fakeClock();
+    const reads: string[] = [];
+    const result = await waitForBuild(
+      async () => {
+        reads.push("read");
+        return "abc\n";
+      },
+      "abc",
+      { timeoutMs: 60_000, intervalMs: 15_000, ...clock },
+    );
+    expect(result).toBe("live");
+    expect(reads).toHaveLength(1);
+  });
+
+  test("keeps polling through the old deploy and through errors until the new one is live", async () => {
+    const clock = fakeClock();
+    const answers: Array<string | null> = ["old", null, "old", "abc"];
+    const result = await waitForBuild(async () => answers.shift() ?? null, "abc", {
+      timeoutMs: 120_000,
+      intervalMs: 15_000,
+      ...clock,
+    });
+    expect(result).toBe("live");
+    expect(clock.now()).toBe(45_000);
+  });
+
+  test("gives up after the timeout rather than announcing a deploy that never went live", async () => {
+    const clock = fakeClock();
+    const result = await waitForBuild(async () => "old", "abc", {
+      timeoutMs: 60_000,
+      intervalMs: 15_000,
+      ...clock,
+    });
+    expect(result).toBe("timeout");
+    expect(clock.now()).toBeGreaterThanOrEqual(60_000);
   });
 });

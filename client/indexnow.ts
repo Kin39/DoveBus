@@ -54,6 +54,54 @@ export function indexNowKeyFile(): { readonly fileName: string; readonly source:
   return { fileName: `${INDEXNOW_KEY}.txt`, source: INDEXNOW_KEY };
 }
 
+/** Where the build says which commit it was built from. */
+export const BUILD_MARKER_PATH = "/build.txt";
+
+/**
+ * The commit this build came from, published beside the key file.
+ *
+ * The key file proves that *a* deploy is live, not that *this* one is: it has
+ * been the same file since August. Announcing URLs before the deploy carrying
+ * their new content is published sends the engine to the old page, which it
+ * then marks as seen. Netlify sets `COMMIT_REF` for every build; reading it back
+ * off the live site is the only proof that the new pages are what is served.
+ */
+export function buildMarkerFile(commit: string | undefined): {
+  readonly fileName: string;
+  readonly source: string;
+} {
+  const ref = commit?.trim();
+  return { fileName: BUILD_MARKER_PATH.slice(1), source: ref ? ref : "local" };
+}
+
+export interface WaitOptions {
+  readonly timeoutMs: number;
+  readonly intervalMs: number;
+  readonly now: () => number;
+  readonly sleep: (ms: number) => Promise<void>;
+}
+
+/**
+ * Polls the live build marker until it names `expected`, or the time runs out.
+ *
+ * `read` returns the marker's contents, or `null` when it could not be read; a
+ * failed read is just another reason to look again. Gives up rather than
+ * waiting for ever: a deploy that is not live after the timeout has failed or
+ * been superseded, and either way there is nothing true to announce.
+ */
+export async function waitForBuild(
+  read: () => Promise<string | null>,
+  expected: string,
+  options: WaitOptions,
+): Promise<"live" | "timeout"> {
+  const deadline = options.now() + options.timeoutMs;
+  for (;;) {
+    if ((await read())?.trim() === expected) return "live";
+    if (options.now() >= deadline) return "timeout";
+    await options.sleep(options.intervalMs);
+  }
+}
+
 /** The submission payload, per the protocol's bulk form. */
 export interface IndexNowSubmission {
   readonly host: string;

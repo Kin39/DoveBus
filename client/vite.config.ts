@@ -9,7 +9,7 @@ import { deployHeadersFile } from "./deploy-headers";
 // The IndexNow key is published as a file whose *name* is the key, so the build
 // writes it from the same constant the submission script sends — see
 // `indexnow.ts`.
-import { indexNowKeyFile } from "./indexnow";
+import { buildMarkerFile, indexNowKeyFile } from "./indexnow";
 // The generated Italian-only pages: the line, comune and index pages built from
 // `seo/lines.json`. The config needs them twice over — to list them in the
 // sitemap, and to know that a page which declares no `hreflang` is right rather
@@ -427,6 +427,11 @@ function crawlerFiles(): Plugin {
       // from a search engine, not from the build.
       const key = indexNowKeyFile();
       this.emitFile({ type: "asset", fileName: key.fileName, source: key.source });
+
+      // Which commit this is, so `npm run indexnow -- --wait-for` can tell when
+      // *this* deploy is the one being served. See `buildMarkerFile`.
+      const marker = buildMarkerFile(process.env.COMMIT_REF);
+      this.emitFile({ type: "asset", fileName: marker.fileName, source: marker.source });
 
       assertRedirectsNameThisOrigin();
 
