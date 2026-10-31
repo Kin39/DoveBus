@@ -1418,7 +1418,16 @@ happened.
 **Caveat, accepted:** the updater updates itself. If a commit breaks it, updates stop, but the
 silence trips the healthchecks heartbeat, and nothing that failed CI is ever deployed.
 
-### 15.5 Step 4 — counter backups
+### 15.5 Step 4 — counter backups — ✅ DONE 2026-10-31
+
+Installed and run once on both ends; the restore drill passed (GoatCounter opened the copy, no
+pending migrations). Tested beforehand against a real copy: normal run, pruning to 14, a source that
+is not a database, a database with no site, an unreachable ping; on the PC side, an idempotent
+rerun, a copy older than the one kept, a corrupt download, a gzip that is not a database, a name
+from the server that is not a backup's, a missing host. One defect found and fixed that way: a
+refused copy left SQLite's `-shm`/`-wal` files behind. The pings are wired but empty until 0b.
+`shellcheck` is not installed on either machine, so it was not run; `sh -n` was.
+
 
 **On the VPS:** `goatcounter-backup.timer`, daily at 03:15, running as `goatcounter`. SQLite
 `.backup` into `/var/lib/goatcounter/backups/YYYYMMDD.sqlite3`, `PRAGMA integrity_check` must answer
@@ -1451,7 +1460,13 @@ in `DEPLOY.md`, including **the one command that switches it off**.
 - `dovebus-refresh.timer` and the manual procedures in `DEPLOY.md` keep working exactly as before.
 - `/healthz` is `ok` after every change made on the VPS.
 
-### 15.8 Decisions for the owner
+### 15.8 Decisions for the owner — answered 2026-10-31
+
+D1 healthchecks.io plus an uptime monitor. D2 stop and ask (the default). D3 direct push after two
+good PR runs. D4 the owner's PC. **D5 any hour** — the owner chose speed over the window, so a
+failed rollback at night is found in the morning; the `halt` file is what keeps it from getting
+worse meanwhile.
+
 
 - **D1** monitoring: healthchecks.io plus an uptime monitor on `/healthz`. Both need your accounts.
 - **D2** comune drift: for now the automation stops and asks (B2). Later option: match published

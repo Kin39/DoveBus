@@ -649,17 +649,110 @@ it. Rolling back past a schema change therefore means a re-import too.
 
 **Backing up the counter.** It is the only data on this machine that cannot be
 rebuilt from somewhere else: the timetable is re-downloaded every night from the
-operator, and the site is in git, but nobody else has these numbers. Use SQLite's
-own backup rather than `cp` — the file is being written to while you read it:
+operator, and the site is in git, but nobody else has these numbers. A timer
+takes a copy every night with SQLite's own `.backup` (the database runs in WAL
+mode, so `cp` would copy it without its most recent hours), checks it, and keeps
+two weeks — `deploy/goatcounter-backup.sh` says what it checks and why.
 
 ```bash
-sudo -u goatcounter sqlite3 /var/lib/goatcounter/db.sqlite3 ".backup /var/lib/goatcounter/backup.sqlite3" && sudo gzip -f /var/lib/goatcounter/backup.sqlite3
+install -d -m 755 /usr/local/lib/dovebus /etc/dovebus && install -m 755 /srv/dovebus/deploy/goatcounter-backup.sh /usr/local/lib/dovebus/
 ```
 
-Then copy `backup.sqlite3.gz` off the machine. `.backup` rather than `cp`
-because the database runs in WAL mode: there is a `-wal` file beside it holding
-writes that have not landed yet, and copying the one file without the other
-copies a database that is missing its most recent hours.
+The script is *copied*, not run from the checkout: a timer should run what was
+installed and read, not whatever the last `git pull` brought.
+
+```bash
+cat > /etc/systemd/system/goatcounter-backup.service <<'EOF'
+[Unit]
+Description=Back up the GoatCounter database
+
+[Service]
+Type=oneshot
+User=goatcounter
+Group=goatcounter
+EnvironmentFile=-/etc/dovebus/notify.env
+ExecStart=/usr/local/lib/dovebus/goatcounter-backup.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/goatcounter
+EOF
+```
+
+```bash
+cat > /etc/systemd/system/goatcounter-backup.timer <<'EOF'
+[Unit]
+Description=Back up the GoatCounter database daily
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+```bash
+systemctl daemon-reload && systemctl enable --now goatcounter-backup.timer && systemctl start goatcounter-backup && journalctl -u goatcounter-backup -n 3 --no-pager
+```
+
+That must end with `backup ok:`. Copies land in `/var/lib/goatcounter/backups/`,
+one per day, with `latest.sqlite3.gz` pointing at the newest. Switch it off with
+`systemctl disable --now goatcounter-backup.timer`.
+
+**The copy that survives losing the machine** is pulled by the owner's PC, with
+a systemd *user* timer that catches up after days the PC was off. It keeps a
+copy only if it decompresses, passes the integrity check, and is not older than
+the newest one already there. On the PC, from the repository:
+
+```bash
+install -D -m 755 deploy/pull-counter-backup.sh ~/.local/bin/pull-counter-backup.sh
+```
+
+```bash
+mkdir -p ~/.config/systemd/user && cat > ~/.config/systemd/user/dovebus-counter-pull.service <<'EOF'
+[Unit]
+Description=Pull the DoveBus counter backup
+
+[Service]
+Type=oneshot
+Environment=DOVEBUS_SSH_HOST=ubuntu@<the VPS>
+EnvironmentFile=-%h/.config/dovebus/notify.env
+ExecStart=%h/.local/bin/pull-counter-backup.sh
+EOF
+```
+
+```bash
+cat > ~/.config/systemd/user/dovebus-counter-pull.timer <<'EOF'
+[Unit]
+Description=Pull the DoveBus counter backup daily
+
+[Timer]
+OnCalendar=*-*-* 10:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+```bash
+systemctl --user daemon-reload && systemctl --user enable --now dovebus-counter-pull.timer && systemctl --user start dovebus-counter-pull && journalctl --user -u dovebus-counter-pull -n 3 --no-pager
+```
+
+Copies land in `~/dovebus-backups/goatcounter/`, sixty kept. **To restore**,
+stop the counter, decompress a copy over `db.sqlite3` (removing the `-wal` and
+`-shm` beside it), and start it again.
+
+**Restore drill, 2026-10-31:** a copy decompressed into a temporary directory
+was opened by GoatCounter itself, which found the site and no pending
+migrations. Repeat it after a counter upgrade:
+
+```bash
+T=$(sudo -u goatcounter mktemp -d) && sudo -u goatcounter sh -c "gzip -dc /var/lib/goatcounter/backups/latest.sqlite3.gz > $T/db.sqlite3" && sudo -u goatcounter goatcounter db migrate pending -db "sqlite+$T/db.sqlite3"; sudo rm -rf "$T"
+```
 
 **Updating the counter.** Releases are roughly twice a year and the binary is
 self-contained, so this is a download, a checksum, and a restart. Take a backup
