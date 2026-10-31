@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   assertEveryLineHasAParent,
+  assertPublishedPagesStillFit,
   buildPages,
   type ComunePage,
   INDEX_PATH,
@@ -8,7 +9,6 @@ import {
   type LineData,
   type LinePage,
   type LineSummary,
-  missingFromData,
   type PublishedList,
 } from "../seo/pages.js";
 
@@ -104,18 +104,6 @@ describe("buildPages", () => {
     ).toHaveLength(2);
   });
 
-  test("an unreleased page that vanished from the feed is not a withdrawal", () => {
-    const all = data(line("32-firenze", "Firenze", 102));
-    const published: PublishedList = {
-      released: 1,
-      lines: [
-        { slug: "32-firenze", routeId: "R-32-firenze", shortName: "32", group: 1 },
-        { slug: "99-mai-uscita", routeId: "R-99", shortName: "99", group: 2 },
-      ],
-    };
-    expect(missingFromData(all, published)).toEqual([]);
-  });
-
   test("gives a comune a page once it owns two lines", () => {
     const all = data(line("32-firenze", "Firenze", 102), line("c3-firenze", "Firenze", 168));
     const pages = buildPages(all, publish("32-firenze", "c3-firenze"));
@@ -155,11 +143,11 @@ describe("buildPages", () => {
     expect(index.comuni.find((entry) => entry.comune === "Firenze")?.path).toBe("/comune/firenze/");
   });
 
-  test("skips a published slug the data no longer has, and says which", () => {
+  test("builds nothing for a published slug the data no longer has — the guard refuses it first", () => {
     const all = data(line("32-firenze", "Firenze", 102));
     const published = publish("32-firenze", "99-ritirata");
     expect(pagesOf("line", buildPages(all, published))).toHaveLength(1);
-    expect(missingFromData(all, published).map((entry) => entry.slug)).toEqual(["99-ritirata"]);
+    expect(() => assertPublishedPagesStillFit(all, published)).toThrow(/99-ritirata/);
   });
 
   test("orders comuni by how many lines they own, then by name", () => {
@@ -213,5 +201,65 @@ describe("assertEveryLineHasAParent", () => {
     };
     const index: IndexPage = { kind: "index", path: INDEX_PATH, comuni: [] };
     expect(() => assertEveryLineHasAParent([index, orphan])).toThrow(/comune\/firenze/);
+  });
+});
+
+describe("assertPublishedPagesStillFit", () => {
+  test("passes when every released address still carries the line it was published for", () => {
+    const all = data(line("32-firenze", "Firenze", 102), line("c3-firenze", "Firenze", 168));
+    expect(() =>
+      assertPublishedPagesStillFit(all, publish("32-firenze", "c3-firenze")),
+    ).not.toThrow();
+  });
+
+  test("refuses a released page that has left the data, instead of dropping it from the sitemap", () => {
+    const all = data(line("32-firenze", "Firenze", 102));
+    expect(() => assertPublishedPagesStillFit(all, publish("32-firenze", "99-ritirata"))).toThrow(
+      /\/linea\/99-ritirata\/ .*no longer in the line data/,
+    );
+  });
+
+  test("refuses an address that now computes to a different route of the same number", () => {
+    // Route R-32-firenze drifted to Prato; another 32 drifted into Firenze and
+    // now computes the published address.
+    const all = data(
+      { ...line("32-prato", "Prato", 90), routeId: "R-32-firenze" },
+      { ...line("32-firenze", "Firenze", 102), routeId: "R-OTHER" },
+    );
+    expect(() => assertPublishedPagesStillFit(all, publish("32-firenze"))).toThrow(
+      /published for route R-32-firenze.*now route R-OTHER/,
+    );
+  });
+
+  test("refuses a published route the feed has renumbered", () => {
+    const all = data({ ...line("32-firenze", "Firenze", 102), shortName: "32/" });
+    expect(() => assertPublishedPagesStillFit(all, publish("32-firenze"))).toThrow(
+      /published for line "32".*now line "32\/"/,
+    );
+  });
+
+  test("ignores pages that have not been released yet", () => {
+    const all = data(line("32-firenze", "Firenze", 102));
+    const published: PublishedList = {
+      released: 1,
+      lines: [
+        { slug: "32-firenze", routeId: "R-32-firenze", shortName: "32", group: 1 },
+        { slug: "99-mai-uscita", routeId: "R-99", shortName: "99", group: 2 },
+      ],
+    };
+    expect(() => assertPublishedPagesStillFit(all, published)).not.toThrow();
+  });
+
+  test("lists every problem at once, so one build run says everything", () => {
+    const all = data({ ...line("32-firenze", "Firenze", 102), shortName: "32/" });
+    let message = "";
+    try {
+      assertPublishedPagesStillFit(all, publish("32-firenze", "99-ritirata"));
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toMatch(/^2 published pages/);
+    expect(message).toContain("/linea/32-firenze/");
+    expect(message).toContain("/linea/99-ritirata/");
   });
 });

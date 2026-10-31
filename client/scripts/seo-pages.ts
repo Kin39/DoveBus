@@ -19,7 +19,11 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { readLineData, readPublishedList, SEO_DIRECTORIES } from "../seo/load.js";
-import { assertEveryLineHasAParent, buildPages, missingFromData } from "../seo/pages.js";
+import {
+  assertEveryLineHasAParent,
+  assertPublishedPagesStillFit,
+  buildPages,
+} from "../seo/pages.js";
 import { renderPage } from "../seo/render.js";
 
 const CLIENT_ROOT = resolve(import.meta.dirname, "..");
@@ -27,7 +31,7 @@ const CLIENT_ROOT = resolve(import.meta.dirname, "..");
 const data = readLineData();
 const published = readPublishedList();
 
-const retired = missingFromData(data, published);
+assertPublishedPagesStillFit(data, published);
 const pages = buildPages(data, published);
 assertEveryLineHasAParent(pages);
 
@@ -53,17 +57,3 @@ console.log(
     [...byKind.entries()].map(([kind, count]) => `${count} ${kind}`).join(", "),
 );
 console.log(`  feed ${data.feed.startDate}–${data.feed.endDate}, giorno ${data.referenceDate}`);
-
-if (retired.length > 0) {
-  // Not a failure: a line can genuinely stop running. It is printed because the
-  // page has just disappeared from the sitemap, and that is a decision — keep
-  // it, or redirect it — rather than something to discover in Search Console
-  // six weeks later.
-  console.warn(
-    `  ${retired.length} pagine pubblicate non sono più nei dati e non sono state generate:`,
-  );
-  for (const entry of retired) {
-    console.warn(`    /linea/${entry.slug}/ (route ${entry.routeId}, linea ${entry.shortName})`);
-  }
-  console.warn("  decidi se ritirarle con un 301 o rimetterle nel feed prima di pubblicare.");
-}

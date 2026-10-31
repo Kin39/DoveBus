@@ -142,8 +142,8 @@ const MIN_LINES_FOR_COMUNE_PAGE = 2;
 export function buildPages(data: LineData, published: PublishedList): readonly Page[] {
   const bySlug = new Map(data.lines.map((line) => [line.slug, line]));
 
-  // A published slug the data no longer carries is not skipped quietly: see
-  // `missingFromData`, which the build calls and reports on.
+  // A published slug the data no longer carries is never skipped quietly: the
+  // build calls `assertPublishedPagesStillFit` first and stops on it.
   const lines = published.lines.flatMap((entry) => {
     if (entry.group > published.released) return [];
     const line = bySlug.get(entry.slug);
@@ -198,24 +198,53 @@ export function buildPages(data: LineData, published: PublishedList): readonly P
 }
 
 /**
- * Published slugs the data no longer describes.
+ * Refuses to build when a released address no longer carries the line it was
+ * published for.
  *
- * A line can stop running — a seasonal variant withdrawn, a route renumbered —
- * and when it does, its page cannot be rebuilt from nothing. This reports them
- * rather than deciding: dropping the page silently would remove a URL from the
- * sitemap, which is how a site asks for a page to be deindexed, and that is not
- * a thing a build should do on its own while nobody is watching.
+ * Pages are found by their slug, and a slug is computed from the line number
+ * and the comune it mostly serves — which drifts. When it does, the published
+ * address either vanishes from the data (and would quietly leave the sitemap,
+ * which is how a site asks for a page to be deindexed) or, rarely, is computed
+ * by a *different* route of the same number, and the page renders correctly
+ * about another bus. The weekly refresh refuses both before committing; this is
+ * the same refusal for a regeneration done by hand, at the one step every
+ * deploy goes through.
+ *
+ * Three questions per released page: is its slug still in the data, is it
+ * still the same route, and does that route still carry the published number.
+ * Every failure is listed, so one build run says everything that needs deciding.
  */
-export function missingFromData(
-  data: LineData,
-  published: PublishedList,
-): readonly PublishedLine[] {
-  const known = new Set(data.lines.map((line) => line.slug));
-  // Only the batches that are live: a page that has never been published cannot
-  // have been withdrawn, and reporting it would train whoever reads the build
-  // log to ignore the ones that matter.
-  return published.lines.filter(
-    (entry) => entry.group <= published.released && !known.has(entry.slug),
+export function assertPublishedPagesStillFit(data: LineData, published: PublishedList): void {
+  const bySlug = new Map(data.lines.map((line) => [line.slug, line]));
+  const byRoute = new Map(data.lines.map((line) => [line.routeId, line]));
+  const problems = published.lines
+    .filter((entry) => entry.group <= published.released)
+    .flatMap((entry): string[] => {
+      const found: string[] = [];
+      const atAddress = bySlug.get(entry.slug);
+      if (atAddress === undefined) {
+        found.push(
+          `/linea/${entry.slug}/ is published but no longer in the line data (route ${entry.routeId}, line ${entry.shortName})`,
+        );
+      } else if (atAddress.routeId !== entry.routeId) {
+        found.push(
+          `/linea/${entry.slug}/ was published for route ${entry.routeId}, but that address is now route ${atAddress.routeId}`,
+        );
+      }
+      const route = byRoute.get(entry.routeId);
+      if (route !== undefined && route.shortName !== entry.shortName) {
+        found.push(
+          `/linea/${entry.slug}/ was published for line "${entry.shortName}" (route ${entry.routeId}), but that route is now line "${route.shortName}"`,
+        );
+      }
+      return found;
+    });
+  if (problems.length === 0) return;
+  throw new Error(
+    `${problems.length} published page${problems.length === 1 ? "" : "s"} no longer fit the line data:\n` +
+      problems.map((problem) => `  - ${problem}`).join("\n") +
+      "\nRetire a page with a 301 in public/_redirects and remove it from seo/published.json, " +
+      "or republish it at a new address — never let an address change under its readers.",
   );
 }
 

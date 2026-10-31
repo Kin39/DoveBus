@@ -1321,8 +1321,8 @@ with both `-m` and `-F`) and one hole in the gates, now `slug-reassigned`: a rel
 compute to a *different* route of the same number when two routes' comuni drift past each other, and
 every other check passes. Also added from that review: an unchanged feed still blocks a week before
 the committed edition runs out, an edition that has not started yet blocks, and one branch with at
-most one open pull request. **The build has the same slug-only lookup** (`buildPages`), so a manual
-regeneration is not protected by it — D2's `route_id` matching is what closes that.
+most one open pull request. The build had the same slug-only lookup (`buildPages`), so a manual
+regeneration was not protected by it; D2 closed that (§15.8).
 
 
 GitHub rather than the VPS, so that the API machine never holds a key that can write to the
@@ -1490,7 +1490,12 @@ in `DEPLOY.md`, including **the one command that switches it off**.
 
 ### 15.8 Decisions for the owner — answered 2026-10-31
 
-D1 healthchecks.io plus an uptime monitor. D2 stop and ask (the default). D3 direct push after two
+D1 healthchecks.io plus an uptime monitor. **D2, revisited the same day: the build refuses too.**
+`assertPublishedPagesStillFit` (`client/seo/pages.ts`) stops `seo-pages`, and so every deploy, when a
+released address has left the data, now computes to a different route, or its route was renumbered —
+the same three questions the weekly job asks, now asked of a manual regeneration as well, and the
+old warning-only path is gone. Matching pages by `route_id` instead stays open: worth it only if the
+weekly job keeps stopping on comune drift. D3 direct push after two
 good PR runs. D4 the owner's PC. **D5 any hour** — the owner chose speed over the window, so a
 failed rollback at night is found in the morning; the `halt` file is what keeps it from getting
 worse meanwhile.
