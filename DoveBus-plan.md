@@ -1400,7 +1400,17 @@ It still submits the whole sitemap (~50 URLs), not only the changed ones. At rou
 that is within what IndexNow expects, and diffing built pages would be machinery this does not need
 yet.
 
-### 15.4 Step 3 — the VPS updates itself, by pulling
+### 15.4 Step 3 — the VPS updates itself, by pulling — BUILT 2026-10-31, in `--dry` until 2026-11-07
+
+`npm run update` (`server/src/update/`, `server/src/cli/update.ts`). The review pass found two
+defects the plan above did not foresee: a step failing *after* the fast-forward (a missing sudoers
+rule, a failed `npm ci`) left the checkout ahead of the API with the next round reporting success,
+and a rolled-back commit would have been redeployed every fifteen minutes. Now any throw after the
+fast-forward rolls back, the rolled-back sha is remembered and refused, a modified tracked file stops
+everything (`dirty`), a CI verdict missing for over an hour is reported (`ci-stuck`), renames out
+of `server/` count as server changes, an unreadable `DB_VERSION` counts as a schema change, and a
+probe that cannot reach `/healthz` refuses to deploy rather than halting on its first try.
+
 
 **Design.** A `dovebus-update.timer` fires every 15 minutes. The service runs as **`dovebus`, not
 root**, and a single sudoers line lets that user run `systemctl restart dovebus-api` and nothing

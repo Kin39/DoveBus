@@ -601,6 +601,72 @@ https://example.org — update the redirect, or the deployed site sends every pa
 to the wrong domain
 ```
 
+## Automatic updates
+
+The API machine updates itself from `main`: `npm run update`, every fifteen
+minutes, as `dovebus`. It deploys only a commit whose `CI` run passed, never a
+`DB_VERSION` change (that one is still the manual procedure under "Living with
+it", import before restart), restarts only for changes under `server/` or to a
+manifest, and rolls back a deploy that leaves `/healthz` worse than it found
+it. A rolled-back commit is not retried; a rollback that fails writes
+`data/update.halt`, which stops every later round until it is removed by hand.
+Each round reports to the `aggiornamento-vps` check. `server/src/update/plan.ts`
+is the policy, in order.
+
+**It runs with `--dry` first** — deciding and reporting, changing nothing — for
+a week, read against the pushes that actually happened.
+
+```bash
+cat > /etc/systemd/system/dovebus-update.service <<'EOF'
+[Unit]
+Description=Update DoveBus from main
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=dovebus
+Group=dovebus
+WorkingDirectory=/srv/dovebus/server
+EnvironmentFile=/etc/dovebus/notify.env
+Environment=DOVEBUS_PORT=3200
+ExecStart=/usr/bin/npm run update -- --dry
+EOF
+```
+
+```bash
+cat > /etc/systemd/system/dovebus-update.timer <<'EOF'
+[Unit]
+Description=Update DoveBus from main every fifteen minutes
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+```bash
+systemctl daemon-reload && systemctl enable --now dovebus-update.timer && systemctl start dovebus-update && journalctl -u dovebus-update -n 5 --no-pager
+```
+
+**Going live** takes two changes: the one privilege it needs, and dropping
+`--dry`. The sudoers rule names the full command, so it allows that restart
+and nothing else:
+
+```bash
+echo 'dovebus ALL=(root) NOPASSWD: /usr/bin/systemctl restart dovebus-api' > /etc/sudoers.d/dovebus-update && chmod 440 /etc/sudoers.d/dovebus-update && visudo -c
+```
+
+```bash
+sed -i 's/npm run update -- --dry/npm run update/' /etc/systemd/system/dovebus-update.service && systemctl daemon-reload
+```
+
+Stop it with `systemctl disable --now dovebus-update.timer` (pause the check on
+healthchecks.io first). After a halt: read the journal, fix, then
+`rm /srv/dovebus/data/update.halt`.
+
 ## Alerts
 
 Every unattended job reports to **healthchecks.io** (account `dovebusapp@gmail.com`,
