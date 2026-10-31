@@ -1263,3 +1263,201 @@ one viewport, not the widget.
 **No checksum is published with GoatCounter's releases.** The digest of v2.7.0's binary is recorded
 in `DEPLOY.md` at install time. It cannot vouch for the first download; it is what every upgrade
 after it gets checked against.
+
+## 15. Automating the four manual jobs — PLANNED 2026-10-31, awaiting owner review
+
+Four jobs keep DoveBus correct and none of them runs by itself: regenerating the line data behind
+the line pages, updating the API machine after a push, backing up the pageview counter, and pinging
+IndexNow after a deploy. The first one lapsed on 28 October without anyone noticing, which is the
+argument for this section.
+
+**One rule for every step: fail closed.** An automated job that meets something it was not built
+for does nothing and tells someone. It never publishes, deploys or deletes on a guess. A job that
+went quiet counts as a failure too, so every job reports its successes, not only its errors.
+
+### 15.0 What reading the code turned up — the premises
+
+1. **`client/seo/lines.json` expired on 20261028.** `assertDataIsCurrent` has failed every Netlify
+   build since the 29th, and the live `/linee/` still prints the 8–28 October edition.
+2. **`assertFrozenSlugsStillFit` is implemented and tested, and nothing calls it.** The check that a
+   published `route_id` still carries the line number its address names was done by hand on
+   8 October, from the commit message's checklist.
+3. **Pages are matched to data by the *computed* slug** (`buildPages`, `bySlug`). When a line's
+   principal comune drifts — 34 of 729 routes did in one month — its computed slug changes, the
+   published page is dropped with a `console.warn`, the build passes, and the URL leaves the
+   sitemap. With a person reading the log, that is a prompt. Unattended, it is silent deindexing.
+4. **`seo-data` defaults the reference day to today, and the pages print "un giorno feriale"
+   unconditionally** (`render.ts:302,397,469`). A run on a Saturday or a holiday would publish a
+   false sentence, and fewer lines would clear the 70-trip floor.
+5. **`npm run indexnow` proves that *a* deploy is live (the key file), not that *this* one is.**
+6. **A push made with a workflow's `GITHUB_TOKEN` does not start other workflows.** An automated
+   commit would therefore skip `ci.yml` and any `on: push` IndexNow job, so the job that commits has
+   to run those checks itself.
+7. **The VPS update path already has most of its safety.** `refresh` rebuilds on its own when
+   `DB_VERSION` changes (`decideReason` → `schema-version`), holds `import.lock`, and the API spawns
+   the same refresh as a child process. What is missing is the order: a schema change must be
+   imported *before* the restart.
+8. **No backup of the counter exists** on the machine or anywhere else.
+
+### 15.1 Step 0 — before any automation
+
+**0a. Regenerate `lines.json` by hand, now.** ✅ DONE 2026-10-31, commit `a64491f`. This unblocks deploys while the rest is built. It uses
+the 8 October procedure: fresh import, `seo-data` on a weekday, then compare against the committed
+file (frozen slugs, missing pages, lost routes).
+
+**0b. Monitoring first, because every later step reports into it.** A dead-man's-switch service
+(healthchecks.io, free tier): every job pings it on success, and silence past a grace period sends
+an email. Separately, an uptime monitor that checks that `/healthz` contains `"status":"ok"`. Both
+need accounts that only the owner can create. Ping URLs are kept out of the repository, as a GitHub
+secret and in `/etc/dovebus/notify.env` on the VPS.
+
+### 15.2 Step 1 — line data, from GitHub Actions
+
+GitHub rather than the VPS, so that the API machine never holds a key that can write to the
+repository. The runner downloads and imports the feed itself: it takes about 8 minutes and is free
+on a public repository.
+
+**Code, test first:**
+
+1. **`chooseReferenceDate(window, today, activeServicesByDate)`**, a pure function. It picks the
+   first Tuesday, Wednesday or Thursday inside the feed window whose active services are at least
+   95% of the window's weekday median. The median, rather than a list of holidays, also catches
+   local patron-saint days (Firenze 24 June, Pisa 17 June), which a national list would miss.
+   Tests: today is a Saturday; Easter Monday; a day with reduced service; a window with no
+   qualifying day, which must throw.
+2. **`compareEditions(previous, next, published)`**, a pure function that returns blocking findings
+   plus statistics. Any blocking finding stops the job:
+   - **B1** a published `route_id` now carries a different line number (`assertFrozenSlugsStillFit`,
+     finally wired);
+   - **B2** a released published slug is missing from the new data (§15.0 point 3);
+   - **B3** a direction of a released line that had a route now has none;
+   - **B4** volume: a released line's trips drop by more than 40%, or the candidate count moves by
+     more than 25%;
+   - **B5** window: the new edition's *last day of full service* is less than 7 days away, or the
+     reference day falls outside it. Not the declared `endDate`: the 20261031 edition declares
+     20261120 but carries 3 services a day from the 18th, so its real end is the 17th. The build's
+     own `assertDataIsCurrent` still reads the declared date; whether it should read the same
+     signal is a question for this step.
+
+   **B3 fired on the first manual run (0a, 2026-10-31)**, and it was right to: line 9's direction
+   towards Leopolda fell from 0.77 to 0.70 coverage, the same on every weekday checked, so the
+   page legitimately lost its route. The owner accepted it. Unattended, the job stops there and
+   the issue carries the numbers needed to decide — that is the intended behaviour, not noise.
+
+   An identical `sha1` is not a failure: the job exits quietly with nothing to do. The statistics
+   (pages whose content changed, first and last departures that moved) go into the commit message.
+   Tests: synthetic `LineData` fixtures for each finding, plus a golden test that runs the committed
+   file against itself and must report zero findings.
+3. **`.github/workflows/line-data.yml`**:
+   - **Trigger:** weekly on Tuesday plus `workflow_dispatch`. A ~20-day window refreshed weekly
+     keeps at least 13 days of margin, so even two failed weeks never reach expiry.
+   - **Permissions:** `contents: write` and `issues: write`, granted to this workflow only.
+     `ci.yml` stays read-only.
+   - **Steps:** checkout, `npm ci`, `npm run refresh` (with no database it downloads and imports),
+     `seo-data --date=<chosen>`, `compareEditions`, then the whole of `ci.yml` (typecheck, Biome,
+     coverage, `build:client`, which includes the expiry guard).
+   - **Output:** for the first two runs, a **pull request** the owner merges. After that, if the owner
+     agrees (D3), a direct commit to `main`, rebased on a fresh `main` and abandoned if someone else
+     touched `lines.json` meanwhile.
+   - **On any failure:** open or update a single issue, "line data: automatic refresh blocked", with
+     the findings. GitHub emails it to the owner. Plus the healthchecks ping.
+   - **After a push:** call the IndexNow workflow (§15.3) directly, because point 6 means a push
+     would not start it.
+
+**Risks to verify on the first run:** that the regional server answers GitHub's IP ranges (Kong
+might not), and that Netlify builds on a push made by the bot. Netlify's webhook should fire, but
+that is to be seen, not assumed.
+
+### 15.3 Step 2 — IndexNow after each deploy
+
+1. **A build marker.** The build emits `/build.txt` containing Netlify's `COMMIT_REF` (`local`
+   outside Netlify). Test: the plugin writes it; the CSP and `_headers` are unaffected.
+2. **`npm run indexnow -- --wait-for=<sha>`** polls `build.txt` until it shows that commit, for up to
+   15 minutes, then runs the existing flow unchanged. Test: the wait loop with an injected `fetch`
+   (match, timeout, a network error that is retried).
+3. **`.github/workflows/indexnow.yml`**, on pushes to `main` that touch `client/` (excluding `test/`
+   and `scripts/`), plus `workflow_call` from §15.2.
+
+It still submits the whole sitemap (~50 URLs), not only the changed ones. At roughly one run a week
+that is within what IndexNow expects, and diffing built pages would be machinery this does not need
+yet.
+
+### 15.4 Step 3 — the VPS updates itself, by pulling
+
+**Design.** A `dovebus-update.timer` fires every 15 minutes. The service runs as **`dovebus`, not
+root**, and a single sudoers line lets that user run `systemctl restart dovebus-api` and nothing
+else. Code from the repository therefore runs with the same privilege the API already has, and a bad
+commit gains nothing it did not already have. The logic is a pure function,
+`planUpdate(facts) → action`, in `server/src/cli/update.ts`; a thin layer gathers the facts.
+
+**One round:**
+
+1. `git fetch`. Nothing new: ping and exit.
+2. Not a fast-forward (someone edited on the VPS): stop and notify.
+3. **CI must have passed for that exact commit**, read from the GitHub API (public, unauthenticated,
+   queried only when there is a new commit). Pending: retry next round. Failed: notify once and do
+   not deploy.
+4. Nothing changed under `server/` or the `package*.json` files: fast-forward, no restart.
+5. **`DB_VERSION` changed: do not deploy.** Notify "schema change — manual, see DEPLOY.md". It has
+   happened once, and it is the one change that deserves a person watching.
+6. `import.lock` is held by a live pid: skip this round.
+7. Record `HEAD`, fast-forward, run `npm ci --omit=dev` only if the lockfile changed, restart.
+8. **Verify for up to 180 s:** `/healthz` reports `success`, `staleSchema: false`, `status: "ok"` (the
+   ~60 s warm-up `degraded` is tolerated inside the window), and `GET /` answers `DoveBus`.
+9. **Otherwise roll back:** reset to the recorded commit, `npm ci` if needed, restart, verify again,
+   notify. If the rollback also fails to come up healthy, write a `halt` file that every later round
+   respects until a person removes it.
+
+**Tests:** `planUpdate` for every branch (nothing new, diverged, CI pending/failed/passed,
+client-only, schema bump, lock held, lockfile changed, halt file present); the rollback decision;
+and an integration test with a real bare repository and a clone in a temporary directory, with
+restart and health injected, so fast-forward, divergence and rollback run against real git.
+**Trial:** `--dry` for 7 days, logging what it would have done next to the pushes that actually
+happened.
+
+**Caveat, accepted:** the updater updates itself. If a commit breaks it, updates stop, but the
+silence trips the healthchecks heartbeat, and nothing that failed CI is ever deployed.
+
+### 15.5 Step 4 — counter backups
+
+**On the VPS:** `goatcounter-backup.timer`, daily at 03:15, running as `goatcounter`. SQLite
+`.backup` into `/var/lib/goatcounter/backups/YYYYMMDD.sqlite3`, `PRAGMA integrity_check` must answer
+`ok`, gzip, keep 14, ping.
+
+**Off the machine (D4), recommended: the owner's PC pulls.** A systemd *user* timer with
+`Persistent=true`, so a day the PC was off is caught up on the next boot. It copies the latest backup
+over the existing key-only SSH, then checks `gzip -t`, `integrity_check`, and that the `hits` count
+has not dropped since the previous copy. Keeps 60, ping with a 3-day grace. No credential on the
+VPS, no new account, no cost. The alternative is object storage, a few cents a month but a write key
+on the VPS.
+
+**A restore drill, once:** a local GoatCounter started on a backup, with its dashboard opened. A
+backup that has never been restored is a hope, not a backup. The drill gets recorded in DEPLOY.md
+§8. Scripts live in `deploy/`, pass `shellcheck`, and are installed by hand.
+
+### 15.6 Order, and how each step lands
+
+0a → 0b → **4** (smallest, and it protects the only data that cannot be rebuilt) → **1** in PR mode
+→ **2** → **1** in push mode → **3** in `--dry` for a week → **3** live.
+
+Each step is one commit (tests first, CI green, code-reviewer pass, owner review), with its runbook
+in `DEPLOY.md`, including **the one command that switches it off**.
+
+### 15.7 What must stay true — checked after every step
+
+- `ci.yml` is green with the 80% thresholds; no existing test is changed to make it pass.
+- With unchanged data, the build emits the same set of URLs: the sitemap diff is empty. Pages appear
+  only through `published.json` and never disappear automatically (B2).
+- `dovebus-refresh.timer` and the manual procedures in `DEPLOY.md` keep working exactly as before.
+- `/healthz` is `ok` after every change made on the VPS.
+
+### 15.8 Decisions for the owner
+
+- **D1** monitoring: healthchecks.io plus an uptime monitor on `/healthz`. Both need your accounts.
+- **D2** comune drift: for now the automation stops and asks (B2). Later option: match published
+  pages by `route_id`, which is what "the slug is frozen" intended, but it changes build behaviour
+  and gets its own step.
+- **D3** line data: pull requests forever, or direct pushes after two good runs.
+- **D4** off-site backup: your PC (recommended) or object storage.
+- **D5** the VPS updater: deploy at any hour, or only in a window when you can react (for example
+  09:00–21:00).
