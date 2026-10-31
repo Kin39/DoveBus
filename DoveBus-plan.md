@@ -1305,7 +1305,7 @@ went quiet counts as a failure too, so every job reports its successes, not only
 the 8 October procedure: fresh import, `seo-data` on a weekday, then compare against the committed
 file (frozen slugs, missing pages, lost routes).
 
-**0b. Monitoring first, because every later step reports into it.** A dead-man's-switch service
+**0b. Monitoring first, because every later step reports into it.** ✅ DONE 2026-10-31 — one account, not two: the uptime monitor became a fifth healthchecks check (`api-salute`) pinged from the VPS against the public `/healthz`, because UptimeRobot's free plan is non-commercial-only and sources disagree on whether its keyword check is free. Five checks exist, three are wired; DEPLOY.md "Alerts" lists them. A dead-man's-switch service
 (healthchecks.io, free tier): every job pings it on success, and silence past a grace period sends
 an email. Separately, an uptime monitor that checks that `/healthz` contains `"status":"ok"`. Both
 need accounts that only the owner can create. Ping URLs are kept out of the repository, as a GitHub

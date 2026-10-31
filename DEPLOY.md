@@ -601,6 +601,79 @@ https://example.org — update the redirect, or the deployed site sends every pa
 to the wrong domain
 ```
 
+## Alerts
+
+Every unattended job reports to **healthchecks.io** (account `dovebusapp@gmail.com`,
+free Hobbyist plan), which emails when a job reports a failure or goes quiet for
+longer than its grace period. Silence counts: a job that stopped running is
+caught the same way as one that failed.
+
+| Check | Period / grace | Who pings it |
+|---|---|---|
+| `backup-contatore-vps` | 1 day / 3 hours | `goatcounter-backup.service` (§8) |
+| `backup-contatore-pc` | 1 day / 3 days | the owner's PC (§8) |
+| `api-salute` | 5 minutes / 10 minutes | `api-health-ping.timer`, below |
+| `pagine-linee` | 1 week / 1 day | the line-data workflow (planned) |
+| `aggiornamento-vps` | 15 minutes / 1 hour | the VPS updater (planned) |
+
+The ping URLs are not in this repository: anyone holding one can send false
+signals to that check. On the VPS they live in `/etc/dovebus/notify.env`
+(root, 600), read by the units through `EnvironmentFile=`; on the PC in
+`~/.config/dovebus/notify.env`; for GitHub as the `HC_LINE_DATA_URL` secret.
+
+```bash
+sudo cat /etc/dovebus/notify.env   # HC_COUNTER_BACKUP_URL, HC_API_HEALTH_URL, HC_VPS_UPDATE_URL
+```
+
+**`api-salute`** asks the public `/healthz` every five minutes, so DNS, TLS and
+Caddy are part of the answer. A `degraded` answer is logged on the check rather
+than reported as a failure, because the API is `degraded` for about a minute
+after every restart; the alert comes when health has been missing for longer
+than the grace period. `deploy/api-health-ping.sh` has the reasoning.
+
+```bash
+install -m 755 /srv/dovebus/deploy/api-health-ping.sh /usr/local/lib/dovebus/
+```
+
+```bash
+cat > /etc/systemd/system/api-health-ping.service <<'EOF'
+[Unit]
+Description=Report DoveBus API health to healthchecks
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+DynamicUser=yes
+EnvironmentFile=/etc/dovebus/notify.env
+ExecStart=/usr/local/lib/dovebus/api-health-ping.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+EOF
+```
+
+```bash
+cat > /etc/systemd/system/api-health-ping.timer <<'EOF'
+[Unit]
+Description=Report DoveBus API health every five minutes
+
+[Timer]
+OnCalendar=*:0/5
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+```bash
+systemctl daemon-reload && systemctl enable --now api-health-ping.timer && systemctl start api-health-ping && journalctl -u api-health-ping -n 3 --no-pager
+```
+
+Switch it off with `systemctl disable --now api-health-ping.timer` — and pause
+the check on healthchecks.io first, or the silence will page.
+
 ## Living with it
 
 ```bash
