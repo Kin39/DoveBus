@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "seo-data": "tsx src/cli/seo-data.ts"
+    "seo-data": "tsx src/cli/seo-data.ts",
+    "seo-refresh": "tsx src/cli/seo-refresh.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",

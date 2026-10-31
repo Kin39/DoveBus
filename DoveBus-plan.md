@@ -1311,7 +1311,19 @@ an email. Separately, an uptime monitor that checks that `/healthz` contains `"s
 need accounts that only the owner can create. Ping URLs are kept out of the repository, as a GitHub
 secret and in `/etc/dovebus/notify.env` on the VPS.
 
-### 15.2 Step 1 — line data, from GitHub Actions
+### 15.2 Step 1 — line data, from GitHub Actions — ✅ BUILT 2026-10-31, in PR mode
+
+`npm run seo-refresh` and `.github/workflows/line-data.yml`. Run against real editions before
+committing: the current feed reports `unchanged`; the 8 October edition is `blocked` on exactly the
+line 9 route the manual check found; a clean previous edition is `written`. The review pass found two
+defects that would have stopped every pull request (`runner.temp` in a job-level `env`, `git commit`
+with both `-m` and `-F`) and one hole in the gates, now `slug-reassigned`: a released address can
+compute to a *different* route of the same number when two routes' comuni drift past each other, and
+every other check passes. Also added from that review: an unchanged feed still blocks a week before
+the committed edition runs out, an edition that has not started yet blocks, and one branch with at
+most one open pull request. **The build has the same slug-only lookup** (`buildPages`), so a manual
+regeneration is not protected by it — D2's `route_id` matching is what closes that.
+
 
 GitHub rather than the VPS, so that the API machine never holds a key that can write to the
 repository. The runner downloads and imports the feed itself: it takes about 8 minutes and is free
