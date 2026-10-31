@@ -1,14 +1,14 @@
 {
   "feed": {
-    "startDate": "20261008",
-    "endDate": "20261028",
-    "sha1": "e197884aadc4465a590af74543afd410158b19e7",
-    "importedAt": "2026-10-08T13:06:43.589Z"
+    "startDate": "20261031",
+    "endDate": "20261120",
+    "sha1": "d5db19b27ab90f6dec973c53d2a4cdaa805077ec",
+    "importedAt": "2026-10-31T10:22:24.804Z"
   },
-  "referenceDate": "20261008",
+  "referenceDate": "20261105",
   "minimumTrips": 70,
   "minimumCoverage": 0.75,
-  "generatedAt": "2026-10-08T13:11:09.638Z",
+  "generatedAt": "2026-10-31T10:24:00.696Z",
   "lines": [
     {
       "routeId": "1305",
@@ -44,7 +44,7 @@
           "headwayMinutes": 5,
           "stops": [],
           "itineraries": 2,
-          "coverage": 0.7
+          "coverage": 0.62
         }
       ]
     },
@@ -86,11 +86,11 @@
             "GRAN BRETAGNA KIEV",
             "GRAN BRETAGNA KYOTO",
             "GRAN BRETAGNA ERBOSA",
+            "DATINI FEDERICO D'ANTIOCHIA",
             "DATINI SER LAPO MAZZEI",
             "DATINI GUALFREDOTTO",
-            "GIOVANNI DALLE BANDE NERE",
-            "SALUTATI BRUNI",
-            "BALDOVINI",
+            "tmp VILLAMAGNA",
+            "LUNGARNO FERRUCCI",
             "ORSINI FERRUCCI",
             "CELLINI FORNACE",
             "SERRISTORI TERRAZZA MARASCO",
@@ -125,8 +125,8 @@
             "NUOVA SCUOLA CARABINIERI",
             "FIRENZE T2 GUIDONI"
           ],
-          "itineraries": 8,
-          "coverage": 0.87
+          "itineraries": 7,
+          "coverage": 0.89
         },
         {
           "directionId": 1,
@@ -300,10 +300,13 @@
             "XXVII APRILE SAN ZANOBI",
             "INDIPENDENZA NAZIONALE",
             "STAZIONE SCALETTE",
-            "SCALA SANTA MARIA NOVELLA",
+            "TMP SCALA RUCELLAI",
+            "RUCELLAI",
+            "CURTATONE",
             "PESCAIA DI SANTA ROSA",
-            "ARIOSTO ALEARDI",
-            "ALEARDI MONTE OLIVETO",
+            "SODERINI TORRINO SANTA ROSA",
+            "LUNGARNO DI SANTA ROSA",
+            "SANTA MARIA AL PIGNONE",
             "VANNI GADDI",
             "VANNI ROSSO FIORENTINO",
             "FRANCAVILLA",
@@ -320,7 +323,7 @@
             "OSPEDALE TORRE GALLI"
           ],
           "itineraries": 6,
-          "coverage": 0.75
+          "coverage": 0.82
         },
         {
           "directionId": 1,
@@ -421,7 +424,7 @@
         "Fiesole"
       ],
       "trips": 276,
-      "lengthKm": 14.2,
+      "lengthKm": 10.2,
       "directions": [
         {
           "directionId": 0,
@@ -535,7 +538,7 @@
         },
         {
           "directionId": 1,
-          "headsign": "CARMIGNANO REDI SCUOLE 2",
+          "headsign": "CARMIGNANO Vergheretana",
           "trips": 136,
           "first": "06:05",
           "last": "20:52",
@@ -597,7 +600,7 @@
             "BOITO PERGOLESI",
             "BOITO"
           ],
-          "itineraries": 6,
+          "itineraries": 4,
           "coverage": 0.78
         },
         {
@@ -634,7 +637,6 @@
             "CENTO STELLE CALATAFIMI",
             "CENTO STELLE DE AMICIS",
             "DUSE ARCOLAIO",
-            "DUSE VERGA",
             "VERGA D'ORSO",
             "VERGA GIGNORO",
             "VERGA C.T. COVERCIANO",
@@ -715,7 +717,7 @@
           "headwayMinutes": 8,
           "stops": [],
           "itineraries": 9,
-          "coverage": 0.64
+          "coverage": 0.61
         }
       ]
     },
@@ -979,7 +981,7 @@
         "Firenze"
       ],
       "trips": 202,
-      "lengthKm": 4.3,
+      "lengthKm": 3.9,
       "directions": [
         {
           "directionId": 0,
@@ -990,7 +992,7 @@
           "headwayMinutes": 11,
           "stops": [],
           "itineraries": 3,
-          "coverage": 0.62
+          "coverage": 0.68
         },
         {
           "directionId": 1,
@@ -1001,7 +1003,7 @@
           "headwayMinutes": 11,
           "stops": [],
           "itineraries": 2,
-          "coverage": 0.7
+          "coverage": 0.67
         }
       ]
     },
@@ -1016,11 +1018,11 @@
         "Firenze"
       ],
       "trips": 199,
-      "lengthKm": 4.4,
+      "lengthKm": 4.7,
       "directions": [
         {
           "directionId": 0,
-          "headsign": "PIAZZA BECCARIA",
+          "headsign": "LEOPARDI GRAMSCI",
           "trips": 99,
           "first": "07:07",
           "last": "01:20",
@@ -1030,6 +1032,7 @@
             "IL PRATO",
             "SANTA LUCIA",
             "STAZIONE ORTI ORICELLARI",
+            "PECORI VECCHIETTI",
             "ROMA DUOMO",
             "STUDIO",
             "PROCONSOLO CORSO",
@@ -1037,8 +1040,7 @@
             "GHIBELLINA PEPI",
             "MALBORGHETTO",
             "PIAZZA ANNIGONI",
-            "LEOPARDI GRAMSCI",
-            "PIAZZA BECCARIA"
+            "LEOPARDI GRAMSCI"
           ],
           "itineraries": 1,
           "coverage": 1
@@ -1051,7 +1053,7 @@
           "last": "01:10",
           "headwayMinutes": 11,
           "stops": [
-            "PIAZZA BECCARIA.",
+            "LEOPARDI GRAMSCI",
             "AGNOLO",
             "SALVEMINI",
             "ORIUOLO DUOMO",
@@ -1060,10 +1062,12 @@
             "PORTA ROSSA",
             "PIAZZA DELLA REPUBBLICA",
             "OLIO DUOMO",
+            "PANZANI UNITÀ",
             "STAZIONE SCALETTE",
             "PALAZZUOLO",
             "BORGO OGNISSANTI",
             "ROTONDA BARBETTI",
+            "SOLFERINO",
             "LEOPOLDA T1 PORTA AL PRATO"
           ],
           "itineraries": 1,
@@ -1201,6 +1205,8 @@
             "CIULLI 2",
             "FOSCOLO 2",
             "OSPEDALE Pensilina",
+            "SAN PAOLO 2",
+            "TRAVERSA PISTOIESE 2",
             "PALLI 2",
             "PALLI 4",
             "VIA RIMINI (Passerella Scuole Reggiana)",
@@ -1220,7 +1226,7 @@
             "PRATO Stazione FS"
           ],
           "itineraries": 2,
-          "coverage": 0.9
+          "coverage": 0.91
         }
       ]
     },
@@ -1424,6 +1430,7 @@
             "CAMPO LA VILLA",
             "TOGLIATTI CONFINI",
             "CONFINI BARBERINESE",
+            "BARBERINESE LA VILLA",
             "BARBERINESE CASTRONELLA",
             "FIESOLI PASOLINI",
             "FIESOLI SAN MARTINO",
@@ -1467,7 +1474,7 @@
             "LEOPOLDA PORTA AL PRATO"
           ],
           "itineraries": 6,
-          "coverage": 0.88
+          "coverage": 0.89
         }
       ]
     },
@@ -1529,33 +1536,9 @@
           "first": "05:53",
           "last": "01:15",
           "headwayMinutes": 13,
-          "stops": [
-            "FOGGINI T1 FEDERIGA",
-            "FOGGINI BACCIO DA MONTELUPO",
-            "BEZZUOLI LE TORRI",
-            "LUNGA LE TORRI",
-            "MARTINI LIVORNO",
-            "MARTINI BASSI",
-            "MARTINI SIGNORELLI",
-            "SIGNORELLI BRAMANTE",
-            "BIBLIOTECANOVA",
-            "CANOVA SANTA MARIA A CINTOIA",
-            "CANOVA MARTINI",
-            "CANOVA ARGIN GROSSO",
-            "ARGIN GROSSO CANOVA",
-            "ARGIN GROSSO S.M. A CINTOIA",
-            "ARGIN GROSSO ASSISI",
-            "ARGIN GROSSO FEDI",
-            "ARGIN GROSSO CISERI",
-            "TORCICODA ARGIN GROSSO",
-            "TORCICODA SERNESI",
-            "TORCICODA GERANI",
-            "TORCICODA GINESTRE",
-            "TORCICODA AZALEE",
-            "PIAZZA BATONI"
-          ],
+          "stops": [],
           "itineraries": 3,
-          "coverage": 0.77
+          "coverage": 0.7
         }
       ]
     },
@@ -1570,11 +1553,11 @@
         "Firenze"
       ],
       "trips": 168,
-      "lengthKm": 5,
+      "lengthKm": 4.7,
       "directions": [
         {
           "directionId": 0,
-          "headsign": "PIAZZA BECCARIA",
+          "headsign": "LEOPARDI GRAMSCI",
           "trips": 84,
           "first": "07:00",
           "last": "01:20",
@@ -1595,11 +1578,10 @@
             "GHIBELLINA PEPI",
             "MALBORGHETTO",
             "PIAZZA ANNIGONI",
-            "LEOPARDI GRAMSCI",
-            "PIAZZA BECCARIA"
+            "LEOPARDI GRAMSCI"
           ],
-          "itineraries": 2,
-          "coverage": 0.94
+          "itineraries": 1,
+          "coverage": 1
         },
         {
           "directionId": 1,
@@ -1608,9 +1590,24 @@
           "first": "07:07",
           "last": "01:15",
           "headwayMinutes": 13,
-          "stops": [],
-          "itineraries": 2,
-          "coverage": 0.58
+          "stops": [
+            "LEOPARDI GRAMSCI",
+            "AGNOLO",
+            "PEPI",
+            "MAGLIABECHI",
+            "CORSO DEI TINTORI",
+            "SANTA MARIA SOPRARNO",
+            "BORGO SAN IACOPO",
+            "FRESCOBALDI",
+            "GUICCIARDINI CARRAIA",
+            "SODERINI TORRINO SANTA ROSA",
+            "LUNGARNO DI SANTA ROSA",
+            "SANTA MARIA AL PIGNONE",
+            "VITTORIO VENETO",
+            "LEOPOLDA T1 PORTA AL PRATO"
+          ],
+          "itineraries": 1,
+          "coverage": 1
         }
       ]
     },
@@ -1807,7 +1804,7 @@
         "Lucca"
       ],
       "trips": 160,
-      "lengthKm": 8.8,
+      "lengthKm": 8.7,
       "directions": [
         {
           "directionId": 0,
@@ -1831,14 +1828,13 @@
             "via Bianchini - Campo di Marte",
             "Roosevelt 2",
             "Quercia 2",
-            "Viale Marti fr. Ex casina Rossa",
-            "Piazza Santa Maria",
-            "Del Biscione",
-            "Del Fosso 2",
-            "Porta San Gervasio",
-            "Del Fosso 6",
-            "Arrigoni 2",
-            "Via del Peso",
+            "Viale Marconi ITC",
+            "v.le Marconi ang.Stadio",
+            "v.le Marconi ang.Don A.Mei",
+            "Pacini 2",
+            "Viale Giusti",
+            "Giusti 6",
+            "Regina Margherita FS",
             "Passerella",
             "Stazione fs Lucca",
             "Regina Margherita FS",
@@ -1873,16 +1869,14 @@
             "Viale Carducci",
             "Passerella",
             "Stazione fs Lucca",
-            "Regina Margherita FS",
-            "P.ta San Pietro",
-            "Arrigoni 1",
-            "Della Rosa",
-            "Santa Maria Bianca",
-            "S.Nicolao",
-            "San Francesco",
-            "Della Zecca",
-            "S.Maria 3",
-            "Marti 1",
+            "Stazione Fs Lucca",
+            "Giusti 1",
+            "Viale Giusti",
+            "Giusti 5",
+            "Pacini 1",
+            "v.le Marconi ang.Castracani",
+            "v.le Marconi ang.Stadio",
+            "Viale Marconi ITC",
             "Quercia 1",
             "Roosevelt 1",
             "via Bianchini - Campo di Marte",
@@ -1895,7 +1889,7 @@
             "San Vito"
           ],
           "itineraries": 2,
-          "coverage": 0.82
+          "coverage": 0.81
         }
       ]
     },
@@ -2073,7 +2067,7 @@
         "Signa"
       ],
       "trips": 157,
-      "lengthKm": 12.7,
+      "lengthKm": 13.6,
       "directions": [
         {
           "directionId": 0,
@@ -2292,7 +2286,7 @@
         "Firenze"
       ],
       "trips": 150,
-      "lengthKm": 8.2,
+      "lengthKm": 7.8,
       "directions": [
         {
           "directionId": 0,
@@ -2304,8 +2298,8 @@
           "stops": [
             "IL PRATO BARBETTI",
             "SODERINI TORRINO SANTA ROSA",
-            "ARIOSTO ALEARDI",
-            "ALEARDI MONTE OLIVETO",
+            "LUNGARNO DI SANTA ROSA",
+            "SANTA MARIA AL PIGNONE",
             "VANNI GADDI",
             "VANNI ROSSO FIORENTINO",
             "GIOVANNI DELLA CASA",
@@ -2340,6 +2334,7 @@
             "MICHELANGIOLO PALAGI",
             "MICHELANGIOLO FERRUCCI",
             "AMENDOLA ARNOLFO",
+            "AMENDOLA GIOBERTI",
             "MAZZINI BOVIO",
             "MAZZINI MASACCIO",
             "MASACCIO GIAMBOLOGNA",
@@ -2461,7 +2456,7 @@
         "Lastra a Signa"
       ],
       "trips": 145,
-      "lengthKm": 10.9,
+      "lengthKm": 8.1,
       "directions": [
         {
           "directionId": 0,
@@ -2472,7 +2467,7 @@
           "headwayMinutes": 14,
           "stops": [],
           "itineraries": 5,
-          "coverage": 0.39
+          "coverage": 0.41
         },
         {
           "directionId": 1,
@@ -2552,6 +2547,8 @@
             "ROMA BIBLIOTECA COMUNALE",
             "ROMA CELLINI",
             "GIOTTO CIMABUE",
+            "FANFANI MARCO POLO",
+            "SCUOLA RUSSELL",
             "COSTITUZIONE SETTE REGOLE",
             "COSTITUZIONE T1 VILLA COSTANZA",
             "DEI CILIEGI FANFANI",
@@ -2627,6 +2624,7 @@
           "headwayMinutes": 16,
           "stops": [
             "SANTA MARIA MAGGIORE",
+            "PANZANI UNITÀ",
             "STAZIONE SCALETTE",
             "SCALA ORTI ORICELLARI",
             "RUCELLAI",
@@ -2646,8 +2644,8 @@
             "PO PALAGI VILLA MARGHERITA",
             "PRESIDIO OSPEDALIERO PALAGI"
           ],
-          "itineraries": 2,
-          "coverage": 0.95
+          "itineraries": 1,
+          "coverage": 1
         },
         {
           "directionId": 1,
@@ -2656,49 +2654,25 @@
           "first": "06:48",
           "last": "01:13",
           "headwayMinutes": 16,
-          "stops": [],
-          "itineraries": 2,
-          "coverage": 0.68
-        }
-      ]
-    },
-    {
-      "routeId": "1149",
-      "shortName": "CERTALDO",
-      "longName": "Funicolare - CERTALDO",
-      "comune": "Certaldo",
-      "comuneSlug": "certaldo",
-      "slug": "certaldo-certaldo",
-      "comuni": [
-        "Certaldo"
-      ],
-      "trips": 140,
-      "lengthKm": null,
-      "directions": [
-        {
-          "directionId": 0,
-          "headsign": "Certaldo Alto",
-          "trips": 70,
-          "first": "07:30",
-          "last": "00:45",
-          "headwayMinutes": 15,
           "stops": [
-            "Certaldo Basso",
-            "Certaldo Alto"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        },
-        {
-          "directionId": 1,
-          "headsign": "Certaldo Basso",
-          "trips": 70,
-          "first": "07:35",
-          "last": "00:50",
-          "headwayMinutes": 15,
-          "stops": [
-            "Certaldo Alto",
-            "Certaldo Basso"
+            "PRESIDIO OSPEDALIERO PALAGI",
+            "MICHELANGIOLO FERRUCCI",
+            "CELLINI FORNACE",
+            "SERRISTORI TERRAZZA MARASCO",
+            "SERRISTORI GRAZIE",
+            "SANTA MARIA SOPRARNO",
+            "BORGO SAN IACOPO",
+            "FRESCOBALDI",
+            "PIAZZA SAURO",
+            "PIAZZA PIATTELLINA",
+            "PIAZZA TASSO",
+            "ARIOSTO DELL'ORTO",
+            "SANT'ONOFRIO",
+            "BORGO OGNISSANTI",
+            "SANTA LUCIA",
+            "STAZIONE ORTI ORICELLARI",
+            "STAZIONE VIA PANZANI",
+            "SANTA MARIA MAGGIORE"
           ],
           "itineraries": 1,
           "coverage": 1
@@ -2716,7 +2690,7 @@
         "Firenze"
       ],
       "trips": 138,
-      "lengthKm": 12.9,
+      "lengthKm": 9.1,
       "directions": [
         {
           "directionId": 0,
@@ -2789,7 +2763,7 @@
         "Lucca"
       ],
       "trips": 137,
-      "lengthKm": 8.7,
+      "lengthKm": 8.4,
       "directions": [
         {
           "directionId": 0,
@@ -2807,10 +2781,7 @@
             "Viale Giusti",
             "Giusti 6",
             "Regina Margherita FS",
-            "P.ta San Pietro",
-            "S.Girolamo",
-            "Piazza Napoleone",
-            "Via Vittorio Emanuele",
+            "Viale Carducci",
             "Sant'Anna Chiesa",
             "Puccini 1",
             "Puccini 3",
@@ -2826,7 +2797,7 @@
             "Sant'Angelo Chiesa"
           ],
           "itineraries": 2,
-          "coverage": 0.86
+          "coverage": 0.85
         },
         {
           "directionId": 1,
@@ -2849,10 +2820,7 @@
             "Puccini 10",
             "Puccini 12",
             "Sant'Anna Chiesa",
-            "Via Vittorio Emanuele",
-            "Piazza Napoleone",
-            "S.Girolamo",
-            "Via del Peso",
+            "Viale Carducci",
             "Passerella",
             "Stazione fs Lucca",
             "Giusti 1",
@@ -2865,74 +2833,7 @@
             "Ospedale San Luca"
           ],
           "itineraries": 2,
-          "coverage": 0.87
-        }
-      ]
-    },
-    {
-      "routeId": "1295",
-      "shortName": "3+",
-      "longName": "STAZIONE FS-VIA DEL PESO-NAPOLEONE-S.SALVATORE-TAGLIATE-PALATUCCI",
-      "comune": "Lucca",
-      "comuneSlug": "lucca",
-      "slug": "3-lucca",
-      "comuni": [
-        "Lucca"
-      ],
-      "trips": 136,
-      "lengthKm": 5.7,
-      "directions": [
-        {
-          "directionId": 0,
-          "headsign": "Stazione fs Lucca",
-          "trips": 67,
-          "first": "07:05",
-          "last": "20:17",
-          "headwayMinutes": 12,
-          "stops": [
-            "Pensilina Palatucci",
-            "C. del Prete 2",
-            "Carlo del Prete",
-            "Piazza Santa Maria",
-            "San Frediano 2",
-            "Battisti",
-            "Piazza San Salvatore",
-            "Piazza Napoleone",
-            "S.Girolamo",
-            "Via del Peso",
-            "Passerella",
-            "Stazione fs Lucca"
-          ],
-          "itineraries": 1,
-          "coverage": 1
-        },
-        {
-          "directionId": 1,
-          "headsign": "Pensilina Palatucci",
-          "trips": 69,
-          "first": "06:45",
-          "last": "20:21",
-          "headwayMinutes": 12,
-          "stops": [
-            "Stazione fs Lucca",
-            "Regina Margherita FS",
-            "P.ta San Pietro",
-            "S.Girolamo",
-            "Piazza Napoleone",
-            "Piazza San Salvatore",
-            "Battisti",
-            "San Frediano 1",
-            "S.Maria 1",
-            "Civitali",
-            "Del Brennero",
-            "Borgo Giannotti Croce",
-            "Via delle Tagliate di S.Marco",
-            "Tagliate Parcheggio",
-            "Tagliate Cimitero",
-            "Pensilina Palatucci"
-          ],
-          "itineraries": 1,
-          "coverage": 1
+          "coverage": 0.86
         }
       ]
     },
@@ -3044,7 +2945,7 @@
         "Firenze"
       ],
       "trips": 133,
-      "lengthKm": 9.6,
+      "lengthKm": 9.2,
       "directions": [
         {
           "directionId": 0,
@@ -3100,7 +3001,8 @@
             "ARIOSTO TASSONI",
             "ARIOSTO CIOMPI",
             "ARIOSTO SAN LORENZO",
-            "NERUDA MILLE",
+            "ARIOSTO OSMANNORO",
+            "ARIOSTO MILLE",
             "MILLE ZAMBRA FS",
             "MILLE GRAMSCI",
             "GRAMSCI CALAMANDREI",
@@ -3176,7 +3078,7 @@
         "Firenze"
       ],
       "trips": 130,
-      "lengthKm": 12.2,
+      "lengthKm": 8.4,
       "directions": [
         {
           "directionId": 0,
@@ -3223,13 +3125,14 @@
             "GRAN BRETAGNA KIEV",
             "GRAN BRETAGNA KYOTO",
             "GRAN BRETAGNA ERBOSA",
+            "DATINI FEDERICO D'ANTIOCHIA",
             "DATINI SER LAPO MAZZEI",
             "DATINI GUALFREDOTTO",
-            "GIOVANNI DALLE BANDE NERE",
-            "SALUTATI BRUNI",
-            "BALDOVINI",
+            "tmp VILLAMAGNA",
+            "LUNGARNO FERRUCCI",
             "ORSINI FERRUCCI",
             "AMENDOLA ARNOLFO",
+            "AMENDOLA GIOBERTI",
             "MAZZINI BOVIO",
             "MAZZINI MASACCIO",
             "MASACCIO GIAMBOLOGNA",
@@ -3259,7 +3162,7 @@
         "Calcinaia"
       ],
       "trips": 129,
-      "lengthKm": 14,
+      "lengthKm": 13.6,
       "directions": [
         {
           "directionId": 0,
@@ -3458,7 +3361,7 @@
         "Firenze"
       ],
       "trips": 118,
-      "lengthKm": 12.8,
+      "lengthKm": 13.5,
       "directions": [
         {
           "directionId": 0,
@@ -3486,7 +3389,10 @@
             "SANTA CATERINA D'ALESSANDRIA",
             "INDIPENDENZA NAZIONALE",
             "STAZIONE SCALETTE",
-            "SCALA SANTA MARIA NOVELLA",
+            "TMP SCALA RUCELLAI",
+            "RUCELLAI",
+            "CURTATONE",
+            "PIAZZA D'OGNISSANTI",
             "PIAZZA SAURO",
             "SERRAGLI SANTA MONACA",
             "SERRAGLI CAMPUCCIO",
@@ -3580,8 +3486,7 @@
             "MANZONI",
             "SAN BARTOLO FOSCOLO",
             "COLOMBO DEI CILIEGI",
-            "FANFANI DEI CILIEGI",
-            "DEI CILIEGI SCUOLA RODARI",
+            "SCUOLA RUSSELL",
             "COSTITUZIONE SETTE REGOLE",
             "DON PEROSI PONCHIELLI",
             "NEWTON CODIGNOLA",
@@ -3600,7 +3505,7 @@
             "BADIA A SETTIMO"
           ],
           "itineraries": 2,
-          "coverage": 0.92
+          "coverage": 0.96
         },
         {
           "directionId": 1,
@@ -3735,11 +3640,14 @@
             "ARETINA DUE PONTI",
             "ARETINA 127",
             "ARETINA 65",
+            "PORTA PISPINI",
+            "PIAZZA MARIO CIONI",
+            "PISPINI",
             "PANTANETO",
             "LOGGE DEL PAPA"
           ],
           "itineraries": 3,
-          "coverage": 0.92
+          "coverage": 0.94
         },
         {
           "directionId": 1,
@@ -3752,6 +3660,9 @@
             "LOGGE DEL PAPA",
             "SAN MARTINO",
             "PONTE DI ROMANA",
+            "PISPINI",
+            "PIAZZA MARIO CIONI",
+            "PORTA PISPINI",
             "ARETINA 100",
             "ARETINA 158",
             "ARETINA DUE PONTI",
@@ -3764,7 +3675,7 @@
             "SIENA MERCATO ORTOFRUTTICOLO"
           ],
           "itineraries": 3,
-          "coverage": 0.93
+          "coverage": 0.94
         }
       ]
     },
@@ -4191,7 +4102,7 @@
         "Firenze"
       ],
       "trips": 105,
-      "lengthKm": 12.1,
+      "lengthKm": 13,
       "directions": [
         {
           "directionId": 0,
@@ -4736,13 +4647,13 @@
       "slug": "48-empoli",
       "comuni": [
         "Empoli",
-        "Montelupo Fiorentino",
         "Capraia e Limite",
+        "Montelupo Fiorentino",
         "Vinci",
         "Fucecchio"
       ],
       "trips": 99,
-      "lengthKm": 7.9,
+      "lengthKm": 9.5,
       "directions": [
         {
           "directionId": 0,
@@ -4878,7 +4789,7 @@
         "Bagno a Ripoli"
       ],
       "trips": 98,
-      "lengthKm": 21.2,
+      "lengthKm": 13.5,
       "directions": [
         {
           "directionId": 0,
@@ -4959,6 +4870,7 @@
             "GRAN BRETAGNA KIEV",
             "GRAN BRETAGNA KYOTO",
             "GRAN BRETAGNA ERBOSA",
+            "DATINI FEDERICO D'ANTIOCHIA",
             "DATINI SER LAPO MAZZEI",
             "DATINI GUALFREDOTTO",
             "LANZA MADONNONE",
@@ -4966,6 +4878,7 @@
             "PIAGENTINA BEATO ANGELICO",
             "BEATO ANGELICO GHIRLANDAIO",
             "BEATO ANGELICO AMENDOLA",
+            "AMENDOLA GIOBERTI",
             "SEGNI",
             "MATTONAIA",
             "COLONNA LICEO CASTELNUOVO",
@@ -4976,6 +4889,49 @@
             "FORTEZZA T1 STROZZI",
             "SPADOLINI T1 STROZZI",
             "STAZIONE MONTELUNGO"
+          ],
+          "itineraries": 1,
+          "coverage": 1
+        }
+      ]
+    },
+    {
+      "routeId": "1149",
+      "shortName": "CERTALDO",
+      "longName": "Funicolare - CERTALDO",
+      "comune": "Certaldo",
+      "comuneSlug": "certaldo",
+      "slug": "certaldo-certaldo",
+      "comuni": [
+        "Certaldo"
+      ],
+      "trips": 96,
+      "lengthKm": null,
+      "directions": [
+        {
+          "directionId": 0,
+          "headsign": "Certaldo Alto",
+          "trips": 48,
+          "first": "07:30",
+          "last": "19:15",
+          "headwayMinutes": 15,
+          "stops": [
+            "Certaldo Basso",
+            "Certaldo Alto"
+          ],
+          "itineraries": 1,
+          "coverage": 1
+        },
+        {
+          "directionId": 1,
+          "headsign": "Certaldo Basso",
+          "trips": 48,
+          "first": "07:35",
+          "last": "19:20",
+          "headwayMinutes": 15,
+          "stops": [
+            "Certaldo Alto",
+            "Certaldo Basso"
           ],
           "itineraries": 1,
           "coverage": 1
@@ -5619,7 +5575,7 @@
         "Massa e Cozzile"
       ],
       "trips": 89,
-      "lengthKm": 12.3,
+      "lengthKm": 30.3,
       "directions": [
         {
           "directionId": 0,
@@ -5670,7 +5626,7 @@
           "last": "20:49",
           "headwayMinutes": 20,
           "stops": [],
-          "itineraries": 26,
+          "itineraries": 25,
           "coverage": 0.49
         },
         {
@@ -5762,7 +5718,7 @@
         "Pistoia"
       ],
       "trips": 87,
-      "lengthKm": 7.1,
+      "lengthKm": 9.3,
       "directions": [
         {
           "directionId": 0,
@@ -5962,8 +5918,8 @@
             "COLLODI 2",
             "GOBETTI 2",
             "RINDI 1",
-            "LUCCHESE 3",
-            "LUCCHESE",
+            "BIANCHI 3",
+            "BIANCHI 1",
             "SAN ZENO 1",
             "BUONARROTI 3",
             "DI SIMONE",
@@ -6007,8 +5963,7 @@
             "SAN ZENO 2",
             "SANTA CATERINA",
             "PARLASCIO",
-            "LUCCHESE",
-            "LUCCHESE 4",
+            "BIANCHI 2",
             "RINDI 2",
             "GOBETTI 1",
             "COLLODI 1",
@@ -6185,7 +6140,7 @@
         "Sesto Fiorentino"
       ],
       "trips": 84,
-      "lengthKm": 7.1,
+      "lengthKm": 6.8,
       "directions": [
         {
           "directionId": 0,
@@ -6525,7 +6480,7 @@
             "BACCIO FEDERIGA",
             "PIAZZA PIER DELLA FRANCESCA"
           ],
-          "itineraries": 2,
+          "itineraries": 1,
           "coverage": 1
         }
       ]
@@ -6618,12 +6573,12 @@
       "routeId": "422",
       "shortName": "307 A",
       "longName": "RAZZUOLO-BORGO SAN LORENZO-SAN PIERO A SIEVE-FIRENZE",
-      "comune": "Scarperia e San Piero",
-      "comuneSlug": "scarperia-e-san-piero",
-      "slug": "307-a-scarperia-e-san-piero",
+      "comune": "Firenze",
+      "comuneSlug": "firenze",
+      "slug": "307-a-firenze",
       "comuni": [
-        "Scarperia e San Piero",
         "Firenze",
+        "Scarperia e San Piero",
         "Vaglia",
         "Borgo San Lorenzo",
         "Fiesole",
@@ -6655,6 +6610,62 @@
           "stops": [],
           "itineraries": 19,
           "coverage": 0.42
+        }
+      ]
+    },
+    {
+      "routeId": "1295",
+      "shortName": "3+",
+      "longName": "STAZIONE FS-VIA DEL PESO-NAPOLEONE-S.SALVATORE-TAGLIATE-PALATUCCI",
+      "comune": "Lucca",
+      "comuneSlug": "lucca",
+      "slug": "3-lucca",
+      "comuni": [
+        "Lucca"
+      ],
+      "trips": 81,
+      "lengthKm": 2,
+      "directions": [
+        {
+          "directionId": 0,
+          "headsign": "Stazione fs Lucca",
+          "trips": 41,
+          "first": "06:43",
+          "last": "20:23",
+          "headwayMinutes": 21,
+          "stops": [
+            "Pensilina Palatucci",
+            "Viale Papi",
+            "Viale Carducci",
+            "Passerella",
+            "Stazione fs Lucca"
+          ],
+          "itineraries": 1,
+          "coverage": 1
+        },
+        {
+          "directionId": 1,
+          "headsign": "Pensilina Palatucci",
+          "trips": 40,
+          "first": "06:55",
+          "last": "19:55",
+          "headwayMinutes": 20,
+          "stops": [
+            "Stazione fs Lucca",
+            "Regina Margherita FS",
+            "Viale Carducci",
+            "C. del Prete 2",
+            "Carlo del Prete",
+            "Civitali",
+            "Del Brennero",
+            "Borgo Giannotti Croce",
+            "Via delle Tagliate di S.Marco",
+            "Tagliate Parcheggio",
+            "Tagliate Cimitero",
+            "Pensilina Palatucci"
+          ],
+          "itineraries": 1,
+          "coverage": 1
         }
       ]
     },
@@ -6766,7 +6777,7 @@
         "Bagno a Ripoli"
       ],
       "trips": 79,
-      "lengthKm": 19.9,
+      "lengthKm": 12.6,
       "directions": [
         {
           "directionId": 0,
@@ -6841,6 +6852,7 @@
             "GRAN BRETAGNA KIEV",
             "GRAN BRETAGNA KYOTO",
             "GRAN BRETAGNA ERBOSA",
+            "DATINI FEDERICO D'ANTIOCHIA",
             "DATINI SER LAPO MAZZEI",
             "DATINI GUALFREDOTTO",
             "LANZA MADONNONE",
@@ -6848,6 +6860,7 @@
             "PIAGENTINA BEATO ANGELICO",
             "BEATO ANGELICO GHIRLANDAIO",
             "BEATO ANGELICO AMENDOLA",
+            "AMENDOLA GIOBERTI",
             "SEGNI",
             "MATTONAIA",
             "COLONNA LICEO CASTELNUOVO",
@@ -6963,7 +6976,7 @@
         "Montignoso"
       ],
       "trips": 77,
-      "lengthKm": 35.3,
+      "lengthKm": 35.9,
       "directions": [
         {
           "directionId": 0,
@@ -6974,7 +6987,7 @@
           "headwayMinutes": 21,
           "stops": [],
           "itineraries": 5,
-          "coverage": 0.32
+          "coverage": 0.33
         },
         {
           "directionId": 1,
@@ -7228,11 +7241,11 @@
         "Pietrasanta"
       ],
       "trips": 72,
-      "lengthKm": 26.9,
+      "lengthKm": 27.8,
       "directions": [
         {
           "directionId": 0,
-          "headsign": "LUCCA Piazzale Verdi",
+          "headsign": "Lucca Palatucci",
           "trips": 35,
           "first": "06:10",
           "last": "20:33",
@@ -7250,7 +7263,7 @@
           "headwayMinutes": 24,
           "stops": [],
           "itineraries": 6,
-          "coverage": 0.41
+          "coverage": 0.42
         }
       ]
     },
