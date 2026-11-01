@@ -70,7 +70,10 @@ EOF
 )"
 
 previous="$(cat "$DEST/newest-hour" 2>/dev/null || true)"
-if [ -n "$previous" ] && [ "$newest" \< "$previous" ]; then
+# "YYYY-MM-DD HH:MM:SS" reduced to its digits orders the same way, and compares
+# as a number — POSIX sh defines no string ordering for `[`.
+digits() { printf '%s' "$1" | tr -cd '0-9'; }
+if [ -n "$previous" ] && [ "$(digits "$newest")0" -lt "$(digits "$previous")0" ]; then
   echo "backup $name ends at '$newest', older than the copy already kept ('$previous') — refusing it" >&2
   exit 1
 fi
