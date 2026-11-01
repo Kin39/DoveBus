@@ -47,6 +47,12 @@ jobs:
       - name: Lint and format (Biome)
         run: npm run check
 
+      # The scripts in deploy/ run unattended on the API machine and on the
+      # owner's PC, where a quoting slip fails silently at 03:15. ShellCheck is
+      # preinstalled on GitHub's Ubuntu runners, so nothing is installed for it.
+      - name: ShellCheck the deploy scripts
+        run: shellcheck deploy/*.sh
+
       # Tests with the 80% coverage thresholds enforced, server then client. The
       # tests build their own fixture databases in temporary directories, so the
       # 1 GB timetable in data/ — gitignored — is never needed here.
